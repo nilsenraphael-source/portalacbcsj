@@ -19,9 +19,12 @@ CREATE TABLE IF NOT EXISTS public.associados (
     bairro VARCHAR(100) NOT NULL,
     cidade VARCHAR(100) NOT NULL DEFAULT 'São José - SC',
     email VARCHAR(150),
+    senha VARCHAR(255),
     perfil VARCHAR(20) NOT NULL DEFAULT 'associado', -- 'diretoria' ou 'associado'
-    status VARCHAR(20) NOT NULL DEFAULT 'pendente', -- 'ativo', 'pendente', 'suspenso'
-    data_cadastro VARCHAR(100)
+    status VARCHAR(20) NOT NULL DEFAULT 'pendente', -- 'ativo', 'pendente', 'desligado'
+    data_cadastro VARCHAR(100),
+    data_desligamento VARCHAR(100),
+    motivo_desligamento TEXT
 );
 
 -- 2. TABELA DE CONTROLE FINANCEIRO (ENTRADAS E SAÍDAS / FORNECEDORES)

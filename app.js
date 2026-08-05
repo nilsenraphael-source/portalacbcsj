@@ -82,9 +82,26 @@ function loginWithCPF(cpf, password, roleHint = null) {
     } else {
         const found = list.find(a => a.cpf === cpf);
         if (!found) {
-            alert('CPF não encontrado ou cadastro pendente de aprovação pela Diretoria.');
+            alert('CPF não encontrado no sistema da ACBCSJ. Faça sua solicitação de pré-cadastro.');
             return;
         }
+
+        if (found.status === 'pendente') {
+            alert('Sua solicitação de cadastro ainda está em análise pela Diretoria da ACBCSJ.');
+            return;
+        }
+
+        if (found.status === 'desligado') {
+            alert('Este cadastro consta como desligado do sistema da ACBCSJ.');
+            return;
+        }
+
+        // Validação de senha (se cadastrado com senha)
+        if (found.senha && password && found.senha !== password) {
+            alert('Senha incorreta. Por favor, verifique a senha digitada.');
+            return;
+        }
+
         currentUser = found;
     }
 
@@ -119,6 +136,7 @@ function renderSidebarMenu() {
         menuNav.innerHTML = `
             <div class="nav-item active" onclick="navigateTab('overview-diretoria')">📊 Painel Geral</div>
             <div class="nav-item" onclick="navigateTab('gestao-associados')">👥 Controle de Associados</div>
+            <div class="nav-item" onclick="navigateTab('associados-desligados')">📋 Associados Desligados</div>
             <div class="nav-item" onclick="navigateTab('gestao-financeira')">💰 Lançamentos Financeiros</div>
             <div class="nav-item" onclick="navigateTab('documentos-diretoria')">📑 Publicar Documentos</div>
             <div class="nav-item" onclick="navigateTab('mensagens-diretoria')">📬 Caixa de Mensagens</div>
@@ -148,6 +166,7 @@ function navigateTab(tabId) {
     // Executar atualizações de tela específicas
     if (tabId === 'overview-diretoria') renderDiretoriaOverview();
     if (tabId === 'gestao-associados') renderGestaoAssociados();
+    if (tabId === 'associados-desligados') renderAssociadosDesligados();
     if (tabId === 'gestao-financeira') renderGestaoFinanceira();
     if (tabId === 'overview-associado') renderAssociadoOverview();
     if (tabId === 'balancetes-associado') renderBalancetesAssociado();
@@ -184,7 +203,8 @@ function renderDiretoriaOverview() {
                     <td><small style="color:var(--accent-gold);">${p.data_cadastro || '-'}</small></td>
                     <td>
                         <button class="btn btn-sm btn-primary" onclick="aprovarAssociado('${p.cpf}')">Aprovar</button>
-                        <button class="btn btn-sm btn-outline" onclick="rejeitarAssociado('${p.cpf}')">Rejeitar</button>
+                        <button class="btn btn-sm btn-outline" onclick="verFichaAssociado('${p.cpf}')">Ver Ficha</button>
+                        <button class="btn btn-sm btn-outline" style="color:#E74C3C" onclick="abrirModalDesligar('${p.cpf}')">Rejeitar</button>
                     </td>
                 </tr>
             `).join('');
@@ -192,22 +212,159 @@ function renderDiretoriaOverview() {
     }
 }
 
+// EXIBIR APENAS ASSOCIADOS ATIVOS
 function renderGestaoAssociados() {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const ativos = list.filter(a => a.status === 'ativo');
     const container = document.getElementById('tableTodosAssociadosBody');
     if (container) {
-        container.innerHTML = list.map(a => `
-            <tr>
-                <td><b>${a.nome_guerra || a.nome}</b><br><small style="color:var(--text-muted)">${a.nome}</small></td>
-                <td>${a.cpf}</td>
-                <td>${a.telefone || a.email || '-'}</td>
-                <td><span class="badge badge-${a.perfil === 'diretoria' ? 'warning' : 'info'}">${a.perfil.toUpperCase()}</span></td>
-                <td><span class="badge badge-${a.status === 'ativo' ? 'success' : 'danger'}">${a.status.toUpperCase()}</span></td>
-                <td>
-                    ${a.cpf !== currentUser.cpf ? `<button class="btn btn-sm btn-outline" style="color:#E74C3C; border-color:#E74C3C" onclick="excluirAssociado('${a.cpf}')">Excluir</button>` : '<small style="color:var(--text-muted)">Você</small>'}
-                </td>
-            </tr>
-        `).join('');
+        if (ativos.length === 0) {
+            container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum associado ativo cadastrado.</td></tr>`;
+        } else {
+            container.innerHTML = ativos.map(a => `
+                <tr>
+                    <td><b>${a.nome_guerra || a.nome}</b><br><small style="color:var(--text-muted)">${a.nome}</small></td>
+                    <td>${a.cpf}</td>
+                    <td>${a.telefone || a.email || '-'}</td>
+                    <td><span class="badge badge-${a.perfil === 'diretoria' ? 'warning' : 'info'}">${a.perfil.toUpperCase()}</span></td>
+                    <td><button class="btn btn-sm btn-gold" onclick="verFichaAssociado('${a.cpf}')">📄 Ver Ficha Completa</button></td>
+                    <td>
+                        ${a.cpf !== currentUser.cpf ? `<button class="btn btn-sm btn-outline" style="color:#E74C3C; border-color:#E74C3C" onclick="abrirModalDesligar('${a.cpf}')">Desligar Associado</button>` : '<small style="color:var(--text-muted)">Você (Diretoria)</small>'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+    }
+}
+
+// EXIBIR ASSOCIADOS DESLIGADOS
+function renderAssociadosDesligados() {
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const desligados = list.filter(a => a.status === 'desligado');
+    const container = document.getElementById('tableAssociadosDesligadosBody');
+    if (container) {
+        if (desligados.length === 0) {
+            container.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum associado desligado registrado no sistema.</td></tr>`;
+        } else {
+            container.innerHTML = desligados.map(d => `
+                <tr>
+                    <td><b>${d.nome_guerra || d.nome}</b><br><small style="color:var(--text-muted)">${d.nome}</small></td>
+                    <td>${d.cpf}</td>
+                    <td><small style="color:#FF6B6B;">${d.data_desligamento || '-'}</small></td>
+                    <td><span style="font-size:12px; color:var(--text-muted);">${d.motivo_desligamento || 'Não especificado'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-gold" onclick="verFichaAssociado('${d.cpf}')">Ver Ficha</button>
+                        <button class="btn btn-sm btn-outline" style="color:#2ECC71; border-color:#2ECC71" onclick="reativarAssociado('${d.cpf}')">Reativar</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    }
+}
+
+// FICHA COMPLETA DO ASSOCIADO
+function verFichaAssociado(cpf) {
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const a = list.find(item => item.cpf === cpf);
+    if (!a) {
+        alert('Associado não encontrado.');
+        return;
+    }
+
+    document.getElementById('fichaNomeTitle').textContent = `Ficha Cadastral: ${a.nome_guerra || a.nome}`;
+
+    const body = document.getElementById('fichaContentBody');
+    body.innerHTML = `
+        <div style="grid-column: 1 / -1; background-color:#15181C; padding:12px; border-radius:6px; border:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+            <div><b>Status do Cadastro:</b> <span class="badge badge-${a.status === 'ativo' ? 'success' : (a.status === 'desligado' ? 'danger' : 'warning')}">${a.status.toUpperCase()}</span></div>
+            <div style="font-size:11px; color:var(--text-muted)">Cadastrado em: <b>${a.data_cadastro || '-'}</b></div>
+        </div>
+
+        <div><b>Nome de Guerra:</b> ${a.nome_guerra || '-'}</div>
+        <div><b>Nome Completo:</b> ${a.nome}</div>
+        <div><b>CPF:</b> ${a.cpf}</div>
+        <div><b>Data de Nascimento:</b> ${a.data_nascimento || '-'}</div>
+        <div><b>Sexo:</b> ${a.sexo || '-'}</div>
+        <div><b>Telefone / WhatsApp:</b> ${a.telefone || '-'}</div>
+        
+        <div style="grid-column: 1 / -1; margin-top:8px; border-top:1px dashed var(--border-color); padding-top:8px;"><b>Filiação:</b></div>
+        <div><b>Nome da Mãe:</b> ${a.nome_mae || '-'}</div>
+        <div><b>Nome do Pai:</b> ${a.nome_pai || '-'}</div>
+
+        <div style="grid-column: 1 / -1; margin-top:8px; border-top:1px dashed var(--border-color); padding-top:8px;"><b>Endereço Residencial:</b></div>
+        <div><b>Logradouro / Rua:</b> ${a.logradouro || '-'}, Nº ${a.numero || '-'}</div>
+        <div><b>Complemento:</b> ${a.complemento || 'Nenhum'}</div>
+        <div><b>CEP:</b> ${a.cep || '-'}</div>
+        <div><b>Bairro:</b> ${a.bairro || '-'}</div>
+        <div style="grid-column: 1 / -1;"><b>Cidade:</b> ${a.cidade || '-'}</div>
+
+        ${a.status === 'desligado' ? `
+            <div style="grid-column: 1 / -1; margin-top:10px; background-color:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.4); padding:12px; border-radius:6px; color:#FF6B6B;">
+                <div><b>Data/Hora do Desligamento:</b> ${a.data_desligamento || '-'}</div>
+                <div><b>Motivo do Desligamento:</b> ${a.motivo_desligamento || '-'}</div>
+            </div>
+        ` : ''}
+    `;
+
+    openModal('modalFichaAssociado');
+}
+
+// DESLIGAMENTO COM REGISTRO DE MOTIVO E DATA/HORA
+function abrirModalDesligar(cpf) {
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const a = list.find(item => item.cpf === cpf);
+    if (!a) return;
+
+    document.getElementById('desligarCPF').value = a.cpf;
+    document.getElementById('desligarNomeDisplay').value = `${a.nome_guerra || a.nome} (${a.nome}) - CPF: ${a.cpf}`;
+    document.getElementById('desligarMotivo').value = '';
+
+    openModal('modalDesligarAssociado');
+}
+
+function confirmarDesligamento(e) {
+    e.preventDefault();
+    const cpf = document.getElementById('desligarCPF').value;
+    const motivo = document.getElementById('desligarMotivo').value.trim();
+
+    if (!motivo) {
+        alert('Por favor, informe o motivo do desligamento.');
+        return;
+    }
+
+    const agora = new Date();
+    const dataHoraDesligamento = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const item = list.find(a => a.cpf === cpf);
+    if (item) {
+        item.status = 'desligado';
+        item.data_desligamento = dataHoraDesligamento;
+        item.motivo_desligamento = motivo;
+
+        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+        dbService.saveAssociado(item);
+
+        alert(`Associado ${item.nome_guerra || item.nome} foi desligado em ${dataHoraDesligamento}.\nOs dados foram mantidos na página "Associados Desligados".`);
+        closeModal('modalDesligarAssociado');
+        renderGestaoAssociados();
+        renderDiretoriaOverview();
+    }
+}
+
+function reativarAssociado(cpf) {
+    if (confirm('Deseja reativar este associado no sistema? Ele voltará para a lista de Associados Ativos.')) {
+        let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+        const item = list.find(a => a.cpf === cpf);
+        if (item) {
+            item.status = 'ativo';
+            localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+            dbService.saveAssociado(item);
+            alert(`Associado ${item.nome_guerra || item.nome} foi reativado!`);
+            renderAssociadosDesligados();
+            renderGestaoAssociados();
+            renderDiretoriaOverview();
+        }
     }
 }
 
@@ -355,6 +512,8 @@ function submitPreCadastro(e) {
     const nomePai = semPai ? 'Sem registro paterno / Não declarado' : (document.getElementById('regNomePai').value.trim() || 'Não declarado');
     const sexo = document.getElementById('regSexo').value;
     const telefone = document.getElementById('regTelefone').value.trim();
+    const senha = document.getElementById('regSenha').value;
+    const confirmarSenha = document.getElementById('regConfirmarSenha').value;
     const logradouro = document.getElementById('regLogradouro').value.trim();
     const numero = document.getElementById('regNumero').value.trim();
     const complemento = document.getElementById('regComplemento').value.trim();
@@ -362,6 +521,11 @@ function submitPreCadastro(e) {
     const bairro = document.getElementById('regBairro').value.trim();
     const cidade = document.getElementById('regCidade').value.trim();
     const termoAceito = document.getElementById('regTermoAceito').checked;
+
+    if (senha !== confirmarSenha) {
+        alert('As senhas digitadas não coincidem. Por favor, digite a mesma senha nos dois campos.');
+        return;
+    }
 
     if (!termoAceito) {
         alert('Você precisa aceitar os Termos de Responsabilidade para enviar a solicitação.');
@@ -377,6 +541,7 @@ function submitPreCadastro(e) {
     const novoAssociado = {
         id: Date.now().toString(),
         cpf: cpf,
+        senha: senha,
         nome_guerra: nomeGuerra,
         nome: nomeCompleto,
         data_nascimento: dataNascimento,
