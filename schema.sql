@@ -5,12 +5,23 @@
 CREATE TABLE IF NOT EXISTS public.associados (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     cpf VARCHAR(14) UNIQUE NOT NULL,
+    nome_guerra VARCHAR(100) NOT NULL,
     nome VARCHAR(150) NOT NULL,
+    data_nascimento DATE,
+    nome_mae VARCHAR(150) NOT NULL,
+    nome_pai VARCHAR(150),
+    sexo VARCHAR(20) NOT NULL,
+    telefone VARCHAR(20) NOT NULL,
+    logradouro VARCHAR(200) NOT NULL,
+    numero VARCHAR(20) NOT NULL,
+    complemento VARCHAR(100),
+    cep VARCHAR(10),
+    bairro VARCHAR(100) NOT NULL,
+    cidade VARCHAR(100) NOT NULL DEFAULT 'São José - SC',
     email VARCHAR(150),
-    telefone VARCHAR(20),
     perfil VARCHAR(20) NOT NULL DEFAULT 'associado', -- 'diretoria' ou 'associado'
     status VARCHAR(20) NOT NULL DEFAULT 'pendente', -- 'ativo', 'pendente', 'suspenso'
-    data_cadastro TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    data_cadastro VARCHAR(100)
 );
 
 -- 2. TABELA DE CONTROLE FINANCEIRO (ENTRADAS E SAÍDAS / FORNECEDORES)

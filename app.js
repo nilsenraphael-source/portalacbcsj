@@ -174,13 +174,14 @@ function renderDiretoriaOverview() {
     const container = document.getElementById('tablePendentesBody');
     if (container) {
         if (pendentes.length === 0) {
-            container.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhuma solicitação de pré-cadastro pendente.</td></tr>`;
+            container.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhuma solicitação de pré-cadastro pendente.</td></tr>`;
         } else {
             container.innerHTML = pendentes.map(p => `
                 <tr>
-                    <td><b>${p.nome}</b></td>
+                    <td><b>${p.nome_guerra || p.nome}</b><br><small style="color:var(--text-muted)">${p.nome}</small></td>
                     <td>${p.cpf}</td>
                     <td>${p.telefone || '-'}</td>
+                    <td><small style="color:var(--accent-gold);">${p.data_cadastro || '-'}</small></td>
                     <td>
                         <button class="btn btn-sm btn-primary" onclick="aprovarAssociado('${p.cpf}')">Aprovar</button>
                         <button class="btn btn-sm btn-outline" onclick="rejeitarAssociado('${p.cpf}')">Rejeitar</button>
@@ -197,9 +198,9 @@ function renderGestaoAssociados() {
     if (container) {
         container.innerHTML = list.map(a => `
             <tr>
-                <td><b>${a.nome}</b></td>
+                <td><b>${a.nome_guerra || a.nome}</b><br><small style="color:var(--text-muted)">${a.nome}</small></td>
                 <td>${a.cpf}</td>
-                <td>${a.email || '-'}</td>
+                <td>${a.telefone || a.email || '-'}</td>
                 <td><span class="badge badge-${a.perfil === 'diretoria' ? 'warning' : 'info'}">${a.perfil.toUpperCase()}</span></td>
                 <td><span class="badge badge-${a.status === 'ativo' ? 'success' : 'danger'}">${a.status.toUpperCase()}</span></td>
                 <td>
@@ -326,27 +327,87 @@ function renderMensagensDiretoria() {
 }
 
 // PRÉ-CADASTRO E ENVIOS
+function toggleSemPai(checkbox) {
+    const inputPai = document.getElementById('regNomePai');
+    if (checkbox.checked) {
+        inputPai.value = 'Sem registro paterno / Não declarado';
+        inputPai.disabled = true;
+    } else {
+        inputPai.value = '';
+        inputPai.disabled = false;
+    }
+}
+
 function submitPreCadastro(e) {
     e.preventDefault();
-    const nome = document.getElementById('regNome').value;
-    const cpf = document.getElementById('regCPF').value;
-    const email = document.getElementById('regEmail').value;
-    const telefone = document.getElementById('regTelefone').value;
+    
+    // Captura da Data e Hora Exata do Cadastro gerada pelo Sistema
+    const agora = new Date();
+    const dataHoraCadastro = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    if (list.find(a => a.cpf === cpf)) {
-        alert('Este CPF já possui cadastro no sistema.');
+    // Captura dos campos na ordem exigida
+    const nomeGuerra = document.getElementById('regNomeGuerra').value.trim();
+    const nomeCompleto = document.getElementById('regNomeCompleto').value.trim();
+    const dataNascimento = document.getElementById('regDataNascimento').value;
+    const cpf = document.getElementById('regCPF').value.trim();
+    const nomeMae = document.getElementById('regNomeMae').value.trim();
+    const semPai = document.getElementById('regSemPai').checked;
+    const nomePai = semPai ? 'Sem registro paterno / Não declarado' : (document.getElementById('regNomePai').value.trim() || 'Não declarado');
+    const sexo = document.getElementById('regSexo').value;
+    const telefone = document.getElementById('regTelefone').value.trim();
+    const logradouro = document.getElementById('regLogradouro').value.trim();
+    const numero = document.getElementById('regNumero').value.trim();
+    const complemento = document.getElementById('regComplemento').value.trim();
+    const cep = document.getElementById('regCEP').value.trim();
+    const bairro = document.getElementById('regBairro').value.trim();
+    const cidade = document.getElementById('regCidade').value.trim();
+    const termoAceito = document.getElementById('regTermoAceito').checked;
+
+    if (!termoAceito) {
+        alert('Você precisa aceitar os Termos de Responsabilidade para enviar a solicitação.');
         return;
     }
 
-    const novo = { id: Date.now().toString(), cpf, nome, email, telefone, perfil: 'associado', status: 'pendente', data_cadastro: new Date().toISOString().split('T')[0] };
-    list.push(novo);
-    localStorage.setItem('acbcsj_associados', JSON.stringify(list));
-    dbService.saveAssociado(novo);
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    if (list.find(a => a.cpf === cpf)) {
+        alert('Este CPF já possui uma solicitação ou cadastro ativo no sistema da ACBCSJ.');
+        return;
+    }
 
-    alert('Solicitação enviada com sucesso! A Diretoria da ACBCSJ analisará seu pedido em breve.');
+    const novoAssociado = {
+        id: Date.now().toString(),
+        cpf: cpf,
+        nome_guerra: nomeGuerra,
+        nome: nomeCompleto,
+        data_nascimento: dataNascimento,
+        nome_mae: nomeMae,
+        nome_pai: nomePai,
+        sexo: sexo,
+        telefone: telefone,
+        logradouro: logradouro,
+        numero: numero,
+        complemento: complemento,
+        cep: cep,
+        bairro: bairro,
+        cidade: cidade,
+        perfil: 'associado',
+        status: 'pendente',
+        data_cadastro: dataHoraCadastro
+    };
+
+    list.push(novoAssociado);
+    localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+    dbService.saveAssociado(novoAssociado);
+
+    alert(`Solicitação de cadastro de ${nomeGuerra} (${nomeCompleto}) enviada com sucesso em ${dataHoraCadastro}!\n\nA Diretoria da ACBCSJ analisará seus dados em breve.`);
+    e.target.reset();
+    if (document.getElementById('regSemPai')) {
+        document.getElementById('regSemPai').checked = false;
+        document.getElementById('regNomePai').disabled = false;
+    }
     closeModal('modalPreCadastro');
 }
 
 function openModal(id) { document.getElementById(id).classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+

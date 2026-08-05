@@ -265,29 +265,130 @@
 
     <!-- MODAL DE PRÉ-CADASTRO -->
     <div id="modalPreCadastro" class="modal-backdrop">
-        <div class="modal-content">
+        <div class="modal-content modal-content-lg">
             <div class="modal-header">
-                <h3 class="card-title">Solicitar Cadastro na ACBCSJ</h3>
+                <div>
+                    <h3 class="card-title">Solicitar Cadastro na ACBCSJ</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Preencha seus dados para avaliação da Diretoria. Os itens marcados com <span class="req-star">*</span> são obrigatórios.</p>
+                </div>
                 <button class="modal-close" onclick="closeModal('modalPreCadastro')">&times;</button>
             </div>
+            
             <form onsubmit="submitPreCadastro(event)">
-                <div class="form-group">
-                    <label>Nome Completo</label>
-                    <input type="text" id="regNome" class="form-control" placeholder="Digite seu nome" required>
+                <div class="form-grid">
+                    <!-- 1. Nome de Guerra* -->
+                    <div class="form-group">
+                        <label>Nome de Guerra <span class="req-star">*</span></label>
+                        <input type="text" id="regNomeGuerra" class="form-control" placeholder="Ex: Sd. Silva / GBC Santos" required>
+                    </div>
+
+                    <!-- 2. Nome Completo* -->
+                    <div class="form-group">
+                        <label>Nome Completo <span class="req-star">*</span></label>
+                        <input type="text" id="regNomeCompleto" class="form-control" placeholder="Seu nome completo" required>
+                    </div>
+
+                    <!-- 3. Data Nascimento* -->
+                    <div class="form-group">
+                        <label>Data de Nascimento <span class="req-star">*</span></label>
+                        <input type="date" id="regDataNascimento" class="form-control" required>
+                    </div>
+
+                    <!-- 4. CPF* -->
+                    <div class="form-group">
+                        <label>CPF <span class="req-star">*</span></label>
+                        <input type="text" id="regCPF" class="form-control cpf-mask" placeholder="000.000.000-00" required>
+                    </div>
+
+                    <!-- 5. Nome da Mãe* -->
+                    <div class="form-group form-group-full">
+                        <label>Nome da Mãe <span class="req-star">*</span></label>
+                        <input type="text" id="regNomeMae" class="form-control" placeholder="Nome completo da mãe" required>
+                    </div>
+
+                    <!-- 6. Nome do Pai (com opção de sem pai) -->
+                    <div class="form-group form-group-full">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                            <label style="margin-bottom:0;">Nome do Pai</label>
+                            <label style="font-size:12px; font-weight:normal; cursor:pointer; color:var(--text-muted);">
+                                <input type="checkbox" id="regSemPai" onchange="toggleSemPai(this)"> Sem pai registrado / Não declarado
+                            </label>
+                        </div>
+                        <input type="text" id="regNomePai" class="form-control" placeholder="Nome completo do pai (opcional)">
+                    </div>
+
+                    <!-- 7. Sexo* -->
+                    <div class="form-group">
+                        <label>Sexo <span class="req-star">*</span></label>
+                        <select id="regSexo" class="form-control" required>
+                            <option value="">Selecione...</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Feminino">Feminino</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+
+                    <!-- 8. Telefone* -->
+                    <div class="form-group">
+                        <label>Telefone / WhatsApp <span class="req-star">*</span></label>
+                        <input type="text" id="regTelefone" class="form-control" placeholder="(48) 99999-9999" required>
+                    </div>
+
+                    <!-- 9. Logradouro* -->
+                    <div class="form-group form-group-full">
+                        <label>Logradouro (Rua, Avenida...) <span class="req-star">*</span></label>
+                        <input type="text" id="regLogradouro" class="form-control" placeholder="Ex: Rua Luiz Fagundes" required>
+                    </div>
+
+                    <!-- 10. Número* -->
+                    <div class="form-group">
+                        <label>Número <span class="req-star">*</span></label>
+                        <input type="text" id="regNumero" class="form-control" placeholder="Ex: 123" required>
+                    </div>
+
+                    <!-- 11. Complemento -->
+                    <div class="form-group">
+                        <label>Complemento</label>
+                        <input type="text" id="regComplemento" class="form-control" placeholder="Ex: Apto 302 / Bloco B">
+                    </div>
+
+                    <!-- 12. CEP -->
+                    <div class="form-group">
+                        <label>CEP</label>
+                        <input type="text" id="regCEP" class="form-control" placeholder="88100-000">
+                    </div>
+
+                    <!-- 13. Bairro* -->
+                    <div class="form-group">
+                        <label>Bairro <span class="req-star">*</span></label>
+                        <input type="text" id="regBairro" class="form-control" placeholder="Ex: Praia Comprida" required>
+                    </div>
+
+                    <!-- 14. Cidade* -->
+                    <div class="form-group form-group-full">
+                        <label>Cidade <span class="req-star">*</span></label>
+                        <input type="text" id="regCidade" class="form-control" placeholder="Ex: São José / Florianópolis" required>
+                    </div>
+
+                    <!-- Termo de Responsabilidade -->
+                    <div class="form-group form-group-full" style="margin-top: 10px;">
+                        <label>Termo de Responsabilidade <span class="req-star">*</span></label>
+                        <div class="termo-box">
+                            <p><b>DECLARAÇÃO E TERMO DE RESPONSABILIDADE — ACBCSJ</b></p>
+                            <p style="margin-top: 6px;">Ao enviar esta solicitação, declaro que as informações prestadas são verdadeiras e exatas. Comprometo-me a respeitar o Estatuto Social, os regulamentos internos e os valores da Associação Corpo de Bombeiros Comunitários de São José (ACBCSJ).</p>
+                            <p style="margin-top: 4px; font-style: italic; color: var(--accent-gold);">[Texto complementar do termo de responsabilidade a ser acrescentado futuramente pela diretoria].</p>
+                        </div>
+                        <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="regTermoAceito" required>
+                            Li e aceito os termos de responsabilidade e regras da ACBCSJ <span class="req-star">*</span>
+                        </label>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>CPF</label>
-                    <input type="text" id="regCPF" class="form-control cpf-mask" placeholder="000.000.000-00" required>
+
+                <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalPreCadastro')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width: auto;">Enviar Solicitação para a Diretoria</button>
                 </div>
-                <div class="form-group">
-                    <label>E-mail</label>
-                    <input type="email" id="regEmail" class="form-control" placeholder="seuemail@exemplo.com">
-                </div>
-                <div class="form-group">
-                    <label>Telefone / WhatsApp</label>
-                    <input type="text" id="regTelefone" class="form-control" placeholder="(48) 99999-9999">
-                </div>
-                <button type="submit" class="btn btn-primary">Enviar Solicitação para a Diretoria</button>
             </form>
         </div>
     </div>
