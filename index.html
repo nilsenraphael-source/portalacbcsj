@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ACBCSJ - Associa��o Corpo de Bombeiros Comunit�rios de S�o Jos�</title>
+    <title>ACBCSJ - AssociaÃ§Ã£o Corpo de Bombeiros ComunitÃ¡rios de SÃ£o JosÃ©</title>
     
     <!-- Google Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- Chart.js para Balancetes e Gr�ficos -->
+    <!-- Chart.js para Balancetes e GrÃ¡ficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Supabase JS Client SDK -->
@@ -21,42 +21,36 @@
 </head>
 <body>
 
-    <!-- 1. TELA DE AUTENTICA��O E LOGIN (INICIAL) -->
-    <div id="authScreen" class="auth-wrapper">
-        <div class="auth-card">
-            <div class="brand-header">
-                <img src="logo.png" alt="Logo ACBCSJ" class="brand-logo-img">
-                <span class="brand-badge" style="display:block;">Portal do Membro & Diretoria</span>
-                <h1 class="brand-title">ACBCSJ</h1>
-                <p class="brand-subtitle">Associa��o Corpo de Bombeiros Comunit�rios de S�o Jos�</p>
+    <!-- 1. TELA DE AUTENTICAÃ‡ÃƒO / LOGIN -->
+    <div id="authScreen" class="auth-wrapper" style="display: flex;">
+        <div class="auth-box card glass">
+            <div class="auth-header">
+                <img src="logo.png" alt="Logo ACBCSJ" class="auth-logo">
+                <h2>Portal ACBCSJ</h2>
+                <p>AssociaÃ§Ã£o Corpo de Bombeiros ComunitÃ¡rios de SÃ£o JosÃ©</p>
             </div>
 
             <form onsubmit="event.preventDefault(); loginWithCPF(document.getElementById('loginCPF').value, document.getElementById('loginSenha').value);">
                 <div class="form-group">
-                    <label for="loginCPF">Seu CPF Registrado</label>
+                    <label>CPF do Associado</label>
                     <input type="text" id="loginCPF" class="form-control cpf-mask" placeholder="000.000.000-00" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="loginSenha">Sua Senha de Acesso</label>
-                    <input type="password" id="loginSenha" class="form-control" placeholder="........" required>
+                    <label>Senha de Acesso</label>
+                    <input type="password" id="loginSenha" class="form-control" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
-                    Entrar no Portal ACBCSJ
-                </button>
+                <button type="submit" class="btn btn-primary btn-block">Acessar Sistema</button>
             </form>
 
-            <div style="margin-top: 16px; text-align: center;">
-                <button class="btn btn-outline btn-sm" onclick="openModal('modalPreCadastro')">
-                    N�o tem acesso? Solicitar Pr�-Cadastro
+            <div class="auth-footer" style="margin-top: 20px; text-align: center;">
+                <p style="font-size: 13px; color: var(--text-muted);">NÃ£o possui cadastro na ACBCSJ?</p>
+                <button class="btn btn-outline btn-sm" style="margin-top: 6px; width: 100%;" onclick="openModal('modalPreCadastro')">
+                    ðŸ“‹ Solicitar PrÃ©-Cadastro de Associado
                 </button>
-            </div>
 
-            <!-- DICA DE TESTE R�PIDO PARA O CLIENTE -->
-            <div class="demo-shortcut-box">
-                <p> <b>Teste R�pido para Avalia��o:</b></p>
-                <div class="demo-buttons">
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border-color); display: flex; gap: 8px;">
                     <button class="btn btn-gold btn-sm" style="flex:1;" onclick="loginWithCPF('000.000.000-00', '123', 'diretoria')">
                         Entrar como Diretoria
                     </button>
@@ -70,19 +64,19 @@
 
     <!-- 2. DASHBOARD / PORTAL PRINCIPAL (LOGADO) -->
     <div id="appDashboard" style="display: none; min-height: 100vh; flex-direction: column;">
-        <!-- CABE�ALHO SUPERIOR -->
+        <!-- CABEÃ‡ALHO SUPERIOR -->
         <header class="app-header">
             <div class="app-brand">
                 <img src="logo.png" alt="Logo ACBCSJ" class="header-logo-img">
                 <div class="app-title-text">
                     <h1>ACBCSJ</h1>
-                    <span>Portal de Gest�o & Transpar�ncia</span>
+                    <span>Portal de GestÃ£o & TransparÃªncia</span>
                 </div>
             </div>
 
             <div class="user-profile-menu">
                 <div class="user-info">
-                    <div id="headerUserName" class="user-name">Usu�rio</div>
+                    <div id="headerUserName" class="user-name">UsuÃ¡rio</div>
                     <span id="headerUserRole" class="user-role-badge">PERFIL</span>
                 </div>
                 <button class="btn btn-outline btn-sm" onclick="logout()">Sair</button>
@@ -90,10 +84,10 @@
         </header>
 
         <div class="app-container">
-            <!-- NAVEGAÃ‡ÃƒO��O LATERAL -->
+            <!-- NAVEGAÃ‡ÃƒO LATERAL -->
             <nav id="sidebarNav" class="sidebar-nav"></nav>
 
-            <!-- CONTEÃšDO�DO PRINCIPAL (MUDANÃ‡A�A DE ABAS VIA JS) -->
+            <!-- CONTEÃšDO PRINCIPAL (MUDANÃ‡A DE ABAS VIA JS) -->
             <main class="main-content">
                 
                 <!-- ABA 1: PAINEL DA DIRETORIA -->
@@ -101,7 +95,7 @@
                     <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                         <div>
                             <h2 class="page-title">Painel de Controle - Diretoria ACBCSJ</h2>
-                            <p style="font-size: 13px; color: var(--text-muted);">Vis�o geral da associa��o, associados e caixa.</p>
+                            <p style="font-size: 13px; color: var(--text-muted);">VisÃ£o geral da associaÃ§Ã£o, associados e caixa.</p>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                             <label style="font-size: 13px; font-weight: 600; color: var(--accent-gold); white-space: nowrap;">ðŸ“… Filtrar por Ano:</label>
@@ -123,7 +117,7 @@
                             <div class="subtext" style="color: var(--status-success);">Membros regulares ativos</div>
                         </div>
                         <div class="metric-card">
-                            <div class="title">NOVAS ASSOCIA��ES (<span class="lblAnoSelecionado">2026</span>)</div>
+                            <div class="title">NOVAS ASSOCIAÃ‡Ã•ES (<span class="lblAnoSelecionado">2026</span>)</div>
                             <div id="metricNovosAno" class="value" style="color: #2ECC71;">0</div>
                             <div class="subtext" style="color: var(--text-muted);">Bombeiros associados no ano</div>
                         </div>
@@ -133,9 +127,9 @@
                             <div class="subtext" style="color: var(--text-muted);">Integrantes desligados no ano</div>
                         </div>
                         <div class="metric-card">
-                            <div class="title">SOLICITA��ES DE CADASTRO</div>
+                            <div class="title">SOLICITAÃ‡Ã•ES DE CADASTRO</div>
                             <div id="metricCadastrosPendentes" class="value" style="color: #FF6B6B;">0</div>
-                            <div class="subtext" style="color: var(--text-muted);">Aguardando sua aprova��o</div>
+                            <div class="subtext" style="color: var(--text-muted);">Aguardando sua aprovaÃ§Ã£o</div>
                         </div>
                         <div class="metric-card">
                             <div class="title">SALDO EM CAIXA</div>
@@ -146,7 +140,7 @@
 
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Solicita��es de Pr�-Cadastro Pendentes</h3>
+                            <h3 class="card-title">SolicitaÃ§Ãµes de PrÃ©-Cadastro Pendentes</h3>
                         </div>
                         <div class="table-responsive">
                             <table class="custom-table">
@@ -155,7 +149,7 @@
                                         <th>Nome Completo</th>
                                         <th>CPF</th>
                                         <th>Telefone</th>
-                                        <th>A��o da Diretoria</th>
+                                        <th>AÃ§Ã£o da Diretoria</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tablePendentesBody"></tbody>
@@ -164,7 +158,7 @@
                     </div>
                 </div>
 
-                <!-- ABA 2: GESTÃƒO�O DE ASSOCIADOS (DIRETORIA) -->
+                <!-- ABA 2: GESTÃƒO DE ASSOCIADOS (DIRETORIA) -->
                 <div id="tab-gestao-associados" class="tab-content" style="display: none;">
                     <div class="page-header">
                         <h2 class="page-title">Controle de Associados Ativos</h2>
@@ -178,10 +172,10 @@
                                     <tr>
                                         <th>Nome de Guerra / Completo</th>
                                         <th>CPF</th>
-                                        <th>Telefone / Contato</th>
-                                        <th>Perfil</th>
+                                        <th>Contato / E-mail</th>
+                                        <th>Perfil de Acesso</th>
                                         <th>Ficha Cadastral</th>
-                                        <th>A��es da Diretoria</th>
+                                        <th>Desligar</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tableTodosAssociadosBody"></tbody>
@@ -193,7 +187,10 @@
                 <!-- ABA DE ASSOCIADOS DESLIGADOS (DIRETORIA) -->
                 <div id="tab-associados-desligados" class="tab-content" style="display: none;">
                     <div class="page-header">
-                        <h2 class="page-title">Hist�rico de Associados Desligados</h2>
+                        <div>
+                            <h2 class="page-title">Associados Desligados</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">HistÃ³rico de integrantes desligados da ACBCSJ, motivos e termos anexados.</p>
+                        </div>
                     </div>
 
                     <div class="card">
@@ -201,11 +198,11 @@
                             <table class="custom-table">
                                 <thead>
                                     <tr>
-                                        <th>Nome de Guerra / Completo</th>
+                                        <th>Nome / Nome de Guerra</th>
                                         <th>CPF</th>
-                                        <th>Data/Hora do Desligamento</th>
-                                        <th>Motivo do Desligamento</th>
-                                        <th>Ficha / A��es</th>
+                                        <th>Data do Desligamento</th>
+                                        <th>Motivo / Termo de Desligamento</th>
+                                        <th>AÃ§Ãµes</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tableAssociadosDesligadosBody"></tbody>
@@ -214,12 +211,12 @@
                     </div>
                 </div>
 
-                <!-- ABA 3: GESTÃƒO�O FINANCEIRA (DIRETORIA) -->
+                <!-- ABA 3: GESTÃƒO FINANCEIRA (DIRETORIA) -->
                 <div id="tab-gestao-financeira" class="tab-content" style="display: none;">
                     <div class="page-header">
                         <div>
-                            <h2 class="page-title">Controle Financeiro, Entradas & Sa�das</h2>
-                            <p style="font-size: 13px; color: var(--text-muted);">Lan�amentos de receitas, despesas, fornecedores e balancetes da ACBCSJ.</p>
+                            <h2 class="page-title">Controle Financeiro, Entradas & SaÃ­das</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">LanÃ§amentos de receitas, despesas, fornecedores e balancetes da ACBCSJ.</p>
                         </div>
                     </div>
 
@@ -230,7 +227,7 @@
                             <span class="metric-value" id="finTotalReceitas" style="color: #2ECC71;">R$ 0,00</span>
                         </div>
                         <div class="metric-card">
-                            <span class="metric-title">Total de Despesas (Sa�das)</span>
+                            <span class="metric-title">Total de Despesas (SaÃ­das)</span>
                             <span class="metric-value" id="finTotalDespesas" style="color: #E74C3C;">R$ 0,00</span>
                         </div>
                         <div class="metric-card">
@@ -239,28 +236,29 @@
                         </div>
                     </div>
 
-                    <!-- EXTRATO DE LAN�AMENTOS -->
+                    <!-- TABELA DE EXTRATO DE LANÃ‡AMENTOS -->
                     <div class="card">
-                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3 class="card-title">Extrato Geral de Lan�amentos Financeiros</h3>
-                            <div style="display: flex; gap: 8px;">
-                                <select id="finFiltroTipo" class="form-control" style="width: 150px; padding: 4px 8px; font-size: 12px;" onchange="renderGestaoFinanceira()">
-                                    <option value="todos">Todos os Tipos</option>
-                                    <option value="receita">Apenas Receitas</option>
-                                    <option value="despesa">Apenas Despesas</option>
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <h3 class="card-title">Extrato de LanÃ§amentos Registrados</h3>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <select id="finFiltroTipo" class="form-control" style="width: 150px; font-size: 12px;" onchange="renderGestaoFinanceira()">
+                                    <option value="todos">Todos os LanÃ§amentos</option>
+                                    <option value="receita">Apenas Receitas (Entradas)</option>
+                                    <option value="despesa">Apenas Despesas (SaÃ­das)</option>
                                 </select>
                             </div>
                         </div>
+
                         <div class="table-responsive">
                             <table class="custom-table">
                                 <thead>
                                     <tr>
                                         <th>Data</th>
-                                        <th>Descri��o / Hist�rico</th>
+                                        <th>DescriÃ§Ã£o / HistÃ³rico</th>
                                         <th>Categoria</th>
                                         <th>Tipo</th>
                                         <th>Valor (R$)</th>
-                                        <th>A��es / Recibo</th>
+                                        <th>Comprovante</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tableFinanceiroBody"></tbody>
@@ -269,27 +267,25 @@
                     </div>
                 </div>
 
-                <!-- ABA 4: PAINEL DO ASSOCIADO -->
+                <!-- ABA 4: OVERVIEW DO ASSOCIADO -->
                 <div id="tab-overview-associado" class="tab-content" style="display: none;">
                     <div class="page-header">
-                        <div>
-                            <h2 class="page-title">Bem-vindo(a), <span id="associadoWelcomeName">Associado</span></h2>
-                            <p style="font-size: 13px; color: var(--text-muted);">AÃ§Ã£ompanhe suas mensalidades e contribui��es lan�adas na ACBCSJ.</p>
-                        </div>
+                        <h2 class="page-title">Bem-vindo, <span id="associadoWelcomeName">Associado</span>!</h2>
+                        <p style="font-size: 13px; color: var(--text-muted);">Acompanhe suas contribuiÃ§Ãµes e novidades da associaÃ§Ã£o.</p>
                     </div>
 
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title"> Minhas Mensalidades & Contribui��es (Ano 2026)</h3>
-                            <p style="font-size: 12px; color: var(--text-muted);">Hist�rico dos seus pagamentos e lan�amentos confirmados m�s a m�s.</p>
+                            <h3 class="card-title">Minha SituaÃ§Ã£o Financeira / Mensalidades</h3>
                         </div>
                         <div class="table-responsive">
-                            <table class="custom-table" style="font-size: 12px;">
+                            <table class="custom-table">
                                 <thead>
                                     <tr>
-                                        <th>M�s de Refer�ncia</th>
-                                        <th>Valor Lan�ado (R$)</th>
+                                        <th>MÃªs de ReferÃªncia</th>
+                                        <th>Valor</th>
                                         <th>Status do Pagamento</th>
+                                        <th>Data Pagamento</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tableMinhasMensalidadesBody"></tbody>
@@ -298,207 +294,176 @@
                     </div>
                 </div>
 
-                <!-- ABA 5: BALANCETES E CONTAS (TRANSPAR�NCIA ASSOCIADO) -->
+                <!-- ABA 5: BALANCETES E CONTAS (ASSOCIADO) -->
                 <div id="tab-balancetes-associado" class="tab-content" style="display: none;">
                     <div class="page-header">
-                        <h2 class="page-title">Transpar�ncia & Balancetes da Associa��o</h2>
-                        <p style="font-size: 13px; color: var(--text-muted);">Presta��o de contas mensal entre receitas arrecadadas e despesas operacionais da ACBCSJ.</p>
+                        <h2 class="page-title">PrestaÃ§Ã£o de Contas & Balancetes</h2>
+                        <p style="font-size: 13px; color: var(--text-muted);">TransparÃªncia total sobre a utilizaÃ§Ã£o dos recursos da ACBCSJ.</p>
                     </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Balan�o Geral de Entradas vs Sa�das</h3>
-                        </div>
-                        <div style="max-width: 380px; margin: 0 auto; padding: 20px 0;">
-                            <canvas id="chartBalancete"></canvas>
-                        </div>
+
+                    <div class="card" style="height: 350px;">
+                        <canvas id="chartBalancete"></canvas>
                     </div>
                 </div>
 
-                <!-- ABA 6: DOCUMENTOS E CONVITES -->
+                <!-- ABA 6: DOCUMENTOS & ATAS (TODOS OS PERFIS) -->
                 <div id="tab-documentos-associado" class="tab-content" style="display: none;">
-                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h2 class="page-title">Documentos, Atas & Convites</h2>
-                            <p style="font-size: 13px; color: var(--text-muted);">Reposit�rio oficial de documentos, atas e formul�rios da ACBCSJ.</p>
+                            <p style="font-size: 13px; color: var(--text-muted);">Acesse estatutos, regimentos, atas e formulÃ¡rios da ACBCSJ.</p>
                         </div>
                         <div id="headerDocsAction"></div>
                     </div>
-                    <div class="card" id="listDocsAssociado"></div>
+
+                    <div id="listDocsAssociado" class="documents-grid"></div>
                 </div>
 
-                <!-- ABA 7: ENVIAR MENSAGEM / IDEIAS -->
+                <!-- ABA 7: MENSAGENS E CONTATO -->
                 <div id="tab-enviar-mensagem" class="tab-content" style="display: none;">
                     <div class="page-header">
-                        <h2 class="page-title">Canal Direto com a Diretoria</h2>
+                        <h2 class="page-title">Fale com a Diretoria</h2>
+                        <p style="font-size: 13px; color: var(--text-muted);">Envie dÃºvidas, sugestÃµes ou solicitaÃ§Ãµes diretamente aos diretores.</p>
                     </div>
+
                     <div class="card" style="max-width: 600px;">
-                        <form onsubmit="event.preventDefault(); alert('Sua ideia/mensagem foi enviada para a Diretoria com sucesso!');">
+                        <form onsubmit="enviarMensagemDiretoria(event)">
                             <div class="form-group">
-                                <label>Assunto</label>
-                                <input type="text" class="form-control" placeholder="Ex: Sugest�o para novo projeto" required>
+                                <label>Assunto <span class="req-star">*</span></label>
+                                <input type="text" id="msgAssunto" class="form-control" placeholder="Ex: DÃºvida sobre uniforme / Carteirinha" required>
                             </div>
                             <div class="form-group">
-                                <label>Sua Mensagem ou Ideia</label>
-                                <textarea class="form-control" rows="5" placeholder="Escreva aqui detalhadamente..." required></textarea>
+                                <label>Mensagem <span class="req-star">*</span></label>
+                                <textarea id="msgConteudo" class="form-control" rows="5" placeholder="Escreva detalhadamente sua mensagem..." required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-gold">Enviar para a Diretoria</button>
+                            <button type="submit" class="btn btn-gold">Enviar Mensagem</button>
                         </form>
                     </div>
                 </div>
 
-                <!-- ABA 8: MENSAGENS RECEBIDAS (DIRETORIA) -->
+                <!-- ABA 8: CAIXA DE MENSAGENS DA DIRETORIA -->
                 <div id="tab-mensagens-diretoria" class="tab-content" style="display: none;">
                     <div class="page-header">
-                        <h2 class="page-title">Caixa de Mensagens & Ideias dos Associados</h2>
+                        <h2 class="page-title">Mensagens Recebidas dos Associados</h2>
                     </div>
-                    <div id="listMensagensDiretoria"></div>
+
+                    <div id="listMensagensDiretoria" class="messages-list"></div>
                 </div>
 
             </main>
         </div>
     </div>
 
-    <!-- MODAL DE PR�-CADASTRO -->
+    <!-- MODAIS DE DIÃLOGO DO SISTEMA -->
+
+    <!-- MODAL DE SOLICITAÃ‡ÃƒO DE PRÃ‰-CADASTRO (NOVO INTEGRANTE) -->
     <div id="modalPreCadastro" class="modal-backdrop">
         <div class="modal-content modal-content-lg">
             <div class="modal-header">
                 <div>
-                    <h3 class="card-title">Solicitar Cadastro na ACBCSJ</h3>
-                    <p style="font-size: 12px; color: var(--text-muted);">Preencha seus dados para avalia��o da Diretoria. Os itens marcados com <span class="req-star">*</span> s�o obrigat�rios.</p>
+                    <h3 class="card-title" style="color: var(--accent-gold);">Ficha de SolicitaÃ§Ã£o de PrÃ©-Cadastro</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Preencha todos os dados pessoais e profissionais para anÃ¡lise da Diretoria da ACBCSJ.</p>
                 </div>
                 <button class="modal-close" onclick="closeModal('modalPreCadastro')">&times;</button>
             </div>
-            
-            <form onsubmit="submitPreCadastro(event)">
-                <div class="form-grid">
-                    <!-- 1. Nome de Guerra* -->
+
+            <form onsubmit="salvarSolicitacaoPreCadastro(event)">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                     <div class="form-group">
                         <label>Nome de Guerra <span class="req-star">*</span></label>
-                        <input type="text" id="regNomeGuerra" class="form-control" placeholder="Ex: Sd. Silva / GBC Santos" required>
+                        <input type="text" id="regNomeGuerra" class="form-control" placeholder="Ex: Sd. Silva / Sd. Antunes" required>
                     </div>
 
-                    <!-- 2. Nome Completo* -->
                     <div class="form-group">
                         <label>Nome Completo <span class="req-star">*</span></label>
-                        <input type="text" id="regNomeCompleto" class="form-control" placeholder="Seu nome completo" required>
+                        <input type="text" id="regNomeCompleto" class="form-control" placeholder="Nome sem abreviaÃ§Ãµes" required>
                     </div>
 
-                    <!-- 3. Data Nascimento* -->
                     <div class="form-group">
                         <label>Data de Nascimento <span class="req-star">*</span></label>
                         <input type="date" id="regDataNascimento" class="form-control" required>
                     </div>
 
-                    <!-- 4. CPF* -->
                     <div class="form-group">
                         <label>CPF <span class="req-star">*</span></label>
                         <input type="text" id="regCPF" class="form-control cpf-mask" placeholder="000.000.000-00" required>
                     </div>
 
-                    <!-- 5. Nome da M�e* -->
-                    <div class="form-group form-group-full">
-                        <label>Nome da M�e <span class="req-star">*</span></label>
-                        <input type="text" id="regNomeMae" class="form-control" placeholder="Nome completo da m�e" required>
+                    <div class="form-group">
+                        <label>Nome da MÃ£e <span class="req-star">*</span></label>
+                        <input type="text" id="regNomeMae" class="form-control" required>
                     </div>
 
-                    <!-- 6. Nome do Pai (com op��o de sem pai) -->
-                    <div class="form-group form-group-full">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                            <label style="margin-bottom:0;">Nome do Pai</label>
-                            <label style="font-size:12px; font-weight:normal; cursor:pointer; color:var(--text-muted);">
-                                <input type="checkbox" id="regSemPai" onchange="toggleSemPai(this)"> Sem pai registrado / N�o declarado
-                            </label>
-                        </div>
-                        <input type="text" id="regNomePai" class="form-control" placeholder="Nome completo do pai (opcional)">
+                    <div class="form-group">
+                        <label>Nome do Pai</label>
+                        <input type="text" id="regNomePai" class="form-control">
+                        <label style="font-size: 11px; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                            <input type="checkbox" id="regSemPai" onchange="document.getElementById('regNomePai').disabled = this.checked;">
+                            Pai nÃ£o declarado na certidÃ£o
+                        </label>
                     </div>
 
-                    <!-- 7. Sexo* -->
                     <div class="form-group">
                         <label>Sexo <span class="req-star">*</span></label>
                         <select id="regSexo" class="form-control" required>
-                            <option value="">Selecione...</option>
                             <option value="Masculino">Masculino</option>
                             <option value="Feminino">Feminino</option>
-                            <option value="Outro">Outro</option>
                         </select>
                     </div>
 
-                    <!-- 8. Telefone* -->
-                    <div class="form-group form-group-full">
+                    <div class="form-group">
                         <label>Telefone / WhatsApp <span class="req-star">*</span></label>
                         <input type="text" id="regTelefone" class="form-control" placeholder="(48) 99999-9999" required>
                     </div>
 
-                    <!-- 9. OBM de Lota��o* -->
                     <div class="form-group">
-                        <label>OBM de Lota��o <span class="req-star">*</span></label>
-                        <select id="regOBM" class="form-control" required>
-                            <option value="">Selecione a OBM...</option>
-                            <option value="S�o Jos�">S�o Jos�</option>
-                            <option value="Palho�a">Palho�a</option>
-                            <option value="Pinheira">Pinheira</option>
-                            <option value="Santo Amaro">Santo Amaro</option>
-                            <option value="Bigua�u">Bigua�u</option>
-                            <option value="G. Celso Ramos">G. Celso Ramos</option>
-                            <option value="Rancho Queimado">Rancho Queimado</option>
-                        </select>
+                        <label>OBM / Unidade <span class="req-star">*</span></label>
+                        <input type="text" id="regOBM" class="form-control" value="SÃ£o JosÃ©" required>
                     </div>
 
-                    <!-- 10. Profiss�o* -->
                     <div class="form-group">
-                        <label>Profiss�o <span class="req-star">*</span></label>
-                        <input type="text" id="regProfissao" class="form-control" placeholder="Ex: Bombeiro Comunit�rio, Contador..." required>
+                        <label>ProfissÃ£o / FunÃ§Ã£o <span class="req-star">*</span></label>
+                        <input type="text" id="regProfissao" class="form-control" value="Bombeiro ComunitÃ¡rio" required>
                     </div>
+                </div>
 
-                    <!-- Informativo sobre Senha de Acesso -->
-                    <div class="form-group form-group-full" style="background-color: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); padding: 10px 14px; border-radius: 6px;">
-                        <span style="font-size: 13px; color: var(--accent-gold); font-weight: 600; display: block; margin-bottom: 2px;"> Senha de Acesso Autom�tica:</span>
-                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Sua senha inicial de acesso ser� automaticamente os <b>4 primeiros d�gitos do seu CPF</b>. O acesso ao portal ser� liberado assim que a Diretoria aprovar o seu pr�-cadastro.</p>
-                    </div>
+                <h4 style="color: var(--accent-gold); margin-top: 15px; margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">EndereÃ§o Residencial</h4>
 
-                    <!-- 9. Logradouro* -->
-                    <div class="form-group form-group-full">
-                        <label>Logradouro (Rua, Avenida...) <span class="req-star">*</span></label>
-                        <input type="text" id="regLogradouro" class="form-control" placeholder="Ex: Rua Luiz Fagundes" required>
-                    </div>
-
-                    <!-- 10. N�mero* -->
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 14px;">
                     <div class="form-group">
-                        <label>N�mero <span class="req-star">*</span></label>
-                        <input type="text" id="regNumero" class="form-control" placeholder="Ex: 123" required>
+                        <label>Logradouro (Rua, Av.) <span class="req-star">*</span></label>
+                        <input type="text" id="regLogradouro" class="form-control" required>
                     </div>
+                    <div class="form-group">
+                        <label>NÃºmero</label>
+                        <input type="text" id="regNumero" class="form-control" placeholder="S/N">
+                    </div>
+                </div>
 
-                    <!-- 11. Complemento -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px;">
                     <div class="form-group">
                         <label>Complemento</label>
-                        <input type="text" id="regComplemento" class="form-control" placeholder="Ex: Apto 302 / Bloco B">
+                        <input type="text" id="regComplemento" class="form-control" placeholder="Apto / Bloco">
                     </div>
-
-                    <!-- 12. CEP -->
                     <div class="form-group">
-                        <label>CEP</label>
-                        <input type="text" id="regCEP" class="form-control" placeholder="88100-000">
+                        <label>CEP <span class="req-star">*</span></label>
+                        <input type="text" id="regCEP" class="form-control" placeholder="88000-000" required>
                     </div>
-
-                    <!-- 13. Bairro* -->
                     <div class="form-group">
                         <label>Bairro <span class="req-star">*</span></label>
-                        <input type="text" id="regBairro" class="form-control" placeholder="Ex: Praia Comprida" required>
+                        <input type="text" id="regBairro" class="form-control" required>
                     </div>
-
-                    <!-- 14. Cidade* -->
-                    <div class="form-group form-group-full">
+                    <div class="form-group">
                         <label>Cidade <span class="req-star">*</span></label>
-                        <input type="text" id="regCidade" class="form-control" placeholder="Ex: S�o Jos� / Florian�polis" required>
+                        <input type="text" id="regCidade" class="form-control" value="SÃ£o JosÃ©" required>
                     </div>
+                </div>
 
-                    <!-- Termo de Responsabilidade -->
-                    <div class="form-group form-group-full" style="margin-top: 10px;">
-                        <label>Termo de Responsabilidade <span class="req-star">*</span></label>
-                        <div class="termo-box">
-                            <p><b>DECLARA��O E TERMO DE RESPONSABILIDADE - ACBCSJ</b></p>
-                            <p style="margin-top: 6px;">Ao enviar esta solicita��o, declaro que as informa��es prestadas s�o verdadeiras e exatas. Comprometo-me a respeitar o Estatuto Social, os regulamentos internos e os valores da Associa��o Corpo de Bombeiros Comunit�rios de S�o Jos� (ACBCSJ).</p>
-                            <p style="margin-top: 4px; font-style: italic; color: var(--accent-gold);">[Texto complementar do termo de responsabilidade a ser acrescentado futuramente pela diretoria].</p>
+                <div style="margin-top: 15px; padding: 12px; background: rgba(212, 175, 55, 0.05); border: 1px solid var(--accent-gold); border-radius: 8px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-weight: bold; color: var(--accent-gold);">Termo de Aceite e Compromisso EstatutÃ¡rio</label>
+                        <div style="max-height: 100px; overflow-y: auto; font-size: 11px; color: var(--text-muted); background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; margin-bottom: 8px;">
+                            <p>Ao enviar esta solicitaÃ§Ã£o, declaro que as informaÃ§Ãµes prestadas sÃ£o verdadeiras e exatas. Comprometo-me a respeitar o Estatuto Social, os regulamentos internos e os valores da AssociaÃ§Ã£o Corpo de Bombeiros ComunitÃ¡rios de SÃ£o JosÃ© (ACBCSJ).</p>
                         </div>
                         <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                             <input type="checkbox" id="regTermoAceito" required>
@@ -509,7 +474,7 @@
 
                 <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('modalPreCadastro')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="width: auto;">Enviar Solicita��o para a Diretoria</button>
+                    <button type="submit" class="btn btn-primary" style="width: auto;">Enviar SolicitaÃ§Ã£o para a Diretoria</button>
                 </div>
             </form>
         </div>
@@ -542,7 +507,7 @@
             <div class="modal-header">
                 <div>
                     <h3 class="card-title" style="color: #FF4D4D;">Desligar Associado</h3>
-                    <p style="font-size: 12px; color: var(--text-muted);">O cadastro ser� transferido para a p�gina de "Associados Desligados".</p>
+                    <p style="font-size: 12px; color: var(--text-muted);">O cadastro serÃ¡ transferido para a pÃ¡gina de "Associados Desligados".</p>
                 </div>
                 <button class="modal-close" onclick="closeModal('modalDesligarAssociado')">&times;</button>
             </div>
@@ -586,15 +551,15 @@
             <div class="modal-header">
                 <div>
                     <h3 class="card-title" style="color: var(--accent-gold);">Publicar Novo Documento / Ata</h3>
-                    <p style="font-size: 12px; color: var(--text-muted);">Adicione novos arquivos com categoria, vencimento e n�vel de permiss�o.</p>
+                    <p style="font-size: 12px; color: var(--text-muted);">Adicione novos arquivos com categoria, vencimento e nÃ­vel de permissÃ£o.</p>
                 </div>
                 <button class="modal-close" onclick="closeModal('modalNovoDocumento')">&times;</button>
             </div>
 
             <form onsubmit="salvarNovoDocumento(event)">
                 <div class="form-group">
-                    <label>T�tulo / Nome do Documento <span class="req-star">*</span></label>
-                    <input type="text" id="docTitulo" class="form-control" placeholder="Ex: Ata da Assembleia Geral de Elei��o" required>
+                    <label>TÃ­tulo / Nome do Documento <span class="req-star">*</span></label>
+                    <input type="text" id="docTitulo" class="form-control" placeholder="Ex: Ata da Assembleia Geral de EleiÃ§Ã£o" required>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
@@ -606,15 +571,15 @@
                             <option value="Documentos Oficiais">Documentos Oficiais</option>
                             <option value="Documentos Operacionais">Documentos Operacionais</option>
                             <option value="Documentos Administrativos">Documentos Administrativos</option>
-                            <option value="Jur�dico">Jur�dico</option>
-                            <option value="Formul�rios">Formul�rios</option>
+                            <option value="JurÃ­dico">JurÃ­dico</option>
+                            <option value="FormulÃ¡rios">FormulÃ¡rios</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label>Visibilidade / Acesso <span class="req-star">*</span></label>
                         <select id="docVisibilidade" class="form-control" required>
-                            <option value="todos" selected>Todos os Integrantes (P�blico)</option>
+                            <option value="todos" selected>Todos os Integrantes (PÃºblico)</option>
                             <option value="diretoria">Apenas Diretoria (Restrito)</option>
                         </select>
                     </div>
@@ -623,7 +588,7 @@
                 <div class="form-group">
                     <label>Data de Vencimento do Documento <small style="color: var(--text-muted); font-weight: normal;">(Opcional)</small></label>
                     <input type="date" id="docDataVencimento" class="form-control">
-                    <small style="color: var(--text-muted); display: block; margin-top: 4px;">Deixe em branco se o documento n�o possui prazo de validade/vencimento.</small>
+                    <small style="color: var(--text-muted); display: block; margin-top: 4px;">Deixe em branco se o documento nÃ£o possui prazo de validade/vencimento.</small>
                 </div>
 
                 <div class="form-group">
@@ -654,7 +619,7 @@
                 <input type="hidden" id="editDocId">
 
                 <div class="form-group">
-                    <label>T�tulo / Nome do Documento <span class="req-star">*</span></label>
+                    <label>TÃ­tulo / Nome do Documento <span class="req-star">*</span></label>
                     <input type="text" id="editDocTitulo" class="form-control" required>
                 </div>
 
@@ -666,15 +631,15 @@
                             <option value="Documentos Oficiais">Documentos Oficiais</option>
                             <option value="Documentos Operacionais">Documentos Operacionais</option>
                             <option value="Documentos Administrativos">Documentos Administrativos</option>
-                            <option value="Jur�dico">Jur�dico</option>
-                            <option value="Formul�rios">Formul�rios</option>
+                            <option value="JurÃ­dico">JurÃ­dico</option>
+                            <option value="FormulÃ¡rios">FormulÃ¡rios</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label>Visibilidade / Acesso <span class="req-star">*</span></label>
                         <select id="editDocVisibilidade" class="form-control" required>
-                            <option value="todos">Todos os Integrantes (P�blico)</option>
+                            <option value="todos">Todos os Integrantes (PÃºblico)</option>
                             <option value="diretoria">Apenas Diretoria (Restrito)</option>
                         </select>
                     </div>
@@ -692,7 +657,7 @@
 
                 <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarDocumento')">Cancelar</button>
-                    <button type="submit" class="btn btn-gold">Salvar Altera��es</button>
+                    <button type="submit" class="btn btn-gold">Salvar AlteraÃ§Ãµes</button>
                 </div>
             </form>
         </div>
