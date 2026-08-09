@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS public.associados (
     nome_pai VARCHAR(150),
     sexo VARCHAR(20) NOT NULL,
     telefone VARCHAR(20) NOT NULL,
+    obm VARCHAR(100) NOT NULL,
+    profissao VARCHAR(100) NOT NULL,
     logradouro VARCHAR(200) NOT NULL,
     numero VARCHAR(20) NOT NULL,
     complemento VARCHAR(100),

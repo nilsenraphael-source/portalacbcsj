@@ -336,6 +336,8 @@ function verFichaAssociado(cpf) {
         <div><b>Data de Nascimento:</b> ${a.data_nascimento || '-'}</div>
         <div><b>Sexo:</b> ${a.sexo || '-'}</div>
         <div><b>Telefone / WhatsApp:</b> ${a.telefone || '-'}</div>
+        <div><b>OBM de Lotação:</b> <b style="color: var(--accent-gold);">${a.obm || '-'}</b></div>
+        <div><b>Profissão:</b> ${a.profissao || '-'}</div>
         <div><b>Perfil no Portal:</b> <b style="color: var(--accent-gold);">${(a.perfil || 'associado').toUpperCase()}</b></div>
         
         <div style="grid-column: 1 / -1; margin-top:8px; border-top:1px dashed var(--border-color); padding-top:8px;"><b>Filiação:</b></div>
@@ -619,6 +621,8 @@ function submitPreCadastro(e) {
     const nomePai = semPai ? 'Sem registro paterno / Não declarado' : (document.getElementById('regNomePai').value.trim() || 'Não declarado');
     const sexo = document.getElementById('regSexo').value;
     const telefone = document.getElementById('regTelefone').value.trim();
+    const obm = document.getElementById('regOBM').value;
+    const profissao = document.getElementById('regProfissao').value.trim();
     const senha = document.getElementById('regSenha').value;
     const confirmarSenha = document.getElementById('regConfirmarSenha').value;
     const logradouro = document.getElementById('regLogradouro').value.trim();
@@ -628,6 +632,16 @@ function submitPreCadastro(e) {
     const bairro = document.getElementById('regBairro').value.trim();
     const cidade = document.getElementById('regCidade').value.trim();
     const termoAceito = document.getElementById('regTermoAceito').checked;
+
+    if (!obm) {
+        alert('Por favor, selecione a OBM de Lotação.');
+        return;
+    }
+
+    if (!profissao) {
+        alert('Por favor, preencha o campo Profissão.');
+        return;
+    }
 
     if (senha !== confirmarSenha) {
         alert('As senhas digitadas não coincidem. Por favor, digite a mesma senha nos dois campos.');
@@ -656,6 +670,8 @@ function submitPreCadastro(e) {
         nome_pai: nomePai,
         sexo: sexo,
         telefone: telefone,
+        obm: obm,
+        profissao: profissao,
         logradouro: logradouro,
         numero: numero,
         complemento: complemento,
