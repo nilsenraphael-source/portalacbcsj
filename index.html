@@ -98,18 +98,39 @@
                 
                 <!-- ABA 1: PAINEL DA DIRETORIA -->
                 <div id="tab-overview-diretoria" class="tab-content" style="display: none;">
-                    <div class="page-header">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                         <div>
                             <h2 class="page-title">Painel de Controle — Diretoria ACBCSJ</h2>
                             <p style="font-size: 13px; color: var(--text-muted);">Visão geral da associação, associados e caixa.</p>
                         </div>
+                        <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <label style="font-size: 13px; font-weight: 600; color: var(--accent-gold); white-space: nowrap;">📅 Filtrar por Ano:</label>
+                            <select id="diretoriaFiltroAno" class="form-control" style="width: 130px; margin: 0; padding: 4px 8px; font-weight: bold;" onchange="renderDiretoriaOverview()">
+                                <option value="2026" selected>2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                                <option value="todos">Todos os Anos</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="metrics-grid">
+                    <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
                         <div class="metric-card">
-                            <div class="title">ASSOCIADOS ATIVOS</div>
+                            <div class="title">ASSOCIADOS ATIVOS TOTAL</div>
                             <div id="metricTotalAssociados" class="value" style="color: var(--accent-gold);">0</div>
-                            <div class="subtext" style="color: var(--status-success);">Membros regulares</div>
+                            <div class="subtext" style="color: var(--status-success);">Membros regulares ativos</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="title">NOVAS ASSOCIAÇÕES (<span class="lblAnoSelecionado">2026</span>)</div>
+                            <div id="metricNovosAno" class="value" style="color: #2ECC71;">0</div>
+                            <div class="subtext" style="color: var(--text-muted);">Bombeiros associados no ano</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="title">DESLIGAMENTOS (<span class="lblAnoSelecionado">2026</span>)</div>
+                            <div id="metricDesligadosAno" class="value" style="color: #E74C3C;">0</div>
+                            <div class="subtext" style="color: var(--text-muted);">Integrantes desligados no ano</div>
                         </div>
                         <div class="metric-card">
                             <div class="title">SOLICITAÇÕES DE CADASTRO</div>
@@ -249,8 +270,12 @@
 
                 <!-- ABA 6: DOCUMENTOS E CONVITES -->
                 <div id="tab-documentos-associado" class="tab-content" style="display: none;">
-                    <div class="page-header">
-                        <h2 class="page-title">Documentos, Atas & Convites</h2>
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">Documentos, Atas & Convites</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Repositório oficial de documentos, atas e formulários da ACBCSJ.</p>
+                        </div>
+                        <div id="headerDocsAction"></div>
                     </div>
                     <div class="card" id="listDocsAssociado"></div>
                 </div>
@@ -489,14 +514,65 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Carta de Desligamento (Arquivo / PDF / Imagem) <span class="req-star">*</span></label>
-                    <input type="file" id="desligarCartaArquivo" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" required>
-                    <small style="color: var(--text-muted); display: block; margin-top: 4px;">Anexe a carta ou termo assinado de desligamento do associado.</small>
+                    <label>Carta de Desligamento (Arquivo / PDF / Imagem) <small style="color: var(--text-muted); font-weight: normal;">(Opcional)</small></label>
+                    <input type="file" id="desligarCartaArquivo" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+                    <small style="color: var(--text-muted); display: block; margin-top: 4px;">Caso possua, anexe a carta ou termo assinado de desligamento (opcional).</small>
+                </div>
+
+    <!-- MODAL DE NOVO DOCUMENTO (DIRETORIA) -->
+    <div id="modalNovoDocumento" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: var(--accent-gold);">Publicar Novo Documento / Ata</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Adicione novos arquivos com categoria, vencimento e nível de permissão.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalNovoDocumento')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarNovoDocumento(event)">
+                <div class="form-group">
+                    <label>Título / Nome do Documento <span class="req-star">*</span></label>
+                    <input type="text" id="docTitulo" class="form-control" placeholder="Ex: Ata da Assembleia Geral de Eleição" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Categoria do Documento <span class="req-star">*</span></label>
+                        <select id="docCategoria" class="form-control" required>
+                            <option value="">Selecione uma Categoria...</option>
+                            <option value="Atas">Atas</option>
+                            <option value="Documentos Oficiais">Documentos Oficiais</option>
+                            <option value="Documentos Operacionais">Documentos Operacionais</option>
+                            <option value="Documentos Administrativos">Documentos Administrativos</option>
+                            <option value="Jurídico">Jurídico</option>
+                            <option value="Formulários">Formulários</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Visibilidade / Acesso <span class="req-star">*</span></label>
+                        <select id="docVisibilidade" class="form-control" required>
+                            <option value="todos" selected>Todos os Integrantes (Público)</option>
+                            <option value="diretoria">Apenas Diretoria (Restrito)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Data de Vencimento do Documento <small style="color: var(--text-muted); font-weight: normal;">(Opcional)</small></label>
+                    <input type="date" id="docDataVencimento" class="form-control">
+                    <small style="color: var(--text-muted); display: block; margin-top: 4px;">Deixe em branco se o documento não possui prazo de validade/vencimento.</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Arquivo do Documento (PDF, Imagem, Word, etc.) <span class="req-star">*</span></label>
+                    <input type="file" id="docArquivo" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx" required>
                 </div>
 
                 <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('modalDesligarAssociado')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" style="background-color: #E74C3C; border-color: #E74C3C;">Confirmar Desligamento</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalNovoDocumento')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">Publicar Documento</button>
                 </div>
             </form>
         </div>

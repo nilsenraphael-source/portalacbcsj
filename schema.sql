@@ -59,9 +59,12 @@ CREATE TABLE IF NOT EXISTS public.mensalidades (
 CREATE TABLE IF NOT EXISTS public.documentos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     titulo VARCHAR(200) NOT NULL,
-    categoria VARCHAR(50) NOT NULL, -- 'ata', 'balancete', 'estatuto', 'convite', 'outro'
+    categoria VARCHAR(100) NOT NULL, -- 'Atas', 'Documentos Oficiais', 'Documentos Operacionais', 'Documentos Administrativos', 'Jurídico', 'Formulários'
+    visibilidade VARCHAR(20) DEFAULT 'todos', -- 'todos' ou 'diretoria'
+    data_vencimento DATE,
     descricao TEXT,
     arquivo_url TEXT,
+    arquivo_nome VARCHAR(255),
     data_publicacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -1,4 +1,4 @@
-// DADOS IMPORTADOS DA PLANILHA 'Cadastrosocios.xlsx' (Aba: Cadastro de SÃ³cios 2026)
+// DADOS IMPORTADOS DA PLANILHA 'Cadastrosocios.xlsx' (Aba: Cadastro de Sócios 2026)
 const ASSOCIADOS_EXCEL_IMPORT = [
     {
         "id":  "100",
@@ -12,8 +12,8 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)99814-2594",
         "email":  "amangelica14@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
-        "profissao":  "Bombeiro ComunitÃ¡rio",
+        "obm":  "São José",
+        "profissao":  "Bombeiro Comunitário",
         "logradouro":  "rua João Evangelista da Costa",
         "numero":  "",
         "complemento":  "",
@@ -36,7 +36,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)98435-4431",
         "email":  "douglas.antunes4012@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Flores da Cunha",
         "numero":  "",
@@ -60,7 +60,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8984941095E10",
         "email":  "GALDINOMUS@GMAIL.COM",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "VALDIR GUTHIA",
         "numero":  "12.0",
@@ -84,7 +84,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.8996970295E10",
         "email":  "andreiamachado2508@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Antônio Elias",
         "numero":  "22.0",
@@ -108,7 +108,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)99616-1172",
         "email":  "bentodani1989@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Av Governador Ivo Silveira",
         "numero":  "",
@@ -132,7 +132,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)98497-4657",
         "email":  "tiagobinhoti@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "rua Francisco Lutz de Almeida",
         "numero":  "",
@@ -156,7 +156,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "9.99620506E8",
         "email":  "Emersonboiko@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua das amiexas",
         "numero":  "126.0",
@@ -180,7 +180,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.8991264292E10",
         "email":  "Camila.coelhosoares@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Walmor Beppler",
         "numero":  "S/N",
@@ -204,7 +204,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.898485629E10",
         "email":  "ricardo.pc15@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Santo André",
         "numero":  "518.0",
@@ -228,7 +228,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48) 984269481",
         "email":  "alexsandrob221@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Bela Vista",
         "numero":  "",
@@ -252,7 +252,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.898821786E10",
         "email":  "michel_sbarros@yahoo.com.br",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua José Cláudio Schmidt",
         "numero":  "50.0",
@@ -276,7 +276,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8998683269E10",
         "email":  "denyazevedo1972@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Algarves",
         "numero":  "S/n",
@@ -300,7 +300,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "(48)99834-6944",
         "email":  "eder.alisondasilva@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "rua Tercílio Tedesco",
         "numero":  "",
@@ -324,7 +324,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.8991192407E10",
         "email":  "corretoraimobiliariaelaine@gmail.com",
-        "obm":  "Santo Amaro",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua São João",
         "numero":  "500.0",
@@ -348,7 +348,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.898831562E10",
         "email":  "fabicericato@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Madre Benvenuta",
         "numero":  "388.0",
@@ -372,7 +372,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "(48)99852-5717",
         "email":  "bombeirofloripa2011@hotmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "João Batista Derner Neves",
         "numero":  "25.0",
@@ -396,7 +396,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.8998000811E10",
         "email":  "mahenkes@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua das Ameixas",
         "numero":  "126.0",
@@ -420,7 +420,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)99117-2211",
         "email":  "carlosjr@hotmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Madre tereza de Calcutá",
         "numero":  "",
@@ -444,7 +444,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)-999260398",
         "email":  "iltonbraz.bc@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Antonio Goncalves Chaves",
         "numero":  "",
@@ -468,7 +468,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.8984758962E10",
         "email":  "kassandracolossi@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Maria Helena Kretzer",
         "numero":  "503.0",
@@ -492,7 +492,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)99850-3832",
         "email":  "algustolinder@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Cabo Oderli Schilchting",
         "numero":  "",
@@ -516,7 +516,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)99936-9240",
         "email":  "carioca-henrique@hotmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "rua Conde Afonso Celso",
         "numero":  "",
@@ -540,7 +540,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8999352731E10",
         "email":  "lucasrodrigues-sc@hotmail.com.br",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Fernando José Zimmermann",
         "numero":  "33.0",
@@ -564,7 +564,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.899620586E10",
         "email":  "Mayarasoaresrl@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Rodney Brasil Machado",
         "numero":  "59.0",
@@ -588,7 +588,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)98430-9294",
         "email":  "kleber_dvdx@hotmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "rua Pedro Paulo de Abreu",
         "numero":  "",
@@ -612,7 +612,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)98447-8424",
         "email":  "mithel_lima@hotmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "rua 13 de Junho",
         "numero":  "",
@@ -636,7 +636,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)98404-1027",
         "email":  "raphael_nilsen@hotmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "R. João Guilherme dos Santos",
         "numero":  "",
@@ -660,7 +660,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8996491296E10",
         "email":  "gabrielnerycristiano1@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Av. Brasil",
         "numero":  "158.0",
@@ -684,7 +684,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)99991-3979",
         "email":  "boliveiraqap@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Domingos Pedro Hermes",
         "numero":  "",
@@ -708,7 +708,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8991107391E10",
         "email":  "guilherme.ozol@hotmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Elizeu de Bernardi",
         "numero":  "641.0",
@@ -734,7 +734,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)98428-4002",
         "email":  "emersonobra@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Balbuino Mechen",
         "numero":  "",
@@ -758,7 +758,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(04)89907-1505",
         "email":  "caio.p.ravache@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "rua João Meirelles",
         "numero":  "",
@@ -784,7 +784,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)99606-4164",
         "email":  "jcmicheliquint@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Roberto VALDIR Manchich",
         "numero":  "",
@@ -808,7 +808,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.8984242904E10",
         "email":  "juliadasilvasarda@hotmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Manoel Eduardo Cardoso",
         "numero":  "17.0",
@@ -834,7 +834,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)98435-2594",
         "email":  "andréLuizschmitt@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Frei Albano",
         "numero":  "",
@@ -858,7 +858,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(48)99903-1009",
         "email":  "kleberspotti@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "rua Baldicero Filomeno",
         "numero":  "",
@@ -882,7 +882,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.898801019E10",
         "email":  "UELDER.ALVES@GMAIL.COM",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "RUA CRISTÓVÃO NUNES PIRES",
         "numero":  "180.0",
@@ -906,7 +906,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "",
         "telefone":  "(04)89997-1294",
         "email":  "ismaelvru@intercop.com.br",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "av Itamarati",
         "numero":  "",
@@ -930,7 +930,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "048996418318",
         "email":  "yanka.carolinyy@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "R. José João de Souza",
         "numero":  "457.0",
@@ -954,7 +954,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8988303826E10",
         "email":  "yurits828@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua sábia una",
         "numero":  "45.0",
@@ -978,7 +978,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8988785387E10",
         "email":  "bcfortkamp@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Av. Patrício Antônio Teixeira",
         "numero":  "131.0",
@@ -1002,7 +1002,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.8991806824E10",
         "email":  "Kakamania33@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Adão Shimitd",
         "numero":  "998.0",
@@ -1026,7 +1026,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "5.598449257E10",
         "email":  "nakatagarra@hotmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Avenida Ceniro Martins 1078",
         "numero":  "1078.0",
@@ -1052,7 +1052,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8998218785E10",
         "email":  "Machadoweverton424@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua 13 de maio",
         "numero":  "876.0",
@@ -1076,7 +1076,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8999575275E10",
         "email":  "djxandemartins@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Olavo Bilac",
         "numero":  "498.0",
@@ -1100,7 +1100,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "9.99444545E8",
         "email":  "anacarolinanascimento2309@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Johannes Lambertus Josef Bovee",
         "numero":  "16.0",
@@ -1124,7 +1124,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.8984728085E10",
         "email":  "andreiamartins.ntr@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Acácio Reitz",
         "numero":  "355.0",
@@ -1148,7 +1148,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8999531501E10",
         "email":  "snnnarfdrums@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua sebastiana Coutinho",
         "numero":  "216.0",
@@ -1172,7 +1172,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8991466837E10",
         "email":  "acgoncalves191@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Av Paulo Roberto Vidal",
         "numero":  "2490.0",
@@ -1196,7 +1196,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8988244964E10",
         "email":  "Misaeldiasneumann@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Manoel Mariano Ferreira",
         "numero":  "621.0",
@@ -1220,7 +1220,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8984372126E10",
         "email":  "Luiz_fpolis.79@hotmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Servidão Inácia de Medeiros",
         "numero":  "263.0",
@@ -1244,7 +1244,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "047991363393",
         "email":  "j.victorfc@yahoo.com.br",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Thomé Israel da Silva",
         "numero":  "105.0",
@@ -1268,7 +1268,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8999933233E10",
         "email":  "lucianompereira@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Maria Filomena da Silva",
         "numero":  "388.0",
@@ -1292,7 +1292,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8999066108E10",
         "email":  "claudio3110@yahoo.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Caetano da costa coelho",
         "numero":  "1593.0",
@@ -1316,7 +1316,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8998237756E10",
         "email":  "eventos_djdiego@hotmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua geral de três riachos",
         "numero":  "Sem numero",
@@ -1342,7 +1342,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8999512775E10",
         "email":  "joaoppb01@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Acioli Nunes dos Santos",
         "numero":  "231.0",
@@ -1366,7 +1366,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.8984666195E10",
         "email":  "Vanessamodapet1209@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Inhambu",
         "numero":  "104.0",
@@ -1390,7 +1390,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.8991540113E10",
         "email":  "bell.450009@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "rua Maria Helena Kretzer",
         "numero":  "503.0",
@@ -1414,7 +1414,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8991075323E10",
         "email":  "fabiandeggy@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Prefeito Dib Cherem",
         "numero":  "2734.0",
@@ -1438,7 +1438,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8988591896E10",
         "email":  "Vulgo.levi@2004@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Av paulo roberto vidal",
         "numero":  "475.0",
@@ -1464,7 +1464,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8988390467E10",
         "email":  "Reinaldospengler@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Demetrio Novossate",
         "numero":  "278.0",
@@ -1490,7 +1490,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8999938011E10",
         "email":  "anderson84negocios@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Maria Helena Kretzer",
         "numero":  "503a",
@@ -1514,7 +1514,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8998558268E10",
         "email":  "washingtondejesus1509@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
+        "obm":  "São José",
         "profissao":  "Bombeiro ComunitÃ¡rio",
         "logradouro":  "Rua Rodnei Brasil machado",
         "numero":  "59.0",
@@ -1526,7 +1526,7 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "status":  "desligado",
         "data_cadastro":  "2026-03-15",
         "data_desligamento":  "2026-06-26",
-        "motivo_desligamento":  "Desligamento registrado na planilha de sÃ³cios 2026"
+        "motivo_desligamento":  "Desligamento registrado na planilha de sócios 2026"
     },
     {
         "id":  "163",
@@ -1540,8 +1540,8 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.8991860157E10",
         "email":  "palperdona@gmail.com",
-        "obm":  "SÃ£o JosÃ©",
-        "profissao":  "Bombeiro ComunitÃ¡rio",
+        "obm":  "São José",
+        "profissao":  "Bombeiro Comunitário",
         "logradouro":  "Servidão silvestre Prim",
         "numero":  "136.0",
         "complemento":  "Casa",
@@ -1564,8 +1564,8 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Masculino",
         "telefone":  "4.8991861852E10",
         "email":  "otavio_viapiana@hotmail.com",
-        "obm":  "SÃ£o JosÃ©",
-        "profissao":  "Bombeiro ComunitÃ¡rio",
+        "obm":  "São José",
+        "profissao":  "Bombeiro Comunitário",
         "logradouro":  "Rua Júlio Teodoro Martins",
         "numero":  "1800.0",
         "complemento":  "Apt 624",
@@ -1588,8 +1588,8 @@ const ASSOCIADOS_EXCEL_IMPORT = [
         "sexo":  "Feminino",
         "telefone":  "4.899858915E10",
         "email":  "graziela291211@gmail.com",
-        "obm":  "Santo Amaro",
-        "profissao":  "Bombeiro ComunitÃ¡rio",
+        "obm":  "São José",
+        "profissao":  "Bombeiro Comunitário",
         "logradouro":  "Rua nossa senhora das dores",
         "numero":  "1606.0",
         "complemento":  "Casa",
@@ -1611,9 +1611,9 @@ const MOCK_DATA_INITIAL = {
     ],
     financeiro: [
         { id: 'f1', tipo: 'receita', descricao: 'Mensalidades de Associados - Julho', valor: 4500.00, categoria: 'Mensalidades', fornecedor_cliente: 'Associados', data_lancamento: '2026-07-30' },
-        { id: 'f2', tipo: 'despesa', descricao: 'Manuten��o de Equipamentos de Resgate', valor: 1200.00, categoria: 'Manuten��o', fornecedor_cliente: 'Servi�os de Seguran�a LTDA', data_lancamento: '2026-08-01' },
-        { id: 'f3', tipo: 'despesa', descricao: 'Contabilidade e Assessoria Jur�dica', valor: 800.00, categoria: 'Administrativo', fornecedor_cliente: 'Contabilidade S�o Jos�', data_lancamento: '2026-08-02' },
-        { id: 'f4', tipo: 'receita', descricao: 'Doa��o Institucional para Equipamentos', valor: 3000.00, categoria: 'Doa��es', fornecedor_cliente: 'Empresas Unidas SJ', data_lancamento: '2026-08-03' }
+        { id: 'f2', tipo: 'despesa', descricao: 'Manutenção de Equipamentos de Resgate', valor: 1200.00, categoria: 'Manutenção', fornecedor_cliente: 'Serviços de Segurança LTDA', data_lancamento: '2026-08-01' },
+        { id: 'f3', tipo: 'despesa', descricao: 'Contabilidade e Assessoria Jurídica', valor: 800.00, categoria: 'Administrativo', fornecedor_cliente: 'Contabilidade São José', data_lancamento: '2026-08-02' },
+        { id: 'f4', tipo: 'receita', descricao: 'Doação Institucional para Equipamentos', valor: 3000.00, categoria: 'Doações', fornecedor_cliente: 'Empresas Unidas SJ', data_lancamento: '2026-08-03' }
     ],
     mensalidades: [
         { id: 'm1', associado_cpf: '111.111.111-11', mes: '2026-07', valor: 50.00, status: 'pago', data_pagamento: '2026-07-10' },
@@ -1622,23 +1622,23 @@ const MOCK_DATA_INITIAL = {
     ],
     documentos: [
         { id: 'd1', titulo: 'Estatuto Social Reformulado 2024', categoria: 'Estatuto', data: '2024-01-10', link: '#' },
-        { id: 'd2', titulo: 'Ata da Assembleia Geral Ordin�ria #42', categoria: 'Ata', data: '2026-06-15', link: '#' },
-        { id: 'd3', titulo: 'Balancete Consolidado 1� Semestre 2026', categoria: 'Balancete', data: '2026-07-05', link: '#' }
+        { id: 'd2', titulo: 'Ata da Assembleia Geral Ordinária #42', categoria: 'Ata', data: '2026-06-15', link: '#' },
+        { id: 'd3', titulo: 'Balancete Consolidado 1º Semestre 2026', categoria: 'Balancete', data: '2026-07-05', link: '#' }
     ],
     programacao: [
         { id: 'p1', titulo: 'Treinamento Geral de Primeiros Socorros', data: '2026-08-20', local: 'Sede ACBCSJ', status: 'agendado' },
-        { id: 'p2', titulo: 'Assembleia Trimestral de Presta��o de Contas', data: '2026-09-10', local: 'Audit�rio Central', status: 'agendado' }
+        { id: 'p2', titulo: 'Assembleia Trimestral de Prestação de Contas', data: '2026-09-10', local: 'Auditório Central', status: 'agendado' }
     ],
     mensagens: [
-        { id: 'msg1', associado_nome: 'Sgt. Carlos Andrade', assunto: 'Sugest�o de Treinamento Comunit�rio', conteudo: 'Gostaria de propor um curso b�sico para moradores do bairro Barreiros.', data: '2026-08-02', status: 'pendente' }
+        { id: 'msg1', associado_nome: 'Sgt. Carlos Andrade', assunto: 'Sugestão de Treinamento Comunitário', conteudo: 'Gostaria de propor um curso básico para moradores do bairro Barreiros.', data: '2026-08-02', status: 'pendente' }
     ]
 };
 
-// ESTADO DA APLICA��O
+// ESTADO DA APLICAÇÃO
 let currentUser = null;
 let currentChart = null;
 
-// INICIALIZA��O
+// INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', () => {
     initMockData();
     setupCPFMasks();
@@ -1648,15 +1648,20 @@ document.addEventListener('DOMContentLoaded', () => {
 function initMockData() {
     let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     
-    // Mescla os dados iniciais mockados se a lista estiver vazia
-    if (list.length === 0) {
+    // Se estiver vazio ou contiver itens com codificação antiga desformatada, recarrega com dados limpos
+    const needsReset = list.length === 0 || list.some(a => (a.obm && a.obm.includes('Ã')) || (a.cidade && a.cidade.includes('Ã')) || (a.nome && a.nome.includes('Ã')));
+
+    if (needsReset) {
         list = [...MOCK_DATA_INITIAL.associados];
     }
 
-    // Importa automaticamente os 66 sócios da planilha Cadastrosocios.xlsx se ainda não existirem
     if (typeof ASSOCIADOS_EXCEL_IMPORT !== 'undefined' && Array.isArray(ASSOCIADOS_EXCEL_IMPORT)) {
         ASSOCIADOS_EXCEL_IMPORT.forEach(socio => {
-            if (!list.some(a => a.cpf === socio.cpf)) {
+            const index = list.findIndex(a => a.cpf === socio.cpf);
+            if (index >= 0) {
+                // Atualiza com dados limpos e com acentuação correta
+                list[index] = { ...list[index], ...socio };
+            } else {
                 list.push(socio);
             }
         });
@@ -1664,14 +1669,14 @@ function initMockData() {
 
     localStorage.setItem('acbcsj_associados', JSON.stringify(list));
 
-    if (!localStorage.getItem('acbcsj_financeiro')) localStorage.setItem('acbcsj_financeiro', JSON.stringify(MOCK_DATA_INITIAL.financeiro));
-    if (!localStorage.getItem('acbcsj_mensalidades')) localStorage.setItem('acbcsj_mensalidades', JSON.stringify(MOCK_DATA_INITIAL.mensalidades));
-    if (!localStorage.getItem('acbcsj_documentos')) localStorage.setItem('acbcsj_documentos', JSON.stringify(MOCK_DATA_INITIAL.documentos));
-    if (!localStorage.getItem('acbcsj_programacao')) localStorage.setItem('acbcsj_programacao', JSON.stringify(MOCK_DATA_INITIAL.programacao));
-    if (!localStorage.getItem('acbcsj_mensagens')) localStorage.setItem('acbcsj_mensagens', JSON.stringify(MOCK_DATA_INITIAL.mensagens));
+    localStorage.setItem('acbcsj_financeiro', JSON.stringify(MOCK_DATA_INITIAL.financeiro));
+    localStorage.setItem('acbcsj_mensalidades', JSON.stringify(MOCK_DATA_INITIAL.mensalidades));
+    localStorage.setItem('acbcsj_documentos', JSON.stringify(MOCK_DATA_INITIAL.documentos));
+    localStorage.setItem('acbcsj_programacao', JSON.stringify(MOCK_DATA_INITIAL.programacao));
+    localStorage.setItem('acbcsj_mensagens', JSON.stringify(MOCK_DATA_INITIAL.mensagens));
 }
 
-// M�SCARA AUTOM�TICA DE CPF
+// MÁSCARA AUTOMÁTICA DE CPF
 function setupCPFMasks() {
     const cpfInputs = document.querySelectorAll('.cpf-mask');
     cpfInputs.forEach(input => {
@@ -1686,7 +1691,7 @@ function setupCPFMasks() {
     });
 }
 
-// AUTENTICA��O E LOGIN
+// AUTENTICAÇÃO E LOGIN
 function loginWithCPF(cpf, password, roleHint = null) {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     
@@ -1698,12 +1703,12 @@ function loginWithCPF(cpf, password, roleHint = null) {
     } else {
         const found = list.find(a => a.cpf === cpf);
         if (!found) {
-            alert('CPF n�o encontrado no sistema da ACBCSJ. Fa�a sua solicita��o de pr�-cadastro.');
+            alert('CPF não encontrado no sistema da ACBCSJ. Faça sua solicitação de pré-cadastro.');
             return;
         }
 
         if (found.status === 'pendente') {
-            alert('Acesso bloqueado! Sua solicita��o de cadastro ainda est� em an�lise pela Diretoria da ACBCSJ. Aguarde a aprova��o para conseguir logar.');
+            alert('Acesso bloqueado! Sua solicitação de cadastro ainda está em análise pela Diretoria da ACBCSJ. Aguarde a aprovação para conseguir logar.');
             return;
         }
 
@@ -1712,12 +1717,12 @@ function loginWithCPF(cpf, password, roleHint = null) {
             return;
         }
 
-        // Validao de senha (automtica: 4 primeiros dgitos do CPF ou senha definida)
+        // Validação de senha (automática: 4 primeiros dígitos do CPF ou senha definida)
         const apenasNumerosCPF = (found.cpf || '').replace(/\D/g, '');
         const senhaEsperada = found.senha || apenasNumerosCPF.substring(0, 4);
 
         if (password && password !== senhaEsperada) {
-            alert(`Senha incorreta. Lembre-se que sua senha inicial de acesso so os 4 primeiros dgitos do seu CPF (${senhaEsperada}).`);
+            alert(`Senha incorreta. Lembre-se que sua senha inicial de acesso são os 4 primeiros dígitos do seu CPF (${senhaEsperada}).`);
             return;
         }
 
@@ -1794,26 +1799,59 @@ function navigateTab(tabId) {
     if (tabId === 'mensagens-diretoria') renderMensagensDiretoria();
 }
 
-// L�GICA DA DIRETORIA: PAINEL GERAL E TABELAS
+// LÓGICA DA DIRETORIA: PAINEL GERAL E TABELAS
 function renderDiretoriaOverview() {
     const associados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
     const pendentes = associados.filter(a => a.status === 'pendente');
 
-    document.getElementById('metricTotalAssociados').textContent = associados.filter(a => a.status === 'ativo').length;
+    // Captura o ano selecionado no filtro (padrão: 2026)
+    const selectAno = document.getElementById('diretoriaFiltroAno');
+    const anoFiltro = selectAno ? selectAno.value : '2026';
+
+    // Atualiza labels visuais de ano
+    document.querySelectorAll('.lblAnoSelecionado').forEach(el => {
+        el.textContent = anoFiltro === 'todos' ? 'Todos' : anoFiltro;
+    });
+
+    // 1. Total Ativos Gerais
+    const totalAtivos = associados.filter(a => a.status === 'ativo').length;
+    document.getElementById('metricTotalAssociados').textContent = totalAtivos;
+
+    // 2. Novas Associações no Ano Selecionado
+    const novosNoAno = associados.filter(a => {
+        if (!a.data_cadastro) return false;
+        return anoFiltro === 'todos' || a.data_cadastro.includes(anoFiltro);
+    }).length;
+    const elNovos = document.getElementById('metricNovosAno');
+    if (elNovos) elNovos.textContent = novosNoAno;
+
+    // 3. Desligamentos no Ano Selecionado
+    const desligadosNoAno = associados.filter(a => {
+        if (a.status !== 'desligado') return false;
+        if (anoFiltro === 'todos') return true;
+        const emData = a.data_desligamento && a.data_desligamento.includes(anoFiltro);
+        const emMotivo = a.motivo_desligamento && a.motivo_desligamento.includes(anoFiltro);
+        const emCadastro = a.data_cadastro && a.data_cadastro.includes(anoFiltro);
+        return emData || emMotivo || emCadastro;
+    }).length;
+    const elDesligados = document.getElementById('metricDesligadosAno');
+    if (elDesligados) elDesligados.textContent = desligadosNoAno;
+
+    // 4. Solicitações Pendentes
     document.getElementById('metricCadastrosPendentes').textContent = pendentes.length;
 
+    // 5. Saldo em Caixa
     const totalReceitas = financeiro.filter(f => f.tipo === 'receita').reduce((sum, item) => sum + Number(item.valor), 0);
     const totalDespesas = financeiro.filter(f => f.tipo === 'despesa').reduce((sum, item) => sum + Number(item.valor), 0);
     const saldo = totalReceitas - totalDespesas;
-
     document.getElementById('metricSaldoCaixa').textContent = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
-    // Tabela de aprova��o r�pida
+    // Tabela de aprovação rápida
     const container = document.getElementById('tablePendentesBody');
     if (container) {
         if (pendentes.length === 0) {
-            container.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhuma solicita��o de pr�-cadastro pendente.</td></tr>`;
+            container.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhuma solicitação de pré-cadastro pendente.</td></tr>`;
         } else {
             container.innerHTML = pendentes.map(p => `
                 <tr>
@@ -1991,7 +2029,7 @@ function verFichaAssociado(cpf) {
     openModal('modalFichaAssociado');
 }
 
-// DESLIGAMENTO COM REGISTRO DE MOTIVO, CARTA DE DESLIGAMENTO E DATA/HORA
+// DESLIGAMENTO COM REGISTRO DE MOTIVO, CARTA DE DESLIGAMENTO (OPCIONAL) E DATA/HORA
 function abrirModalDesligar(cpf) {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const a = list.find(item => item.cpf === cpf);
@@ -2018,32 +2056,25 @@ function confirmarDesligamento(e) {
         return;
     }
 
-    if (!file) {
-        alert('Por favor, anexe a Carta de Desligamento do associado.');
-        return;
-    }
+    const agora = new Date();
+    const dataHoraDesligamento = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    const reader = new FileReader();
-    reader.onload = function (event) {
-        const fileDataUrl = event.target.result;
-        const fileName = file.name;
-
-        const agora = new Date();
-        const dataHoraDesligamento = agora.toLocaleDateString('pt-BR') + ' �s ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
+    const processarSalvarDesligamento = (fileDataUrl = null, fileName = null) => {
         let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
         const item = list.find(a => a.cpf === cpf);
         if (item) {
             item.status = 'desligado';
             item.data_desligamento = dataHoraDesligamento;
             item.motivo_desligamento = motivo;
-            item.carta_desligamento_url = fileDataUrl;
-            item.carta_desligamento_nome = fileName;
+            if (fileDataUrl) {
+                item.carta_desligamento_url = fileDataUrl;
+                item.carta_desligamento_nome = fileName;
+            }
 
             localStorage.setItem('acbcsj_associados', JSON.stringify(list));
             dbService.saveAssociado(item);
 
-            alert(`Associado ${item.nome_guerra || item.nome} foi desligado com sucesso em ${dataHoraDesligamento}.\nA Carta de Desligamento foi salva e registrada no sistema.`);
+            alert(`Associado ${item.nome_guerra || item.nome} foi desligado com sucesso em ${dataHoraDesligamento}.${fileDataUrl ? '\nA Carta de Desligamento foi salva e registrada no sistema.' : ''}`);
             closeModal('modalDesligarAssociado');
             renderGestaoAssociados();
             renderAssociadosDesligados();
@@ -2051,7 +2082,15 @@ function confirmarDesligamento(e) {
         }
     };
 
-    reader.readAsDataURL(file);
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            processarSalvarDesligamento(event.target.result, file.name);
+        };
+        reader.readAsDataURL(file);
+    } else {
+        processarSalvarDesligamento();
+    }
 }
 
 // FUN��O PARA ABRIR OU BAIXAR A CARTA DE DESLIGAMENTO
@@ -2176,21 +2215,153 @@ function renderBalancetesAssociado() {
 
 function renderDocumentos() {
     const docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
-    const containers = [document.getElementById('listDocsAssociado'), document.getElementById('listDocsDiretoria')];
+    const isDiretoria = currentUser && currentUser.perfil === 'diretoria';
     
-    containers.forEach(container => {
-        if (container) {
-            container.innerHTML = docs.map(d => `
-                <div style="display:flex; justify-between; align-items:center; padding:12px; border-bottom:1px solid var(--border-color)">
-                    <div>
-                        <b>${d.titulo}</b> <small style="color:var(--accent-gold); margin-left:8px">[${d.categoria}]</small>
-                        <div style="font-size:11px; color:var(--text-muted)">Publicado em: ${d.data}</div>
-                    </div>
-                    <a href="${d.link}" class="btn btn-sm btn-outline">Visualizar / Download</a>
-                </div>
-            `).join('');
+    // Renderiza botão de inserção de documentos apenas para a Diretoria
+    const actionContainer = document.getElementById('headerDocsAction');
+    if (actionContainer) {
+        if (isDiretoria) {
+            actionContainer.innerHTML = `<button class="btn btn-gold" onclick="openModal('modalNovoDocumento')">➕ Inserir Novo Documento</button>`;
+        } else {
+            actionContainer.innerHTML = '';
         }
-    });
+    }
+
+    // Filtra documentos: se for associado comum, oculta os restritos à Diretoria
+    const docsFiltrados = isDiretoria ? docs : docs.filter(d => d.visibilidade !== 'diretoria');
+
+    const container = document.getElementById('listDocsAssociado');
+    if (container) {
+        if (docsFiltrados.length === 0) {
+            container.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted);">Nenhum documento disponível no momento.</div>`;
+        } else {
+            const hoje = new Date().toISOString().split('T')[0];
+
+            container.innerHTML = docsFiltrados.map(d => {
+                // Cálculo de Vencimento
+                let vencimentoBadge = '';
+                if (d.data_vencimento) {
+                    const isVencido = d.data_vencimento < hoje;
+                    const dataFmt = d.data_vencimento.split('-').reverse().join('/');
+                    if (isVencido) {
+                        vencimentoBadge = `<span style="color: #E74C3C; font-weight: bold; margin-left: 8px;">⚠️ Vencido em ${dataFmt}</span>`;
+                    } else {
+                        vencimentoBadge = `<span style="color: var(--text-muted); margin-left: 8px;">📅 Vence em: ${dataFmt}</span>`;
+                    }
+                } else {
+                    vencimentoBadge = `<span style="color: var(--text-muted); margin-left: 8px;">Sem vencimento</span>`;
+                }
+
+                // Badge de Visibilidade
+                const visibBadge = d.visibilidade === 'diretoria' 
+                    ? `<span class="badge badge-warning" style="margin-left: 6px;">🔒 Apenas Diretoria</span>` 
+                    : `<span class="badge badge-info" style="margin-left: 6px;">🌐 Todos</span>`;
+
+                return `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; border-bottom:1px solid var(--border-color); flex-wrap:wrap; gap:12px;">
+                        <div>
+                            <div style="font-size:15px; font-weight:bold; color:var(--text-main);">
+                                ${d.titulo}
+                                <span class="badge badge-warning" style="margin-left:8px; background:rgba(255,215,0,0.15); color:var(--accent-gold);">${d.categoria || 'Geral'}</span>
+                                ${visibBadge}
+                            </div>
+                            <div style="font-size:12px; margin-top:4px;">
+                                <span style="color:var(--text-muted)">Publicado em: ${d.data || '-'}</span>
+                                ${vencimentoBadge}
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-sm btn-outline" onclick="abrirDocumento('${d.id}')">📖 Visualizar / Download</button>
+                            ${isDiretoria ? `<button class="btn btn-sm btn-outline" style="color:#E74C3C;" onclick="excluirDocumento('${d.id}')">Excluir</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+}
+
+function salvarNovoDocumento(e) {
+    e.preventDefault();
+    const titulo = document.getElementById('docTitulo').value.trim();
+    const categoria = document.getElementById('docCategoria').value;
+    const visibilidade = document.getElementById('docVisibilidade').value;
+    const dataVencimento = document.getElementById('docDataVencimento').value;
+    const fileInput = document.getElementById('docArquivo');
+    const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+    if (!titulo || !categoria || !file) {
+        alert('Por favor, preencha o título, selecione a categoria e anexe o arquivo do documento.');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        const fileDataUrl = event.target.result;
+        const fileName = file.name;
+
+        let docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
+        const novoDoc = {
+            id: 'doc_' + Date.now(),
+            titulo: titulo,
+            categoria: categoria,
+            visibilidade: visibilidade,
+            data_vencimento: dataVencimento || null,
+            data: new Date().toLocaleDateString('pt-BR'),
+            link: fileDataUrl,
+            arquivo_nome: fileName
+        };
+
+        docs.unshift(novoDoc);
+        localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
+
+        alert(`Documento "${titulo}" publicado com sucesso!`);
+        e.target.reset();
+        closeModal('modalNovoDocumento');
+        renderDocumentos();
+    };
+
+    reader.readAsDataURL(file);
+}
+
+function abrirDocumento(id) {
+    const docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
+    const doc = docs.find(d => d.id === id);
+    if (!doc) {
+        alert('Documento não encontrado.');
+        return;
+    }
+
+    if (doc.link && doc.link.startsWith('data:')) {
+        const win = window.open();
+        if (win) {
+            win.document.write(`
+                <html>
+                    <head><title>${doc.titulo} - ACBCSJ</title></head>
+                    <body style="margin:0; background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh;">
+                        <iframe src="${doc.link}" style="width:100%; height:100vh; border:none;"></iframe>
+                    </body>
+                </html>
+            `);
+        } else {
+            const a = document.createElement('a');
+            a.href = doc.link;
+            a.download = doc.arquivo_nome || `${doc.titulo}.pdf`;
+            a.click();
+        }
+    } else {
+        window.open(doc.link || '#', '_blank');
+    }
+}
+
+function excluirDocumento(id) {
+    if (confirm('Deseja realmente excluir este documento do repositório?')) {
+        let docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
+        docs = docs.filter(d => d.id !== id);
+        localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
+        alert('Documento excluído com sucesso.');
+        renderDocumentos();
+    }
 }
 
 function renderMensagensDiretoria() {
@@ -2214,11 +2385,11 @@ function renderMensagensDiretoria() {
     }
 }
 
-// PR�-CADASTRO E ENVIOS
+// PRÉ-CADASTRO E ENVIOS
 function toggleSemPai(checkbox) {
     const inputPai = document.getElementById('regNomePai');
     if (checkbox.checked) {
-        inputPai.value = 'Sem registro paterno / N�o declarado';
+        inputPai.value = 'Sem registro paterno / Não declarado';
         inputPai.disabled = true;
     } else {
         inputPai.value = '';
@@ -2231,7 +2402,7 @@ function submitPreCadastro(e) {
     
     // Captura da Data e Hora Exata do Cadastro gerada pelo Sistema
     const agora = new Date();
-    const dataHoraCadastro = agora.toLocaleDateString('pt-BR') + ' �s ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const dataHoraCadastro = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     // Captura dos campos na ordem exigida
     const nomeGuerra = document.getElementById('regNomeGuerra').value.trim();
@@ -2240,7 +2411,7 @@ function submitPreCadastro(e) {
     const cpf = document.getElementById('regCPF').value.trim();
     const nomeMae = document.getElementById('regNomeMae').value.trim();
     const semPai = document.getElementById('regSemPai').checked;
-    const nomePai = semPai ? 'Sem registro paterno / N�o declarado' : (document.getElementById('regNomePai').value.trim() || 'N�o declarado');
+    const nomePai = semPai ? 'Sem registro paterno / Não declarado' : (document.getElementById('regNomePai').value.trim() || 'Não declarado');
     const sexo = document.getElementById('regSexo').value;
     const telefone = document.getElementById('regTelefone').value.trim();
     const obm = document.getElementById('regOBM').value;
@@ -2254,27 +2425,27 @@ function submitPreCadastro(e) {
     const termoAceito = document.getElementById('regTermoAceito').checked;
 
     if (!obm) {
-        alert('Por favor, selecione a OBM de Lota��o.');
+        alert('Por favor, selecione a OBM de Lotação.');
         return;
     }
 
     if (!profissao) {
-        alert('Por favor, preencha o campo Profiss�o.');
+        alert('Por favor, preencha o campo Profissão.');
         return;
     }
 
     if (!termoAceito) {
-        alert('Voc� precisa aceitar os Termos de Responsabilidade para enviar a solicita��o.');
+        alert('Você precisa aceitar os Termos de Responsabilidade para enviar a solicitação.');
         return;
     }
 
     let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     if (list.find(a => a.cpf === cpf)) {
-        alert('Este CPF j� possui uma solicita��o ou cadastro ativo no sistema da ACBCSJ.');
+        alert('Este CPF já possui uma solicitação ou cadastro ativo no sistema da ACBCSJ.');
         return;
     }
 
-    // Gera��o autom�tica de senha: os 4 primeiros d�gitos num�ricos do CPF
+    // Geração automática de senha: os 4 primeiros dígitos numéricos do CPF
     const apenasNumerosCPF = cpf.replace(/\D/g, '');
     const senhaAutomatica = apenasNumerosCPF.substring(0, 4);
 
@@ -2306,7 +2477,7 @@ function submitPreCadastro(e) {
     localStorage.setItem('acbcsj_associados', JSON.stringify(list));
     dbService.saveAssociado(novoAssociado);
 
-    alert(`Solicita��o de cadastro de ${nomeGuerra} (${nomeCompleto}) enviada com sucesso em ${dataHoraCadastro}!\n\n?? O acesso estar� BLOQUEADO at� a APROVA��O pela Diretoria.\n?? Ap�s a aprova��o, sua senha de acesso ser� os 4 primeiros d�gitos do seu CPF (${senhaAutomatica}).`);
+    alert(`Solicitação de cadastro de ${nomeGuerra} (${nomeCompleto}) enviada com sucesso em ${dataHoraCadastro}!\n\n⚠️ O acesso estará BLOQUEADO até a APROVAÇÃO pela Diretoria.\n🔑 Após a aprovação, sua senha de acesso será os 4 primeiros dígitos do seu CPF (${senhaAutomatica}).`);
     e.target.reset();
     if (document.getElementById('regSemPai')) {
         document.getElementById('regSemPai').checked = false;
