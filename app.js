@@ -2125,27 +2125,6 @@ function excluirAssociado(cpf) {
 }
 
 // L�GICA DO ASSOCIADO & GR�FICOS
-function renderAssociadoOverview() {
-    document.getElementById('associadoWelcomeName').textContent = currentUser.nome;
-    const mensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades')) || [];
-    const minhas = mensalidades.filter(m => m.associado_cpf === currentUser.cpf);
-
-    const container = document.getElementById('tableMinhasMensalidadesBody');
-    if (container) {
-        if (minhas.length === 0) {
-            container.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhuma mensalidade registrada para o seu CPF at� o momento.</td></tr>`;
-        } else {
-            container.innerHTML = minhas.map(m => `
-                <tr>
-                    <td>${m.mes}</td>
-                    <td>R$ ${Number(m.valor).toFixed(2)}</td>
-                    <td><span class="badge badge-${m.status === 'pago' ? 'success' : 'warning'}">${m.status.toUpperCase()}</span></td>
-                    <td>${m.data_pagamento || '-'}</td>
-                </tr>
-            `).join('');
-        }
-    }
-}
 
 function renderBalancetesAssociado() {
     const financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
@@ -2432,15 +2411,6 @@ async function excluirDocumento(id) {
     }
 }
 
-function excluirDocumento(id) {
-    if (confirm('Deseja realmente excluir este documento do repositório?')) {
-        let docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
-        docs = docs.filter(d => d.id !== id);
-        localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
-        alert('Documento excluído com sucesso.');
-        renderDocumentos();
-    }
-}
 
 function renderMensagensDiretoria() {
     const msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
@@ -2831,18 +2801,6 @@ function renderAssociadoOverview() {
                     <span class="badge badge-${pago ? 'success' : 'warning'}">
                         ${pago ? '✅ PAGO / BAIXADO' : '⏳ EM ABERTO / PENDENTE'}
                     </span>
-                </td>
-            </tr>
-        `;
-    }).join('');
-}-muted)'};">
-                    R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </td>
-                <td>
-                    <span class="badge badge-${pago ? 'success' : 'warning'}">
-                        ${pago ? 'âœ… PAGO / BAIXADO' : 'â³ EM ABERTO / PENDENTE'}
-                    </span>
-                </td>
             </tr>
         `;
     }).join('');
