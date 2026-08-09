@@ -1,3 +1,1396 @@
+﻿// DADOS IMPORTADOS DAS PLANILHAS OFICIAIS DA ACBCSJ (Mensal.xlsx)
+const INITIAL_MENSAL_DATA = [
+    {
+        "nome_guerra":  "Angélica",
+        "nome_completo":  "Angélica Mateus",
+        "jan":  0,
+        "fev":  40,
+        "mar":  20,
+        "abr":  0,
+        "mai":  40,
+        "jun":  20,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Antunes",
+        "nome_completo":  "Douglas Antunes",
+        "jan":  20,
+        "fev":  20,
+        "mar":  20,
+        "abr":  0,
+        "mai":  40,
+        "jun":  20,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Augusto",
+        "nome_completo":  "Murilo Augusto Galdino De Souza",
+        "jan":  20,
+        "fev":  20,
+        "mar":  20,
+        "abr":  20,
+        "mai":  20,
+        "jun":  20,
+        "jul":  0,
+        "ago":  20,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Andreia",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  0,
+        "fev":  0,
+        "mar":  80,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  80,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Bento",
+        "nome_completo":  "Daniel Bento",
+        "jan":  0,
+        "fev":  0,
+        "mar":  20,
+        "abr":  0,
+        "mai":  20,
+        "jun":  20,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Binhoti",
+        "nome_completo":  "Tiago Binhoti",
+        "jan":  0,
+        "fev":  120,
+        "mar":  0,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  120,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Boiko",
+        "nome_completo":  "Emerson Roberto Boiko",
+        "jan":  0,
+        "fev":  0,
+        "mar":  100,
+        "abr":  0,
+        "mai":  0,
+        "jun":  60,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Camila",
+        "nome_completo":  "Camila Coelho Soares",
+        "jan":  20,
+        "fev":  20,
+        "mar":  20,
+        "abr":  20,
+        "mai":  20,
+        "jun":  20,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Coelho",
+        "nome_completo":  "Ricardo Augusto Coelho",
+        "jan":  0,
+        "fev":  0,
+        "mar":  60,
+        "abr":  60,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  80,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Da Silva",
+        "nome_completo":  "Alex Sandro Batista da Silva",
+        "jan":  0,
+        "fev":  0,
+        "mar":  0,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Barros",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  0,
+        "fev":  20,
+        "mar":  40,
+        "abr":  0,
+        "mai":  0,
+        "jun":  60,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Deny",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  0,
+        "fev":  0,
+        "mar":  0,
+        "abr":  0,
+        "mai":  0,
+        "jun":  60,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Eder",
+        "nome_completo":  "Eder Alison Da Silva",
+        "jan":  0,
+        "fev":  0,
+        "mar":  0,
+        "abr":  100,
+        "mai":  0,
+        "jun":  40,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Elaine",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  0,
+        "fev":  40,
+        "mar":  20,
+        "abr":  0,
+        "mai":  20,
+        "jun":  60,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Fabiana",
+        "nome_completo":  "Fabiana Oro Cericato Costa",
+        "jan":  0,
+        "fev":  200,
+        "mar":  0,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Gabriel",
+        "nome_completo":  "Gabriel Francisco Farias da Silva",
+        "jan":  0,
+        "fev":  40,
+        "mar":  20,
+        "abr":  0,
+        "mai":  0,
+        "jun":  60,
+        "jul":  0,
+        "ago":  40,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Henkes",
+        "nome_completo":  "Marcia Aparecida Henkes",
+        "jan":  0,
+        "fev":  0,
+        "mar":  100,
+        "abr":  0,
+        "mai":  0,
+        "jun":  60,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Humberto",
+        "nome_completo":  "Carlos Humberto luiz",
+        "jan":  0,
+        "fev":  0,
+        "mar":  60,
+        "abr":  20,
+        "mai":  20,
+        "jun":  20,
+        "jul":  20,
+        "ago":  20,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Ilton",
+        "nome_completo":  "Ilton Saturnino Braz",
+        "jan":  0,
+        "fev":  0,
+        "mar":  100,
+        "abr":  0,
+        "mai":  0,
+        "jun":  60,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Kassandra",
+        "nome_completo":  "Gabriela Kassandra Luiz Colossi",
+        "jan":  20,
+        "fev":  40,
+        "mar":  40,
+        "abr":  20,
+        "mai":  20,
+        "jun":  0,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Linder",
+        "nome_completo":  "Gustavo Augusto Linder",
+        "jan":  0,
+        "fev":  60,
+        "mar":  0,
+        "abr":  0,
+        "mai":  0,
+        "jun":  40,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Lourenço",
+        "nome_completo":  "Carlos Henrique Lourenço Gonçalves",
+        "jan":  20,
+        "fev":  20,
+        "mar":  20,
+        "abr":  20,
+        "mai":  20,
+        "jun":  20,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Lucas",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  0,
+        "fev":  0,
+        "mar":  100,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  100,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Mayara",
+        "nome_completo":  "Mayara Vieira Soares",
+        "jan":  0,
+        "fev":  0,
+        "mar":  120,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Mina",
+        "nome_completo":  "Kleber Pacheco Mina",
+        "jan":  0,
+        "fev":  0,
+        "mar":  60,
+        "abr":  0,
+        "mai":  0,
+        "jun":  80,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Mithel",
+        "nome_completo":  "Mithel Evergisto de Lima",
+        "jan":  0,
+        "fev":  0,
+        "mar":  100,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Natayan",
+        "nome_completo":  "Raphael Natayan Nilsen",
+        "jan":  40,
+        "fev":  0,
+        "mar":  20,
+        "abr":  20,
+        "mai":  20,
+        "jun":  20,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Nery",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  0,
+        "fev":  0,
+        "mar":  0,
+        "abr":  0,
+        "mai":  80,
+        "jun":  40,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Oliveira",
+        "nome_completo":  "Marcelo luiz de Oliveira",
+        "jan":  0,
+        "fev":  0,
+        "mar":  40,
+        "abr":  0,
+        "mai":  80,
+        "jun":  0,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Ozol",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  0,
+        "fev":  0,
+        "mar":  60,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Pereira",
+        "nome_completo":  "Emerson Pereira",
+        "jan":  0,
+        "fev":  80,
+        "mar":  0,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  180,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Ravache",
+        "nome_completo":  "Caio Passold Ravache",
+        "jan":  0,
+        "fev":  0,
+        "mar":  0,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Santana",
+        "nome_completo":  "Michele Santana Quint",
+        "jan":  0,
+        "fev":  0,
+        "mar":  60,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Sardá",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  0,
+        "fev":  0,
+        "mar":  60,
+        "abr":  20,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Schmitt",
+        "nome_completo":  "André Luiz Schmitt",
+        "jan":  0,
+        "fev":  0,
+        "mar":  100,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Spotti",
+        "nome_completo":  "Kleber Spotti Rodrigues",
+        "jan":  0,
+        "fev":  0,
+        "mar":  100,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  100,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Alves",
+        "nome_completo":  "Uelder Alves Da Costa",
+        "jan":  0,
+        "fev":  240,
+        "mar":  0,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Ulysséia",
+        "nome_completo":  "Ismael Vieira da Rosa Ulysséia",
+        "jan":  0,
+        "fev":  0,
+        "mar":  100,
+        "abr":  0,
+        "mai":  0,
+        "jun":  100,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Yanka",
+        "nome_completo":  "Yanka Caroliny Luciano",
+        "jan":  20,
+        "fev":  20,
+        "mar":  0,
+        "abr":  60,
+        "mai":  20,
+        "jun":  20,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Yuri",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  20,
+        "fev":  20,
+        "mar":  40,
+        "abr":  0,
+        "mai":  20,
+        "jun":  20,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Fortkamp",
+        "nome_completo":  "Markian da Silveira Fortkamp",
+        "jan":  0,
+        "fev":  20,
+        "mar":  40,
+        "abr":  20,
+        "mai":  0,
+        "jun":  20,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Jesus",
+        "nome_completo":  "Karina  Maria de Jesus Sobrinho",
+        "jan":  20,
+        "fev":  0,
+        "mar":  40,
+        "abr":  0,
+        "mai":  0,
+        "jun":  60,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Nakata",
+        "nome_completo":  "Nakata Garra Gomes",
+        "jan":  40,
+        "fev":  20,
+        "mar":  20,
+        "abr":  20,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Martins",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  20,
+        "fev":  20,
+        "mar":  20,
+        "abr":  40,
+        "mai":  20,
+        "jun":  20,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Andréia M",
+        "nome_completo":  "Andréia Martins dos Santos",
+        "jan":  0,
+        "fev":  40,
+        "mar":  20,
+        "abr":  20,
+        "mai":  20,
+        "jun":  20,
+        "jul":  20,
+        "ago":  20,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Siqueira",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  20,
+        "fev":  20,
+        "mar":  20,
+        "abr":  20,
+        "mai":  20,
+        "jun":  20,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Luiz",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  20,
+        "fev":  20,
+        "mar":  20,
+        "abr":  20,
+        "mai":  20,
+        "jun":  20,
+        "jul":  20,
+        "ago":  20,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Figueiredo",
+        "nome_completo":  "João Victor Figueiredo Chrostowski",
+        "jan":  0,
+        "fev":  20,
+        "mar":  20,
+        "abr":  0,
+        "mai":  20,
+        "jun":  40,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Luciano",
+        "nome_completo":  "LUCIANO PEREIRA",
+        "jan":  0,
+        "fev":  0,
+        "mar":  40,
+        "abr":  0,
+        "mai":  80,
+        "jun":  60,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Cardoso",
+        "nome_completo":  "Claudio cardoso",
+        "jan":  0,
+        "fev":  20,
+        "mar":  20,
+        "abr":  20,
+        "mai":  0,
+        "jun":  80,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Bunn",
+        "nome_completo":  "João Pedro Pereira Bunn",
+        "jan":  0,
+        "fev":  0,
+        "mar":  40,
+        "abr":  20,
+        "mai":  20,
+        "jun":  20,
+        "jul":  20,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Sofie",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  0,
+        "fev":  0,
+        "mar":  40,
+        "abr":  20,
+        "mai":  20,
+        "jun":  20,
+        "jul":  20,
+        "ago":  20,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Fabian",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  0,
+        "fev":  0,
+        "mar":  0,
+        "abr":  0,
+        "mai":  80,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Levi",
+        "nome_completo":  "Washington Levi Nascimento Dias",
+        "jan":  0,
+        "fev":  0,
+        "mar":  20,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Joaber",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  0,
+        "fev":  20,
+        "mar":  20,
+        "abr":  20,
+        "mai":  0,
+        "jun":  40,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Sadi",
+        "nome_completo":  [
+                              [
+
+                              ]
+                          ],
+        "jan":  0,
+        "fev":  0,
+        "mar":  0,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    },
+    {
+        "nome_guerra":  "Restituições de Projetos (Privado, Municipal ou Estadual)\t",
+        "nome_completo":  0,
+        "jan":  0,
+        "fev":  0,
+        "mar":  0,
+        "abr":  0,
+        "mai":  0,
+        "jun":  0,
+        "jul":  0,
+        "ago":  0,
+        "set":  0,
+        "out":  0,
+        "nov":  0,
+        "dez":  0
+    }
+];
+
+const INITIAL_LANCAMENTOS_DATA = [
+    {
+        "id":  "lanc_2",
+        "descricao":  "Despesa Operacional Janeiro",
+        "categoria":  "Despesa Operacional",
+        "valor":  35,
+        "tipo":  "despesa",
+        "data":  "20/01/2026",
+        "data_iso":  "2026-01-20",
+        "mes":  "Janeiro"
+    },
+    {
+        "id":  "lanc_3",
+        "descricao":  "Despesa Operacional Janeiro",
+        "categoria":  "Despesa Operacional",
+        "valor":  50,
+        "tipo":  "despesa",
+        "data":  "26/01/2026",
+        "data_iso":  "2026-01-26",
+        "mes":  "Janeiro"
+    },
+    {
+        "id":  "lanc_4",
+        "descricao":  "Despesa Operacional Janeiro",
+        "categoria":  "Despesa Operacional",
+        "valor":  0.17,
+        "tipo":  "despesa",
+        "data":  "31/01/2026",
+        "data_iso":  "2026-01-31",
+        "mes":  "Janeiro"
+    },
+    {
+        "id":  "lanc_5",
+        "descricao":  "Despesa Operacional Janeiro",
+        "categoria":  "Despesa Operacional",
+        "valor":  0.4,
+        "tipo":  "despesa",
+        "data":  "31/01/2026",
+        "data_iso":  "2026-01-31",
+        "mes":  "Janeiro"
+    },
+    {
+        "id":  "lanc_6",
+        "descricao":  "Despesa Operacional Fevereiro",
+        "categoria":  "Despesa Operacional",
+        "valor":  170,
+        "tipo":  "despesa",
+        "data":  "09/02/2026",
+        "data_iso":  "2026-02-09",
+        "mes":  "Fevereiro"
+    },
+    {
+        "id":  "lanc_7",
+        "descricao":  "Despesa Operacional Fevereiro",
+        "categoria":  "Despesa Operacional",
+        "valor":  47.61,
+        "tipo":  "despesa",
+        "data":  "20/02/2026",
+        "data_iso":  "2026-02-20",
+        "mes":  "Fevereiro"
+    },
+    {
+        "id":  "lanc_8",
+        "descricao":  "Despesa Operacional Fevereiro",
+        "categoria":  "Despesa Operacional",
+        "valor":  35,
+        "tipo":  "despesa",
+        "data":  "20/02/2026",
+        "data_iso":  "2026-02-20",
+        "mes":  "Fevereiro"
+    },
+    {
+        "id":  "lanc_9",
+        "descricao":  "Despesa Operacional Fevereiro",
+        "categoria":  "Despesa Operacional",
+        "valor":  1945,
+        "tipo":  "despesa",
+        "data":  "23/02/2026",
+        "data_iso":  "2026-02-23",
+        "mes":  "Fevereiro"
+    },
+    {
+        "id":  "lanc_10",
+        "descricao":  "Despesa Operacional Fevereiro",
+        "categoria":  "Despesa Operacional",
+        "valor":  775.8,
+        "tipo":  "despesa",
+        "data":  "23/02/2026",
+        "data_iso":  "2026-02-23",
+        "mes":  "Fevereiro"
+    },
+    {
+        "id":  "lanc_11",
+        "descricao":  "Despesa Operacional Fevereiro",
+        "categoria":  "Despesa Operacional",
+        "valor":  0.17,
+        "tipo":  "despesa",
+        "data":  "28/02/2026",
+        "data_iso":  "2026-02-28",
+        "mes":  "Fevereiro"
+    },
+    {
+        "id":  "lanc_12",
+        "descricao":  "Despesa Operacional Fevereiro",
+        "categoria":  "Despesa Operacional",
+        "valor":  0.54,
+        "tipo":  "despesa",
+        "data":  "28/02/2026",
+        "data_iso":  "2026-02-28",
+        "mes":  "Fevereiro"
+    },
+    {
+        "id":  "lanc_13",
+        "descricao":  "Despesa Operacional Março",
+        "categoria":  "Despesa Operacional",
+        "valor":  800,
+        "tipo":  "despesa",
+        "data":  "12/03/2026",
+        "data_iso":  "2026-03-12",
+        "mes":  "Março"
+    },
+    {
+        "id":  "lanc_14",
+        "descricao":  "Despesa Operacional Março",
+        "categoria":  "Despesa Operacional",
+        "valor":  35,
+        "tipo":  "despesa",
+        "data":  "20/03/2026",
+        "data_iso":  "2026-03-20",
+        "mes":  "Março"
+    },
+    {
+        "id":  "lanc_15",
+        "descricao":  "Despesa Operacional Março",
+        "categoria":  "Despesa Operacional",
+        "valor":  0.88,
+        "tipo":  "despesa",
+        "data":  "30/03/2026",
+        "data_iso":  "2026-03-30",
+        "mes":  "Março"
+    },
+    {
+        "id":  "lanc_16",
+        "descricao":  "Despesa Operacional Março",
+        "categoria":  "Despesa Operacional",
+        "valor":  0.62,
+        "tipo":  "despesa",
+        "data":  "30/03/2026",
+        "data_iso":  "2026-03-30",
+        "mes":  "Março"
+    },
+    {
+        "id":  "lanc_17",
+        "descricao":  "Despesa Operacional Abril",
+        "categoria":  "Despesa Operacional",
+        "valor":  240,
+        "tipo":  "despesa",
+        "data":  "13/04/2026",
+        "data_iso":  "2026-04-13",
+        "mes":  "Abril"
+    },
+    {
+        "id":  "lanc_18",
+        "descricao":  "Despesa Operacional Abril",
+        "categoria":  "Despesa Operacional",
+        "valor":  132.08,
+        "tipo":  "despesa",
+        "data":  "13/04/2026",
+        "data_iso":  "2026-04-13",
+        "mes":  "Abril"
+    },
+    {
+        "id":  "lanc_19",
+        "descricao":  "Despesa Operacional Abril",
+        "categoria":  "Despesa Operacional",
+        "valor":  35,
+        "tipo":  "despesa",
+        "data":  "20/04/2026",
+        "data_iso":  "2026-04-20",
+        "mes":  "Abril"
+    },
+    {
+        "id":  "lanc_20",
+        "descricao":  "Despesa Operacional Abril",
+        "categoria":  "Despesa Operacional",
+        "valor":  193.67,
+        "tipo":  "despesa",
+        "data":  "24/04/2026",
+        "data_iso":  "2026-04-24",
+        "mes":  "Abril"
+    },
+    {
+        "id":  "lanc_21",
+        "descricao":  "Despesa Operacional Abril",
+        "categoria":  "Despesa Operacional",
+        "valor":  1.34,
+        "tipo":  "despesa",
+        "data":  "30/04/2026",
+        "data_iso":  "2026-04-30",
+        "mes":  "Abril"
+    },
+    {
+        "id":  "lanc_22",
+        "descricao":  "Despesa Operacional Maio",
+        "categoria":  "Despesa Operacional",
+        "valor":  35,
+        "tipo":  "despesa",
+        "data":  "20/05/2026",
+        "data_iso":  "2026-05-20",
+        "mes":  "Maio"
+    },
+    {
+        "id":  "lanc_23",
+        "descricao":  "Despesa Operacional Maio",
+        "categoria":  "Despesa Operacional",
+        "valor":  11.31,
+        "tipo":  "despesa",
+        "data":  "04/05/2026",
+        "data_iso":  "2026-05-04",
+        "mes":  "Maio"
+    },
+    {
+        "id":  "lanc_24",
+        "descricao":  "Despesa Operacional Maio",
+        "categoria":  "Despesa Operacional",
+        "valor":  1.28,
+        "tipo":  "despesa",
+        "data":  "31/05/2026",
+        "data_iso":  "2026-05-31",
+        "mes":  "Maio"
+    },
+    {
+        "id":  "lanc_25",
+        "descricao":  "Despesa Operacional Junho",
+        "categoria":  "Despesa Operacional",
+        "valor":  25,
+        "tipo":  "despesa",
+        "data":  "11/06/2026",
+        "data_iso":  "2026-06-11",
+        "mes":  "Junho"
+    },
+    {
+        "id":  "lanc_26",
+        "descricao":  "Despesa Operacional Junho",
+        "categoria":  "Despesa Operacional",
+        "valor":  440.66,
+        "tipo":  "despesa",
+        "data":  "11/06/2026",
+        "data_iso":  "2026-06-11",
+        "mes":  "Junho"
+    },
+    {
+        "id":  "lanc_27",
+        "descricao":  "Despesa Operacional Junho",
+        "categoria":  "Despesa Operacional",
+        "valor":  184,
+        "tipo":  "despesa",
+        "data":  "11/06/2026",
+        "data_iso":  "2026-06-11",
+        "mes":  "Junho"
+    },
+    {
+        "id":  "lanc_28",
+        "descricao":  "Despesa Operacional Junho",
+        "categoria":  "Despesa Operacional",
+        "valor":  25,
+        "tipo":  "despesa",
+        "data":  "15/06/2026",
+        "data_iso":  "2026-06-15",
+        "mes":  "Junho"
+    },
+    {
+        "id":  "lanc_29",
+        "descricao":  "Despesa Operacional Junho",
+        "categoria":  "Despesa Operacional",
+        "valor":  25,
+        "tipo":  "despesa",
+        "data":  "17/06/2026",
+        "data_iso":  "2026-06-17",
+        "mes":  "Junho"
+    },
+    {
+        "id":  "lanc_30",
+        "descricao":  "Despesa Operacional Junho",
+        "categoria":  "Despesa Operacional",
+        "valor":  80.85,
+        "tipo":  "despesa",
+        "data":  "18/06/2026",
+        "data_iso":  "2026-06-18",
+        "mes":  "Junho"
+    },
+    {
+        "id":  "lanc_31",
+        "descricao":  "Despesa Operacional Junho",
+        "categoria":  "Despesa Operacional",
+        "valor":  248.35,
+        "tipo":  "despesa",
+        "data":  "22/06/2026",
+        "data_iso":  "2026-06-22",
+        "mes":  "Junho"
+    },
+    {
+        "id":  "lanc_32",
+        "descricao":  "Despesa Operacional Junho",
+        "categoria":  "Despesa Operacional",
+        "valor":  35.66,
+        "tipo":  "despesa",
+        "data":  "22/06/2026",
+        "data_iso":  "2026-06-22",
+        "mes":  "Junho"
+    },
+    {
+        "id":  "lanc_33",
+        "descricao":  "Despesa Operacional Junho",
+        "categoria":  "Despesa Operacional",
+        "valor":  35,
+        "tipo":  "despesa",
+        "data":  "22/06/2026",
+        "data_iso":  "2026-06-22",
+        "mes":  "Junho"
+    },
+    {
+        "id":  "lanc_34",
+        "descricao":  "Despesa Operacional Junho",
+        "categoria":  "Despesa Operacional",
+        "valor":  36,
+        "tipo":  "despesa",
+        "data":  "23/06/2026",
+        "data_iso":  "2026-06-23",
+        "mes":  "Junho"
+    },
+    {
+        "id":  "lanc_35",
+        "descricao":  "Despesa Operacional Junho",
+        "categoria":  "Despesa Operacional",
+        "valor":  25,
+        "tipo":  "despesa",
+        "data":  "24/06/2026",
+        "data_iso":  "2026-06-24",
+        "mes":  "Junho"
+    },
+    {
+        "id":  "lanc_36",
+        "descricao":  "Despesa Operacional Junho",
+        "categoria":  "Despesa Operacional",
+        "valor":  0.71,
+        "tipo":  "despesa",
+        "data":  "30/06/2026",
+        "data_iso":  "2026-06-30",
+        "mes":  "Junho"
+    },
+    {
+        "id":  "lanc_37",
+        "descricao":  "Despesa Operacional Junho",
+        "categoria":  "Despesa Operacional",
+        "valor":  1.35,
+        "tipo":  "despesa",
+        "data":  "30/06/2026",
+        "data_iso":  "2026-06-30",
+        "mes":  "Junho"
+    },
+    {
+        "id":  "lanc_38",
+        "descricao":  "Despesa Operacional Julho",
+        "categoria":  "Despesa Operacional",
+        "valor":  384,
+        "tipo":  "despesa",
+        "data":  "17/07/2026",
+        "data_iso":  "2026-07-17",
+        "mes":  "Julho"
+    },
+    {
+        "id":  "lanc_39",
+        "descricao":  "Despesa Operacional Julho",
+        "categoria":  "Despesa Operacional",
+        "valor":  35,
+        "tipo":  "despesa",
+        "data":  "20/07/2026",
+        "data_iso":  "2026-07-20",
+        "mes":  "Julho"
+    },
+    {
+        "id":  "lanc_40",
+        "descricao":  "Despesa Operacional Julho",
+        "categoria":  "Despesa Operacional",
+        "valor":  38.88,
+        "tipo":  "despesa",
+        "data":  "22/07/2026",
+        "data_iso":  "2026-07-22",
+        "mes":  "Julho"
+    },
+    {
+        "id":  "lanc_41",
+        "descricao":  "Despesa Operacional Julho",
+        "categoria":  "Despesa Operacional",
+        "valor":  19.93,
+        "tipo":  "despesa",
+        "data":  "27/07/2026",
+        "data_iso":  "2026-07-27",
+        "mes":  "Julho"
+    },
+    {
+        "id":  "lanc_42",
+        "descricao":  "Despesa Operacional Julho",
+        "categoria":  "Despesa Operacional",
+        "valor":  1.35,
+        "tipo":  "despesa",
+        "data":  "31/07/2026",
+        "data_iso":  "2026-07-31",
+        "mes":  "Julho"
+    }
+];
+
 // DADOS IMPORTADOS DA PLANILHA 'Cadastrosocios.xlsx' (Aba: Cadastro de Sócios 2026)
 const ASSOCIADOS_EXCEL_IMPORT = [
     {
@@ -1735,7 +3128,8 @@ function initMockData() {
 
     localStorage.setItem('acbcsj_associados', JSON.stringify(list));
 
-    localStorage.setItem('acbcsj_financeiro', JSON.stringify(MOCK_DATA_INITIAL.financeiro));
+    localStorage.setItem('acbcsj_financeiro', JSON.stringify(INITIAL_LANCAMENTOS_DATA));
+    localStorage.setItem('acbcsj_mensalidades_grid', JSON.stringify(INITIAL_MENSAL_DATA));
     localStorage.setItem('acbcsj_mensalidades', JSON.stringify(MOCK_DATA_INITIAL.mensalidades));
     localStorage.setItem('acbcsj_programacao', JSON.stringify(MOCK_DATA_INITIAL.programacao));
     localStorage.setItem('acbcsj_mensagens', JSON.stringify(MOCK_DATA_INITIAL.mensagens));
@@ -1784,7 +3178,7 @@ function loginWithCPF(cpf, password, roleHint = null) {
     
     // Se for teste direto via atalho
     if (roleHint === 'diretoria') {
-        currentUser = list.find(a => a.perfil === 'diretoria') || MOCK_DATA_INITIAL.associados[0];
+        currentUser = list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || MOCK_DATA_INITIAL.associados[0];
     } else if (roleHint === 'associado') {
         currentUser = list.find(a => a.perfil === 'associado' && a.status === 'ativo') || MOCK_DATA_INITIAL.associados[1];
     } else {
@@ -1795,12 +3189,12 @@ function loginWithCPF(cpf, password, roleHint = null) {
         }
 
         if (found.status === 'pendente') {
-            alert('Acesso bloqueado! Sua solicitação de cadastro ainda está em análise pela Diretoria da ACBCSJ. Aguarde a aprovação para conseguir logar.');
+            alert('⚠️ ACESSO BLOQUEADO!\n\nSua solicitação de cadastro ainda está em análise pela Diretoria da ACBCSJ. Aguarde a aprovação para conseguir logar.');
             return;
         }
 
         if (found.status === 'desligado') {
-            alert('Este cadastro consta como desligado do sistema da ACBCSJ.');
+            alert('🚫 ACESSO TOTALMENTE BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da Associação Corpo de Bombeiros Comunitários de São José.\nIntegrantes desligados não possuem permissão de acesso ao sistema.');
             return;
         }
 
@@ -1865,6 +3259,16 @@ function renderSidebarMenu() {
 
 // NAVEGAÇÃO ENTRE ABAS
 function navigateTab(tabId) {
+    if (currentUser) {
+        const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+        const currentDbState = list.find(a => a.cpf === currentUser.cpf);
+        if (currentDbState && currentDbState.status === 'desligado') {
+            alert('🚫 ACESSO REVOGADO!\n\nSeu cadastro consta como DESLIGADO da Associação. Você foi desconectado do sistema.');
+            logout();
+            return;
+        }
+    }
+
     document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
 
@@ -2409,7 +3813,11 @@ function salvarEdicaoDocumento(e) {
             } catch (err) {
                 console.warn('Salvo com metadados no sistema.');
             }
-            dbService.saveDocumento(docs[index]);
+            try {
+                dbService.saveDocumento(docs[index]);
+            } catch (e) {
+                console.warn('Erro ao salvar no banco:', e);
+            }
             alert('Documento e permissões atualizados com sucesso!');
             closeModal('modalEditarDocumento');
             renderDocumentos();
@@ -2480,7 +3888,12 @@ function salvarNovoDocumento(e) {
             console.warn('Metadados salvos');
         }
 
-        dbService.saveDocumento(novoDoc);
+        try {
+            dbService.saveDocumento(novoDoc);
+        } catch (e) {
+            console.warn('Erro ao salvar no banco:', e);
+        }
+
         alert(`Documento "${titulo}" publicado com sucesso!`);
         e.target.reset();
         closeModal('modalNovoDocumento');
@@ -2683,3 +4096,316 @@ function submitPreCadastro(e) {
 function openModal(id) { document.getElementById(id).classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
+
+
+
+// ==========================================
+// GESTÃƒO FINANCEIRA, RECEITAS, DESPESAS E MENSALIDADES (PLANILHA MENSAL.XLSX)
+// ==========================================
+
+function abrirModalNovoLancamento(tipo) {
+    const selTipo = document.getElementById('finTipo');
+    const modalTitle = document.getElementById('modalLancamentoTitle');
+    const dataInput = document.getElementById('finData');
+    
+    if (selTipo) {
+        selTipo.value = tipo || 'receita';
+        atualizarCategoriasLancamento(selTipo.value);
+    }
+    
+    if (modalTitle) {
+        modalTitle.textContent = tipo === 'despesa' ? 'âž– Inserir Despesa (SaÃ­da)' : 'âž• Inserir Receita (Entrada)';
+    }
+
+    if (dataInput && !dataInput.value) {
+        const hoje = new Date().toISOString().split('T')[0];
+        dataInput.value = hoje;
+    }
+
+    openModal('modalNovoLancamento');
+}
+
+function atualizarCategoriasLancamento(tipo) {
+    const catSelect = document.getElementById('finCategoria');
+    if (!catSelect) return;
+    
+    catSelect.innerHTML = '';
+    if (tipo === 'receita') {
+        catSelect.innerHTML = `
+            <option value="Mensalidade / ContribuiÃ§Ã£o">Mensalidade / ContribuiÃ§Ã£o</option>
+            <option value="DoaÃ§Ã£o / ConvÃªnio">DoaÃ§Ã£o / ConvÃªnio</option>
+            <option value="Evento / Rifa">Evento / Rifa</option>
+            <option value="Outras Receitas">Outras Receitas</option>
+        `;
+    } else {
+        catSelect.innerHTML = `
+            <option value="Despesa Operacional">Despesa Operacional</option>
+            <option value="ManutenÃ§Ã£o de Viatura">ManutenÃ§Ã£o de Viatura</option>
+            <option value="Administrativo / Consumo">Administrativo / Consumo</option>
+            <option value="Encargos / Tarifas">Encargos / Tarifas</option>
+            <option value="Outras Despesas">Outras Despesas</option>
+        `;
+    }
+}
+
+function salvarNovoLancamento(e) {
+    e.preventDefault();
+    const tipo = document.getElementById('finTipo').value;
+    const valor = parseFloat(document.getElementById('finValor').value);
+    const descricao = document.getElementById('finDescricao').value.trim();
+    const categoria = document.getElementById('finCategoria').value;
+    const dataInput = document.getElementById('finData').value;
+    const fileInput = document.getElementById('finComprovante');
+    const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+    if (!valor || valor <= 0 || !descricao || !dataInput) {
+        alert('Por favor, preencha a descriÃ§Ã£o, valor vÃ¡lido e a data do lanÃ§amento.');
+        return;
+    }
+
+    const [ano, mes, dia] = dataInput.split('-');
+    const dataBR = `${dia}/${mes}/${ano}`;
+    const mesesNomes = ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const mesNome = mesesNomes[parseInt(mes, 10) - 1] || 'Janeiro';
+
+    const lancId = 'lanc_' + Date.now();
+
+    const concluirSalvarLancamento = async (fileDataUrl = null, fileName = null) => {
+        let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+        const novoLancamento = {
+            id: lancId,
+            descricao: descricao,
+            categoria: categoria,
+            valor: valor,
+            tipo: tipo,
+            data: dataBR,
+            data_iso: dataInput,
+            mes: mesNome,
+            comprovante_nome: fileName
+        };
+
+        if (fileDataUrl) {
+            await idbStorage.setFile(lancId, fileDataUrl);
+        }
+
+        list.unshift(novoLancamento);
+
+        try {
+            localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+        } catch (err) {
+            console.warn('Salvo no sistema.');
+        }
+
+        try {
+            dbService.addFinanceiro(novoLancamento);
+        } catch (err) {}
+
+        alert(`LanÃ§amento de ${tipo.toUpperCase()} (R$ ${valor.toFixed(2).replace('.', ',')}) cadastrado com sucesso!`);
+        e.target.reset();
+        closeModal('modalNovoLancamento');
+        renderGestaoFinanceira();
+    };
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            concluirSalvarLancamento(event.target.result, file.name);
+        };
+        reader.readAsDataURL(file);
+    } else {
+        concluirSalvarLancamento();
+    }
+}
+
+function excluirLancamentoFinanceiro(id) {
+    if (confirm('Deseja realmente remover este lanÃ§amento financeiro?')) {
+        let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+        list = list.filter(item => item.id !== id);
+        localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+        idbStorage.deleteFile(id);
+        alert('LanÃ§amento removido com sucesso.');
+        renderGestaoFinanceira();
+    }
+}
+
+async function abrirComprovanteLancamento(id) {
+    const fileContent = await idbStorage.getFile(id);
+    if (!fileContent) {
+        alert('Comprovante nÃ£o disponÃ­vel para este lanÃ§amento.');
+        return;
+    }
+    const win = window.open();
+    if (win) {
+        win.document.write(`
+            <html>
+                <head><title>Comprovante Financeiro - ACBCSJ</title></head>
+                <body style="margin:0; background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh;">
+                    <iframe src="${fileContent}" style="width:100%; height:100vh; border:none;"></iframe>
+                </body>
+            </html>
+        `);
+    } else {
+        alert('VisualizaÃ§Ã£o bloqueada pelo navegador.');
+    }
+}
+
+function renderGestaoFinanceira() {
+    const list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const filtroTipoSelect = document.getElementById('finFiltroTipo');
+    const filtroTipo = filtroTipoSelect ? filtroTipoSelect.value : 'todos';
+
+    let totalReceitas = 0;
+    let totalDespesas = 0;
+
+    list.forEach(item => {
+        const val = parseFloat(item.valor) || 0;
+        if (item.tipo === 'receita') {
+            totalReceitas += val;
+        } else {
+            totalDespesas += val;
+        }
+    });
+
+    const saldo = totalReceitas - totalDespesas;
+
+    const elReceita = document.getElementById('finTotalReceitas');
+    const elDespesa = document.getElementById('finTotalDespesas');
+    const elSaldo = document.getElementById('finSaldoAtual');
+
+    if (elReceita) elReceita.textContent = `R$ ${totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    if (elDespesa) elDespesa.textContent = `R$ ${totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    if (elSaldo) {
+        elSaldo.textContent = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        elSaldo.style.color = saldo >= 0 ? 'var(--accent-gold)' : '#E74C3C';
+    }
+
+    const container = document.getElementById('tableFinanceiroBody');
+    if (container) {
+        let filtrados = list;
+        if (filtroTipo !== 'todos') {
+            filtrados = list.filter(i => i.tipo === filtroTipo);
+        }
+
+        if (filtrados.length === 0) {
+            container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum lanÃ§amento registrado.</td></tr>`;
+        } else {
+            container.innerHTML = filtrados.map(item => `
+                <tr>
+                    <td><b>${item.data || '-'}</b></td>
+                    <td>${item.descricao}</td>
+                    <td><span class="badge badge-info">${item.categoria}</span></td>
+                    <td>
+                        <span class="badge badge-${item.tipo === 'receita' ? 'success' : 'danger'}">
+                            ${item.tipo === 'receita' ? 'âž• RECEITA' : 'âž– DESPESA'}
+                        </span>
+                    </td>
+                    <td style="font-weight: 700; color: ${item.tipo === 'receita' ? '#2ECC71' : '#E74C3C'};">
+                        ${item.tipo === 'receita' ? '+' : '-'} R$ ${(parseFloat(item.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            ${item.comprovante_nome ? `<button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:var(--accent-gold); border-color:var(--accent-gold);" onclick="abrirComprovanteLancamento('${item.id}')">ðŸ“Ž Ver Recibo</button>` : ''}
+                            <button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:#E74C3C; border-color:#E74C3C;" onclick="excluirLancamentoFinanceiro('${item.id}')">ðŸ—‘ï¸</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    }
+
+    renderGradeMensalidadesDiretoria();
+}
+
+function renderGradeMensalidadesDiretoria() {
+    const grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || INITIAL_MENSAL_DATA || [];
+    const container = document.getElementById('tableGradeMensalidadesDiretoria');
+    const filtroInput = document.getElementById('filtroMensalSocio');
+    const termo = filtroInput ? filtroInput.value.toLowerCase().trim() : '';
+
+    if (!container) return;
+
+    let filtrados = grid;
+    if (termo) {
+        filtrados = grid.filter(s => (s.nome_guerra || '').toLowerCase().includes(termo) || (s.nome_completo || '').toLowerCase().includes(termo));
+    }
+
+    if (filtrados.length === 0) {
+        container.innerHTML = `<tr><td colspan="14" style="text-align: center; color: var(--text-muted);">Nenhum sÃ³cio encontrado.</td></tr>`;
+        return;
+    }
+
+    container.innerHTML = filtrados.map(s => {
+        const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+        let totalSocio = 0;
+
+        const colsMeses = meses.map(m => {
+            const val = parseFloat(s[m]) || 0;
+            totalSocio += val;
+            if (val > 0) {
+                return `<td style="color:#2ECC71; font-weight:600; background:rgba(46,204,113,0.1);">R$ ${val}</td>`;
+            } else {
+                return `<td style="color:var(--text-muted);">R$ 0</td>`;
+            }
+        }).join('');
+
+        return `
+            <tr>
+                <td><b>${s.nome_guerra || s.nome_completo}</b><br><small style="color:var(--text-muted); font-size:10px;">${s.nome_completo}</small></td>
+                ${colsMeses}
+                <td style="font-weight:700; color:var(--accent-gold);">R$ ${totalSocio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderAssociadoOverview() {
+    const welcome = document.getElementById('associadoWelcomeName');
+    if (welcome && currentUser) {
+        welcome.textContent = currentUser.nome_guerra || currentUser.nome;
+    }
+
+    const grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || INITIAL_MENSAL_DATA || [];
+    const container = document.getElementById('tableMinhasMensalidadesBody');
+    if (!container || !currentUser) return;
+
+    const socio = grid.find(s => {
+        const ng = (s.nome_guerra || '').toLowerCase();
+        const nc = (s.nome_completo || '').toLowerCase();
+        const userNg = (currentUser.nome_guerra || '').toLowerCase();
+        const userNc = (currentUser.nome || '').toLowerCase();
+        return (ng && userNg && ng === userNg) || (nc && userNc && nc === userNc) || (userNc && nc.includes(userNc));
+    }) || grid[0];
+
+    const mesesNomes = [
+        { key: 'jan', nome: 'Janeiro 2026' },
+        { key: 'fev', nome: 'Fevereiro 2026' },
+        { key: 'mar', nome: 'MarÃ§o 2026' },
+        { key: 'abr', nome: 'Abril 2026' },
+        { key: 'mai', nome: 'Maio 2026' },
+        { key: 'jun', nome: 'Junho 2026' },
+        { key: 'jul', nome: 'Julho 2026' },
+        { key: 'ago', nome: 'Agosto 2026' },
+        { key: 'set', nome: 'Setembro 2026' },
+        { key: 'out', nome: 'Outubro 2026' },
+        { key: 'nov', nome: 'Novembro 2026' },
+        { key: 'dez', nome: 'Dezembro 2026' }
+    ];
+
+    container.innerHTML = mesesNomes.map(m => {
+        const val = socio ? (parseFloat(socio[m.key]) || 0) : 0;
+        const pago = val > 0;
+        return `
+            <tr>
+                <td><b>${m.nome}</b></td>
+                <td style="font-weight: 700; color: ${pago ? '#2ECC71' : 'var(--text-muted)'};">
+                    R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </td>
+                <td>
+                    <span class="badge badge-${pago ? 'success' : 'warning'}">
+                        ${pago ? 'âœ… PAGO / BAIXADO' : 'â³ EM ABERTO / PENDENTE'}
+                    </span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}

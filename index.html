@@ -216,11 +216,94 @@
 
                 <!-- ABA 3: GESTÃO FINANCEIRA (DIRETORIA) -->
                 <div id="tab-gestao-financeira" class="tab-content" style="display: none;">
-                    <div class="page-header">
-                        <h2 class="page-title">Controle Financeiro & Fornecedores</h2>
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">Controle Financeiro, Entradas & Saídas</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Lançamentos de receitas, despesas, fornecedores e balancetes da ACBCSJ.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-sm btn-gold" onclick="abrirModalNovoLancamento('receita')">➕ Inserir Receita (Entrada)</button>
+                            <button class="btn btn-sm btn-outline" style="color: #E74C3C; border-color: #E74C3C;" onclick="abrirModalNovoLancamento('despesa')">➖ Inserir Despesa (Saída)</button>
+                        </div>
                     </div>
+
+                    <!-- CARDS DE METRICAS FINANCEIRAS -->
+                    <div class="metrics-grid" style="margin-bottom: 20px;">
+                        <div class="metric-card">
+                            <span class="metric-title">Total de Receita (Entradas)</span>
+                            <span class="metric-value" id="finTotalReceitas" style="color: #2ECC71;">R$ 0,00</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Total de Despesas (Saídas)</span>
+                            <span class="metric-value" id="finTotalDespesas" style="color: #E74C3C;">R$ 0,00</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Saldo Financeiro Atual</span>
+                            <span class="metric-value" id="finSaldoAtual" style="color: var(--accent-gold);">R$ 0,00</span>
+                        </div>
+                    </div>
+
+                    <!-- EXTRATO DE LANÇAMENTOS -->
                     <div class="card">
-                        <p style="color: var(--text-muted)">Painel de lançamento rápido de receitas, fornecedores e controle de baixas.</p>
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 class="card-title">Extrato Geral de Lançamentos Financeiros</h3>
+                            <div style="display: flex; gap: 8px;">
+                                <select id="finFiltroTipo" class="form-control" style="width: 150px; padding: 4px 8px; font-size: 12px;" onchange="renderGestaoFinanceira()">
+                                    <option value="todos">Todos os Tipos</option>
+                                    <option value="receita">Apenas Receitas</option>
+                                    <option value="despesa">Apenas Despesas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Descrição / Histórico</th>
+                                        <th>Categoria</th>
+                                        <th>Tipo</th>
+                                        <th>Valor (R$)</th>
+                                        <th>Ações / Recibo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableFinanceiroBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- VISUALIZADOR DA PLANILHA MENSAL DE SÓCIOS (DIRETORIA) -->
+                    <div class="card" style="margin-top: 24px;">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 class="card-title">📊 Controle Mensal de Contribuições por Associado (2026)</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Valores lançados mês a mês para cada bombeiro comunitário conforme planilha oficial da ACBCSJ.</p>
+                            </div>
+                            <input type="text" id="filtroMensalSocio" class="form-control" style="width: 220px; padding: 4px 10px; font-size: 12px;" placeholder="Buscar por Nome de Guerra..." oninput="renderGradeMensalidadesDiretoria()">
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 11px;">
+                                <thead>
+                                    <tr>
+                                        <th>Nome de Guerra</th>
+                                        <th>Jan</th>
+                                        <th>Fev</th>
+                                        <th>Mar</th>
+                                        <th>Abr</th>
+                                        <th>Mai</th>
+                                        <th>Jun</th>
+                                        <th>Jul</th>
+                                        <th>Ago</th>
+                                        <th>Set</th>
+                                        <th>Out</th>
+                                        <th>Nov</th>
+                                        <th>Dez</th>
+                                        <th>Total Acumulado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableGradeMensalidadesDiretoria"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -229,22 +312,22 @@
                     <div class="page-header">
                         <div>
                             <h2 class="page-title">Bem-vindo(a), <span id="associadoWelcomeName">Associado</span></h2>
-                            <p style="font-size: 13px; color: var(--text-muted);">Acompanhe suas mensalidades e comunicados oficiais da ACBCSJ.</p>
+                            <p style="font-size: 13px; color: var(--text-muted);">Acompanhe suas mensalidades e contribuições lançadas na ACBCSJ.</p>
                         </div>
                     </div>
 
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Minha Situação Financeira (Mensalidades)</h3>
+                            <h3 class="card-title">💳 Minhas Mensalidades & Contribuições (Ano 2026)</h3>
+                            <p style="font-size: 12px; color: var(--text-muted);">Histórico dos seus pagamentos e lançamentos confirmados mês a mês.</p>
                         </div>
                         <div class="table-responsive">
-                            <table class="custom-table">
+                            <table class="custom-table" style="font-size: 12px;">
                                 <thead>
                                     <tr>
                                         <th>Mês de Referência</th>
-                                        <th>Valor</th>
-                                        <th>Status</th>
-                                        <th>Data da Baixa/Pagamento</th>
+                                        <th>Valor Lançado (R$)</th>
+                                        <th>Status do Pagamento</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tableMinhasMensalidadesBody"></tbody>
@@ -257,12 +340,13 @@
                 <div id="tab-balancetes-associado" class="tab-content" style="display: none;">
                     <div class="page-header">
                         <h2 class="page-title">Transparência & Balancetes da Associação</h2>
+                        <p style="font-size: 13px; color: var(--text-muted);">Prestação de contas mensal entre receitas arrecadadas e despesas operacionais da ACBCSJ.</p>
                     </div>
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">Balanço Geral de Entradas vs Saídas</h3>
                         </div>
-                        <div style="max-width: 320px; margin: 0 auto;">
+                        <div style="max-width: 380px; margin: 0 auto; padding: 20px 0;">
                             <canvas id="chartBalancete"></canvas>
                         </div>
                     </div>
@@ -640,6 +724,70 @@
                 <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarDocumento')">Cancelar</button>
                     <button type="submit" class="btn btn-gold">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE NOVO LANÇAMENTO FINANCEIRO (RECEITA / DESPESA) -->
+    <div id="modalNovoLancamento" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" id="modalLancamentoTitle" style="color: var(--accent-gold);">Inserir Lançamento Financeiro</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Cadastre uma receita (entrada) ou despesa (saída) com transparência e comprovante.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalNovoLancamento')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarNovoLancamento(event)">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Tipo de Lançamento <span class="req-star">*</span></label>
+                        <select id="finTipo" class="form-control" required onchange="atualizarCategoriasLancamento(this.value)">
+                            <option value="receita">➕ Receita (Entrada)</option>
+                            <option value="despesa">➖ Despesa (Saída)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Valor (R$) <span class="req-star">*</span></label>
+                        <input type="number" step="0.01" min="0.01" id="finValor" class="form-control" placeholder="0,00" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Descrição / Histórico <span class="req-star">*</span></label>
+                    <input type="text" id="finDescricao" class="form-control" placeholder="Ex: Mensalidades do Mês / Compra de Materiais Operacionais" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Categoria <span class="req-star">*</span></label>
+                        <select id="finCategoria" class="form-control" required>
+                            <option value="Mensalidade / Contribuição">Mensalidade / Contribuição</option>
+                            <option value="Doação / Convênio">Doação / Convênio</option>
+                            <option value="Despesa Operacional">Despesa Operacional</option>
+                            <option value="Manutenção de Viatura">Manutenção de Viatura</option>
+                            <option value="Administrativo / Consumo">Administrativo / Consumo</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data do Lançamento <span class="req-star">*</span></label>
+                        <input type="date" id="finData" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Comprovante / Nota Fiscal / Recibo <small style="color: var(--text-muted); font-weight: normal;">(Opcional - PDF ou Imagem)</small></label>
+                    <input type="file" id="finComprovante" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalNovoLancamento')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold" id="btnSalvarLancamento">Salvar Lançamento</button>
                 </div>
             </form>
         </div>
