@@ -1827,7 +1827,7 @@ function logout() {
     document.getElementById('authScreen').style.display = 'flex';
 }
 
-// RENDERIZA�?�fO DO CABE�?ALHO DO USUÁRIO
+// RENDERIZAÇÃO DO CABEÇALHO DO USUÁRIO
 function renderUserHeader() {
     document.getElementById('headerUserName').textContent = currentUser.nome;
     const badge = document.getElementById('headerUserRole');
@@ -1835,7 +1835,7 @@ function renderUserHeader() {
     badge.className = `user-role-badge role-${currentUser.perfil}`;
 }
 
-// MENU LATERAL DIN�,MICO CONFORME PERFIL
+// MENU LATERAL DINÂMICO CONFORME PERFIL
 function renderSidebarMenu() {
     const menuNav = document.getElementById('sidebarNav');
     if (!menuNav) return;
@@ -1843,24 +1843,23 @@ function renderSidebarMenu() {
 
     if (currentUser.perfil === 'diretoria') {
         menuNav.innerHTML = `
-            <div class="nav-item active" onclick="navigateTab('overview-diretoria')">�Y"S Painel Geral</div>
-            <div class="nav-item" onclick="navigateTab('gestao-associados')">�Y'� Controle de Associados</div>
-            <div class="nav-item" onclick="navigateTab('associados-desligados')">�Y"< Associados Desligados</div>
-            <div class="nav-item" onclick="navigateTab('gestao-financeira')">�Y'� Lançamentos Financeiros</div>
-            <div class="nav-item" onclick="navigateTab('documentos-associado')">�Y"' Documentos & Atas</div>
-            <div class="nav-item" onclick="navigateTab('mensagens-diretoria')">�Y"� Caixa de Mensagens</div>
+            <div class="nav-item active" onclick="navigateTab('overview-diretoria')"><span style="margin-right:8px;">📊</span> Painel Geral</div>
+            <div class="nav-item" onclick="navigateTab('gestao-associados')"><span style="margin-right:8px;">👥</span> Controle de Associados</div>
+            <div class="nav-item" onclick="navigateTab('associados-desligados')"><span style="margin-right:8px;">📋</span> Associados Desligados</div>
+            <div class="nav-item" onclick="navigateTab('gestao-financeira')"><span style="margin-right:8px;">💰</span> Lançamentos Financeiros</div>
+            <div class="nav-item" onclick="navigateTab('documentos-associado')"><span style="margin-right:8px;">📑</span> Documentos & Atas</div>
+            <div class="nav-item" onclick="navigateTab('mensagens-diretoria')"><span style="margin-right:8px;">📬</span> Caixa de Mensagens</div>
         `;
     } else {
         menuNav.innerHTML = `
-            <div class="nav-item active" onclick="navigateTab('overview-associado')">�Y�� Meu Painel</div>
-            <div class="nav-item" onclick="navigateTab('balancetes-associado')">�Y"^ Balancetes & Contas</div>
-            <div class="nav-item" onclick="navigateTab('documentos-associado')">�Y"� Documentos & Convites</div>
-            <div class="nav-item" onclick="navigateTab('enviar-mensagem')">�Y'� Fale com a Diretoria</div>
+            <div class="nav-item active" onclick="navigateTab('overview-associado')"><span style="margin-right:8px;">🏠</span> Meu Painel</div>
+            <div class="nav-item" onclick="navigateTab('balancetes-associado')"><span style="margin-right:8px;">📈</span> Balancetes & Contas</div>
+            <div class="nav-item" onclick="navigateTab('documentos-associado')"><span style="margin-right:8px;">📁</span> Documentos & Convites</div>
+            <div class="nav-item" onclick="navigateTab('enviar-mensagem')"><span style="margin-right:8px;">💬</span> Fale com a Diretoria</div>
         `;
     }
 }
-
-// NAVEGA�?�fO ENTRE ABAS
+// NAVEGAÇÃO ENTRE ABAS
 function navigateTab(tabId) {
     if (currentUser) {
         const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
