@@ -2308,6 +2308,11 @@ function salvarEdicaoDocumento(e) {
     const fileInput = document.getElementById('editDocArquivo');
     const file = fileInput && fileInput.files ? fileInput.files[0] : null;
 
+    if (file && file.size > 5 * 1024 * 1024) {
+        alert('O arquivo selecionado é maior que 5MB. Por favor, escolha um arquivo menor (PDF/Imagem compactado) para evitar travamentos do navegador.');
+        return;
+    }
+
     let docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
     const index = docs.findIndex(d => d.id === id);
     if (index >= 0) {
@@ -2317,10 +2322,16 @@ function salvarEdicaoDocumento(e) {
         docs[index].data_vencimento = dataVencimento || null;
 
         const concluirSalvar = () => {
-            localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
-            alert('Documento e permissões atualizados com sucesso!');
-            closeModal('modalEditarDocumento');
-            renderDocumentos();
+            try {
+                localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
+                dbService.saveDocumento(docs[index]);
+                alert('Documento e permissões atualizados com sucesso!');
+                closeModal('modalEditarDocumento');
+                renderDocumentos();
+            } catch (err) {
+                console.error('Erro de armazenamento:', err);
+                alert('Atenção: O limite de armazenamento do navegador foi atingido. Tente enviar um arquivo menor ou remover documentos antigos.');
+            }
         };
 
         if (file) {
@@ -2351,6 +2362,17 @@ function salvarNovoDocumento(e) {
         return;
     }
 
+    if (file.size > 5 * 1024 * 1024) {
+        alert('O arquivo selecionado é maior que 5MB. Por favor, utilize um arquivo PDF ou imagem menor para garantir o correto armazenamento no sistema.');
+        return;
+    }
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Salvando...';
+    }
+
     const reader = new FileReader();
     reader.onload = function (event) {
         const fileDataUrl = event.target.result;
@@ -2369,12 +2391,23 @@ function salvarNovoDocumento(e) {
         };
 
         docs.unshift(novoDoc);
-        localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
 
-        alert(`Documento "${titulo}" publicado com sucesso!`);
-        e.target.reset();
-        closeModal('modalNovoDocumento');
-        renderDocumentos();
+        try {
+            localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
+            dbService.saveDocumento(novoDoc);
+            alert(`Documento "${titulo}" publicado com sucesso!`);
+            e.target.reset();
+            closeModal('modalNovoDocumento');
+            renderDocumentos();
+        } catch (err) {
+            console.error('Erro de armazenamento:', err);
+            alert('Atenção: O arquivo excede a capacidade de armazenamento local do navegador. Utilize arquivos PDF/imagem de tamanho menor.');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Publicar Documento';
+            }
+        }
     };
 
     reader.readAsDataURL(file);
