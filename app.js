@@ -1,4 +1,4 @@
-﻿// SISTEMA ACBCSJ - ASSOCIA�?�fO CORPO DE BOMBEIROS COMUNITÁRIOS DE S�fO JOS�?
+// SISTEMA ACBCSJ - ASSOCIA�?�fO CORPO DE BOMBEIROS COMUNITÁRIOS DE S�fO JOS�?
 
 // MOCK DATA INICIAL E DECLARA�?�.ES GLOBAIS
 const ASSOCIADOS_EXCEL_IMPORT = [
@@ -1765,7 +1765,7 @@ function setupCPFMasks() {
     });
 }
 
-// AUTENTICA�?�fO E LOGIN
+// AUTENTICA?fO E LOGIN
 function loginWithCPF(cpf, password, roleHint = null) {
     try {
         const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || (typeof MOCK_DATA_INITIAL !== 'undefined' ? MOCK_DATA_INITIAL.associados : []);
@@ -1779,17 +1779,17 @@ function loginWithCPF(cpf, password, roleHint = null) {
             const found = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanInputCPF || a.cpf === cpf);
             
             if (!found) {
-                alert('CPF não encontrado no sistema da ACBCSJ. Verifique os números digitados ou faça sua solicitaÃ§Ã£oção de pré-cadastro.');
+                alert('CPF não encontrado no sistema da ACBCSJ. Verifique os números digitados ou faça sua solicitação de pré-cadastro.');
                 return;
             }
 
             if (found.status === 'pendente') {
-                alert('�s�️ ACESSO BLOQUEADO!\n\nSua solicitaÃ§Ã£oção de cadastro ainda está em análise pela Diretoria da ACBCSJ. Aguarde a aprovação para conseguir logar.');
+                alert('ACESSO BLOQUEADO!\n\nSua solicitação de cadastro ainda está em análise pela Diretoria da ACBCSJ. Aguarde a aprovação para conseguir logar.');
                 return;
             }
 
             if (found.status === 'desligado') {
-                alert('�ðŸš«� ACESSO TOTALMENTE BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da Associação Corpo de Bombeiros Comunitários de São José.\nIntegrantes desligados não possuem permissão de acesso ao sistema.');
+                alert('ACESSO TOTALMENTE BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da Associação Corpo de Bombeiros Comunitários de São José.\nIntegrantes desligados não possuem permissão de acesso ao sistema.');
                 return;
             }
 
