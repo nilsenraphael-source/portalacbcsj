@@ -1712,12 +1712,12 @@ function loginWithCPF(cpf, password, roleHint = null) {
             return;
         }
 
-        // Valida��o de senha (autom�tica: 4 primeiros d�gitos do CPF ou senha definida)
+        // Validao de senha (automtica: 4 primeiros dgitos do CPF ou senha definida)
         const apenasNumerosCPF = (found.cpf || '').replace(/\D/g, '');
         const senhaEsperada = found.senha || apenasNumerosCPF.substring(0, 4);
 
         if (password && password !== senhaEsperada) {
-            alert(`Senha incorreta. Lembre-se que sua senha inicial de acesso s�o os 4 primeiros d�gitos do seu CPF (${senhaEsperada}).`);
+            alert(`Senha incorreta. Lembre-se que sua senha inicial de acesso so os 4 primeiros dgitos do seu CPF (${senhaEsperada}).`);
             return;
         }
 
@@ -1738,7 +1738,7 @@ function logout() {
     document.getElementById('authScreen').style.display = 'flex';
 }
 
-// RENDERIZA��O DO CABE�ALHO DO USU�RIO
+// RENDERIZAÇÃO DO CABEÇALHO DO USUÁRIO
 function renderUserHeader() {
     document.getElementById('headerUserName').textContent = currentUser.nome;
     const badge = document.getElementById('headerUserRole');
@@ -1746,31 +1746,32 @@ function renderUserHeader() {
     badge.className = `user-role-badge role-${currentUser.perfil}`;
 }
 
-// MENU LATERAL DIN�MICO CONFORME PERFIL
+// MENU LATERAL DINÂMICO CONFORME PERFIL
 function renderSidebarMenu() {
     const menuNav = document.getElementById('sidebarNav');
+    if (!menuNav) return;
     menuNav.innerHTML = '';
 
     if (currentUser.perfil === 'diretoria') {
         menuNav.innerHTML = `
-            <div class="nav-item active" onclick="navigateTab('overview-diretoria')">?? Painel Geral</div>
-            <div class="nav-item" onclick="navigateTab('gestao-associados')">?? Controle de Associados</div>
-            <div class="nav-item" onclick="navigateTab('associados-desligados')">?? Associados Desligados</div>
-            <div class="nav-item" onclick="navigateTab('gestao-financeira')">?? Lan�amentos Financeiros</div>
-            <div class="nav-item" onclick="navigateTab('documentos-diretoria')">?? Publicar Documentos</div>
-            <div class="nav-item" onclick="navigateTab('mensagens-diretoria')">?? Caixa de Mensagens</div>
+            <div class="nav-item active" onclick="navigateTab('overview-diretoria')">📊 Painel Geral</div>
+            <div class="nav-item" onclick="navigateTab('gestao-associados')">👥 Controle de Associados</div>
+            <div class="nav-item" onclick="navigateTab('associados-desligados')">📋 Associados Desligados</div>
+            <div class="nav-item" onclick="navigateTab('gestao-financeira')">💰 Lançamentos Financeiros</div>
+            <div class="nav-item" onclick="navigateTab('documentos-associado')">📑 Documentos & Atas</div>
+            <div class="nav-item" onclick="navigateTab('mensagens-diretoria')">📬 Caixa de Mensagens</div>
         `;
     } else {
         menuNav.innerHTML = `
-            <div class="nav-item active" onclick="navigateTab('overview-associado')">?? Meu Painel</div>
-            <div class="nav-item" onclick="navigateTab('balancetes-associado')">?? Balancetes & Contas</div>
-            <div class="nav-item" onclick="navigateTab('documentos-associado')">?? Documentos & Convites</div>
-            <div class="nav-item" onclick="navigateTab('enviar-mensagem')">?? Fale com a Diretoria</div>
+            <div class="nav-item active" onclick="navigateTab('overview-associado')">🏠 Meu Painel</div>
+            <div class="nav-item" onclick="navigateTab('balancetes-associado')">📈 Balancetes & Contas</div>
+            <div class="nav-item" onclick="navigateTab('documentos-associado')">📁 Documentos & Convites</div>
+            <div class="nav-item" onclick="navigateTab('enviar-mensagem')">💬 Fale com a Diretoria</div>
         `;
     }
 }
 
-// NAVEGA��O ENTRE ABAS
+// NAVEGAÇÃO ENTRE ABAS
 function navigateTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
@@ -1782,7 +1783,7 @@ function navigateTab(tabId) {
     const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick')?.includes(tabId));
     if (activeNav) activeNav.classList.add('active');
 
-    // Executar atualiza��es de tela espec�ficas
+    // Executar atualizações de tela específicas
     if (tabId === 'overview-diretoria') renderDiretoriaOverview();
     if (tabId === 'gestao-associados') renderGestaoAssociados();
     if (tabId === 'associados-desligados') renderAssociadosDesligados();
