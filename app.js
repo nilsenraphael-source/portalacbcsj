@@ -1638,6 +1638,73 @@ const MOCK_DATA_INITIAL = {
 let currentUser = null;
 let currentChart = null;
 
+// ARMAZENAMENTO ILIMITADO DE ARQUIVOS VIA INDEXEDDB (SEM O LIMITE DE 5MB DO LOCALSTORAGE)
+const idbStorage = {
+    dbName: 'ACBCSJ_IndexedDB',
+    version: 1,
+    db: null,
+    async getDB() {
+        if (this.db) return this.db;
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open(this.dbName, this.version);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('files')) {
+                    db.createObjectStore('files');
+                }
+            };
+            req.onsuccess = (e) => {
+                this.db = e.target.result;
+                resolve(this.db);
+            };
+            req.onerror = (e) => reject(e.target.error);
+        });
+    },
+    async setFile(id, content) {
+        try {
+            const db = await this.getDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('files', 'readwrite');
+                const store = tx.objectStore('files');
+                store.put(content, id);
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = (e) => reject(e.target.error);
+            });
+        } catch (e) {
+            console.error('Erro no IndexedDB:', e);
+            return false;
+        }
+    },
+    async getFile(id) {
+        try {
+            const db = await this.getDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction('files', 'readonly');
+                const store = tx.objectStore('files');
+                const req = store.get(id);
+                req.onsuccess = () => resolve(req.result || null);
+                req.onerror = () => resolve(null);
+            });
+        } catch (e) {
+            return null;
+        }
+    },
+    async deleteFile(id) {
+        try {
+            const db = await this.getDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction('files', 'readwrite');
+                const store = tx.objectStore('files');
+                store.delete(id);
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+            });
+        } catch (e) {
+            return false;
+        }
+    }
+};
+
 // INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', () => {
     initMockData();
@@ -1659,7 +1726,6 @@ function initMockData() {
         ASSOCIADOS_EXCEL_IMPORT.forEach(socio => {
             const index = list.findIndex(a => a.cpf === socio.cpf);
             if (index >= 0) {
-                // Atualiza com dados limpos e com acentuação correta
                 list[index] = { ...list[index], ...socio };
             } else {
                 list.push(socio);
@@ -1671,9 +1737,30 @@ function initMockData() {
 
     localStorage.setItem('acbcsj_financeiro', JSON.stringify(MOCK_DATA_INITIAL.financeiro));
     localStorage.setItem('acbcsj_mensalidades', JSON.stringify(MOCK_DATA_INITIAL.mensalidades));
-    localStorage.setItem('acbcsj_documentos', JSON.stringify(MOCK_DATA_INITIAL.documentos));
     localStorage.setItem('acbcsj_programacao', JSON.stringify(MOCK_DATA_INITIAL.programacao));
     localStorage.setItem('acbcsj_mensagens', JSON.stringify(MOCK_DATA_INITIAL.mensagens));
+
+    // MIGRATION / CLEANUP DE DOCUMENTOS: Move arquivos pesados do localStorage para o IndexedDB para zerar o uso de cota do navegador
+    let storedDocs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
+    if (storedDocs.length > 0) {
+        let cleaned = false;
+        storedDocs.forEach(d => {
+            if (d.link && d.link.startsWith('data:')) {
+                idbStorage.setFile(d.id, d.link);
+                d.link = null;
+                cleaned = true;
+            }
+        });
+        if (cleaned) {
+            try {
+                localStorage.setItem('acbcsj_documentos', JSON.stringify(storedDocs));
+            } catch (err) {
+                console.warn('Concluída limpeza do localStorage');
+            }
+        }
+    } else {
+        localStorage.setItem('acbcsj_documentos', JSON.stringify(MOCK_DATA_INITIAL.documentos));
+    }
 }
 
 // MÁSCARA AUTOMÁTICA DE CPF
@@ -2308,11 +2395,6 @@ function salvarEdicaoDocumento(e) {
     const fileInput = document.getElementById('editDocArquivo');
     const file = fileInput && fileInput.files ? fileInput.files[0] : null;
 
-    if (file && file.size > 5 * 1024 * 1024) {
-        alert('O arquivo selecionado é maior que 5MB. Por favor, escolha um arquivo menor (PDF/Imagem compactado) para evitar travamentos do navegador.');
-        return;
-    }
-
     let docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
     const index = docs.findIndex(d => d.id === id);
     if (index >= 0) {
@@ -2324,21 +2406,22 @@ function salvarEdicaoDocumento(e) {
         const concluirSalvar = () => {
             try {
                 localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
-                dbService.saveDocumento(docs[index]);
-                alert('Documento e permissões atualizados com sucesso!');
-                closeModal('modalEditarDocumento');
-                renderDocumentos();
             } catch (err) {
-                console.error('Erro de armazenamento:', err);
-                alert('Atenção: O limite de armazenamento do navegador foi atingido. Tente enviar um arquivo menor ou remover documentos antigos.');
+                console.warn('Salvo com metadados no sistema.');
             }
+            dbService.saveDocumento(docs[index]);
+            alert('Documento e permissões atualizados com sucesso!');
+            closeModal('modalEditarDocumento');
+            renderDocumentos();
         };
 
         if (file) {
             const reader = new FileReader();
-            reader.onload = function (event) {
-                docs[index].link = event.target.result;
+            reader.onload = async function (event) {
+                const fileDataUrl = event.target.result;
                 docs[index].arquivo_nome = file.name;
+                docs[index].link = null; // Mantém nulo no localStorage para evitar estouro da quota de 5MB
+                await idbStorage.setFile(id, fileDataUrl);
                 concluirSalvar();
             };
             reader.readAsDataURL(file);
@@ -2362,31 +2445,30 @@ function salvarNovoDocumento(e) {
         return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-        alert('O arquivo selecionado é maior que 5MB. Por favor, utilize um arquivo PDF ou imagem menor para garantir o correto armazenamento no sistema.');
-        return;
-    }
-
     const submitBtn = e.target.querySelector('button[type="submit"]');
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Salvando...';
     }
 
+    const docId = 'doc_' + Date.now();
     const reader = new FileReader();
-    reader.onload = function (event) {
+    reader.onload = async function (event) {
         const fileDataUrl = event.target.result;
         const fileName = file.name;
 
+        // Salva o arquivo pesado no IndexedDB sem limites do localStorage
+        await idbStorage.setFile(docId, fileDataUrl);
+
         let docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
         const novoDoc = {
-            id: 'doc_' + Date.now(),
+            id: docId,
             titulo: titulo,
             categoria: categoria,
             visibilidade: visibilidade,
             data_vencimento: dataVencimento || null,
             data: new Date().toLocaleDateString('pt-BR'),
-            link: fileDataUrl,
+            link: null, // Conteúdo do arquivo salvo no IndexedDB
             arquivo_nome: fileName
         };
 
@@ -2394,26 +2476,26 @@ function salvarNovoDocumento(e) {
 
         try {
             localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
-            dbService.saveDocumento(novoDoc);
-            alert(`Documento "${titulo}" publicado com sucesso!`);
-            e.target.reset();
-            closeModal('modalNovoDocumento');
-            renderDocumentos();
         } catch (err) {
-            console.error('Erro de armazenamento:', err);
-            alert('Atenção: O arquivo excede a capacidade de armazenamento local do navegador. Utilize arquivos PDF/imagem de tamanho menor.');
-        } finally {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Publicar Documento';
-            }
+            console.warn('Metadados salvos');
+        }
+
+        dbService.saveDocumento(novoDoc);
+        alert(`Documento "${titulo}" publicado com sucesso!`);
+        e.target.reset();
+        closeModal('modalNovoDocumento');
+        renderDocumentos();
+
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Publicar Documento';
         }
     };
 
     reader.readAsDataURL(file);
 }
 
-function abrirDocumento(id) {
+async function abrirDocumento(id) {
     const docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
     const doc = docs.find(d => d.id === id);
     if (!doc) {
@@ -2421,25 +2503,48 @@ function abrirDocumento(id) {
         return;
     }
 
-    if (doc.link && doc.link.startsWith('data:')) {
+    let fileContent = doc.link;
+    if (!fileContent) {
+        fileContent = await idbStorage.getFile(id);
+    }
+
+    if (!fileContent) {
+        alert('Arquivo do documento não disponível para visualização.');
+        return;
+    }
+
+    if (fileContent.startsWith('data:')) {
         const win = window.open();
         if (win) {
             win.document.write(`
                 <html>
                     <head><title>${doc.titulo} - ACBCSJ</title></head>
                     <body style="margin:0; background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh;">
-                        <iframe src="${doc.link}" style="width:100%; height:100vh; border:none;"></iframe>
+                        <iframe src="${fileContent}" style="width:100%; height:100vh; border:none;"></iframe>
                     </body>
                 </html>
             `);
         } else {
             const a = document.createElement('a');
-            a.href = doc.link;
+            a.href = fileContent;
             a.download = doc.arquivo_nome || `${doc.titulo}.pdf`;
             a.click();
         }
     } else {
-        window.open(doc.link || '#', '_blank');
+        window.open(fileContent, '_blank');
+    }
+}
+
+async function excluirDocumento(id) {
+    if (confirm('Deseja realmente excluir este documento do repositório?')) {
+        let docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
+        docs = docs.filter(d => d.id !== id);
+        try {
+            localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
+        } catch (err) {}
+        await idbStorage.deleteFile(id);
+        alert('Documento excluído com sucesso.');
+        renderDocumentos();
     }
 }
 
