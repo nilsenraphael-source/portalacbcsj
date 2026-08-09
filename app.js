@@ -1779,17 +1779,17 @@ function loginWithCPF(cpf, password, roleHint = null) {
             const found = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanInputCPF || a.cpf === cpf);
             
             if (!found) {
-                alert('CPF não encontrado no sistema da ACBCSJ. Verifique os números digitados ou faça sua solicitação de pré-cadastro.');
+                alert('CPF não encontrado no sistema da ACBCSJ. Verifique os números digitados ou faça sua solicitaÃ§Ã£oção de pré-cadastro.');
                 return;
             }
 
             if (found.status === 'pendente') {
-                alert('�s�️ ACESSO BLOQUEADO!\n\nSua solicitação de cadastro ainda está em análise pela Diretoria da ACBCSJ. Aguarde a aprovação para conseguir logar.');
+                alert('�s�️ ACESSO BLOQUEADO!\n\nSua solicitaÃ§Ã£oção de cadastro ainda está em análise pela Diretoria da ACBCSJ. Aguarde a aprovação para conseguir logar.');
                 return;
             }
 
             if (found.status === 'desligado') {
-                alert('�Ys� ACESSO TOTALMENTE BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da Associação Corpo de Bombeiros Comunitários de São José.\nIntegrantes desligados não possuem permissão de acesso ao sistema.');
+                alert('�ðŸš«� ACESSO TOTALMENTE BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da Associação Corpo de Bombeiros Comunitários de São José.\nIntegrantes desligados não possuem permissão de acesso ao sistema.');
                 return;
             }
 
@@ -1866,7 +1866,7 @@ function navigateTab(tabId) {
         const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
         const currentDbState = list.find(a => a.cpf === currentUser.cpf);
         if (currentDbState && currentDbState.status === 'desligado') {
-            alert('�Ys� ACESSO REVOGADO!\n\nSeu cadastro consta como DESLIGADO da Associação. Você foi desconectado do sistema.');
+            alert('�ðŸš«� ACESSO REVOGADO!\n\nSeu cadastro consta como DESLIGADO da Associação. Você foi desconectado do sistema.');
             logout();
             return;
         }
@@ -1927,15 +1927,15 @@ function renderDiretoriaOverview() {
 
     let totalReceitas = 0;
     financeiro.filter(f => f.tipo === 'receita').forEach(f => totalReceitas += Number(f.valor));
-    document.getElementById('metricSaldoFinanceiro').textContent = `R$ ${totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    document.getElementById('metricSaldoCaixa').textContent = `R$ ${totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
-    const elPendenteCount = document.getElementById('metricNovasSolicitacoes');
+    const elPendenteCount = document.getElementById('metricCadastrosPendentes');
     if (elPendenteCount) elPendenteCount.textContent = pendentes.length;
 
-    const containerPendentes = document.getElementById('tableSolicitacoesPendentesBody');
+    const containerPendentes = document.getElementById('tablePendentesBody');
     if (containerPendentes) {
         if (pendentes.length === 0) {
-            containerPendentes.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhuma solicitação pendente no momento.</td></tr>`;
+            containerPendentes.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhuma solicitaÃ§Ã£oção pendente no momento.</td></tr>`;
         } else {
             containerPendentes.innerHTML = pendentes.map(p => `
                 <tr>
@@ -2004,7 +2004,7 @@ function aprovarAssociado(cpf) {
 }
 
 function rejeitarAssociado(cpf) {
-    if (confirm('Deseja realmente recusar esta solicitação de cadastro?')) {
+    if (confirm('Deseja realmente recusar esta solicitaÃ§Ã£oção de cadastro?')) {
         let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
         list = list.filter(a => a.cpf !== cpf);
         localStorage.setItem('acbcsj_associados', JSON.stringify(list));
@@ -2018,7 +2018,7 @@ function rejeitarAssociado(cpf) {
 function renderGestaoAssociados() {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const ativos = list.filter(a => a.status === 'ativo');
-    const container = document.getElementById('tableAssociadosBody');
+    const container = document.getElementById('tableTodosAssociadosBody');
     const isDiretoria = currentUser && currentUser.perfil === 'diretoria';
 
     if (container) {
@@ -2118,10 +2118,10 @@ function abrirModalDesligar(cpf) {
     if (!item) return;
 
     document.getElementById('desligarCPF').value = cpf;
-    document.getElementById('desligarNomeTarget').textContent = item.nome_guerra || item.nome;
+    document.getElementById('desligarNomeDisplay').textContent = item.nome_guerra || item.nome;
     document.getElementById('desligarData').value = new Date().toISOString().split('T')[0];
     document.getElementById('desligarMotivo').value = '';
-    document.getElementById('desligarCartaFile').value = '';
+    document.getElementById('desligarCartaArquivo').value = '';
 
     openModal('modalDesligarAssociado');
 }
@@ -2131,7 +2131,7 @@ function confirmarDesligamento(e) {
     const cpf = document.getElementById('desligarCPF').value;
     const data = document.getElementById('desligarData').value;
     const motivo = document.getElementById('desligarMotivo').value.trim();
-    const fileInput = document.getElementById('desligarCartaFile');
+    const fileInput = document.getElementById('desligarCartaArquivo');
     const file = fileInput.files ? fileInput.files[0] : null;
 
     let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
@@ -2155,7 +2155,7 @@ function confirmarDesligamento(e) {
         dbService.saveAssociado(item);
 
         if (currentUser && currentUser.cpf === cpf) {
-            alert('�Ys� Seu cadastro foi desligado. Você será desconectado do sistema.');
+            alert('�ðŸš«� Seu cadastro foi desligado. Você será desconectado do sistema.');
             logout();
         } else {
             alert(`Associado ${item.nome_guerra || item.nome} desligado com sucesso.`);
@@ -2254,7 +2254,7 @@ function renderAssociadoOverview() {
 }
 
 function renderBalancetesAssociado() {
-    const ctx = document.getElementById('chartBalanceteAssociado');
+    const ctx = document.getElementById('chartBalancete');
     if (!ctx) return;
 
     const financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];

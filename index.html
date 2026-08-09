@@ -55,7 +55,7 @@
 
             <!-- DICA DE TESTE R�PIDO PARA O CLIENTE -->
             <div class="demo-shortcut-box">
-                <p>?? <b>Teste R�pido para Avalia��o:</b></p>
+                <p> <b>Teste R�pido para Avalia��o:</b></p>
                 <div class="demo-buttons">
                     <button class="btn btn-gold btn-sm" style="flex:1;" onclick="loginWithCPF('000.000.000-00', '123', 'diretoria')">
                         Entrar como Diretoria
@@ -90,10 +90,10 @@
         </header>
 
         <div class="app-container">
-            <!-- NAVEGA��O LATERAL -->
+            <!-- NAVEGAÃ‡ÃƒO��O LATERAL -->
             <nav id="sidebarNav" class="sidebar-nav"></nav>
 
-            <!-- CONTE�DO PRINCIPAL (MUDAN�A DE ABAS VIA JS) -->
+            <!-- CONTEÃšDO�DO PRINCIPAL (MUDANÃ‡A�A DE ABAS VIA JS) -->
             <main class="main-content">
                 
                 <!-- ABA 1: PAINEL DA DIRETORIA -->
@@ -104,7 +104,7 @@
                             <p style="font-size: 13px; color: var(--text-muted);">Vis�o geral da associa��o, associados e caixa.</p>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-                            <label style="font-size: 13px; font-weight: 600; color: var(--accent-gold); white-space: nowrap;">?? Filtrar por Ano:</label>
+                            <label style="font-size: 13px; font-weight: 600; color: var(--accent-gold); white-space: nowrap;">ðŸ“… Filtrar por Ano:</label>
                             <select id="diretoriaFiltroAno" class="form-control" style="width: 130px; margin: 0; padding: 4px 8px; font-weight: bold;" onchange="renderDiretoriaOverview()">
                                 <option value="2026" selected>2026</option>
                                 <option value="2025">2025</option>
@@ -164,7 +164,7 @@
                     </div>
                 </div>
 
-                <!-- ABA 2: GEST�O DE ASSOCIADOS (DIRETORIA) -->
+                <!-- ABA 2: GESTÃƒO�O DE ASSOCIADOS (DIRETORIA) -->
                 <div id="tab-gestao-associados" class="tab-content" style="display: none;">
                     <div class="page-header">
                         <h2 class="page-title">Controle de Associados Ativos</h2>
@@ -214,7 +214,7 @@
                     </div>
                 </div>
 
-                <!-- ABA 3: GEST�O FINANCEIRA (DIRETORIA) -->
+                <!-- ABA 3: GESTÃƒO�O FINANCEIRA (DIRETORIA) -->
                 <div id="tab-gestao-financeira" class="tab-content" style="display: none;">
                     <div class="page-header">
                         <div>
@@ -274,13 +274,13 @@
                     <div class="page-header">
                         <div>
                             <h2 class="page-title">Bem-vindo(a), <span id="associadoWelcomeName">Associado</span></h2>
-                            <p style="font-size: 13px; color: var(--text-muted);">Acompanhe suas mensalidades e contribui��es lan�adas na ACBCSJ.</p>
+                            <p style="font-size: 13px; color: var(--text-muted);">AÃ§Ã£ompanhe suas mensalidades e contribui��es lan�adas na ACBCSJ.</p>
                         </div>
                     </div>
 
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">?? Minhas Mensalidades & Contribui��es (Ano 2026)</h3>
+                            <h3 class="card-title"> Minhas Mensalidades & Contribui��es (Ano 2026)</h3>
                             <p style="font-size: 12px; color: var(--text-muted);">Hist�rico dos seus pagamentos e lan�amentos confirmados m�s a m�s.</p>
                         </div>
                         <div class="table-responsive">
@@ -452,7 +452,7 @@
 
                     <!-- Informativo sobre Senha de Acesso -->
                     <div class="form-group form-group-full" style="background-color: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); padding: 10px 14px; border-radius: 6px;">
-                        <span style="font-size: 13px; color: var(--accent-gold); font-weight: 600; display: block; margin-bottom: 2px;">?? Senha de Acesso Autom�tica:</span>
+                        <span style="font-size: 13px; color: var(--accent-gold); font-weight: 600; display: block; margin-bottom: 2px;"> Senha de Acesso Autom�tica:</span>
                         <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Sua senha inicial de acesso ser� automaticamente os <b>4 primeiros d�gitos do seu CPF</b>. O acesso ao portal ser� liberado assim que a Diretoria aprovar o seu pr�-cadastro.</p>
                     </div>
 
@@ -520,7 +520,7 @@
         <div class="modal-content modal-content-lg">
             <div class="modal-header">
                 <div>
-                    <h3 class="card-title" id="fichaNomeTitle">Ficha Cadastral do Associado</h3>
+                    <h3 class="card-title" id="fichaNomeTitle">ðŸ“‹ Ficha Cadastral do Associado</h3>
                     <p style="font-size: 12px; color: var(--text-muted);">Dados completos inseridos no cadastro da ACBCSJ.</p>
                 </div>
                 <button class="modal-close" onclick="closeModal('modalFichaAssociado')">&times;</button>
@@ -549,9 +549,16 @@
 
             <form onsubmit="confirmarDesligamento(event)">
                 <input type="hidden" id="desligarCPF">
-                <div class="form-group">
-                    <label>Associado a ser desligado:</label>
-                    <input type="text" id="desligarNomeDisplay" class="form-control" disabled style="font-weight: bold; color: var(--accent-gold);">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Associado a ser desligado:</label>
+                        <input type="text" id="desligarNomeDisplay" class="form-control" disabled style="font-weight: bold; color: var(--accent-gold);">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data do Desligamento <span class="req-star">*</span></label>
+                        <input type="date" id="desligarData" class="form-control" required>
+                    </div>
                 </div>
 
                 <div class="form-group">
