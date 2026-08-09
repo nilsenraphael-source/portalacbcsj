@@ -1976,7 +1976,7 @@ function renderGestaoAssociados() {
                 if (isDiretoria) {
                     perfilControl = `
                         <select class="form-control" style="padding: 4px 8px; font-size: 12px; font-weight: 600; width: 130px; ${a.perfil === 'diretoria' ? 'border-color: var(--accent-gold); color: var(--accent-gold);' : ''}" 
-                                ${isSelf ? 'disabled title="Voc� n�o pode alterar seu pr�prio perfil de Diretoria."' : ''} 
+                                ${isSelf ? 'disabled title="Você não pode alterar seu próprio perfil de Diretoria."' : ''} 
                                 onchange="alterarPerfilAssociado('${a.cpf}', this.value)">
                             <option value="associado" ${a.perfil === 'associado' ? 'selected' : ''}>ASSOCIADO</option>
                             <option value="diretoria" ${a.perfil === 'diretoria' ? 'selected' : ''}>DIRETORIA</option>
@@ -1990,9 +1990,9 @@ function renderGestaoAssociados() {
                         <td>${a.cpf}</td>
                         <td>${a.telefone || a.email || '-'}</td>
                         <td>${perfilControl}</td>
-                        <td><button class="btn btn-sm btn-gold" onclick="verFichaAssociado('${a.cpf}')">?? Ver Ficha Completa</button></td>
+                        <td><button class="btn btn-sm btn-gold" onclick="verFichaAssociado('${a.cpf}')">📋 Ver Ficha Completa</button></td>
                         <td>
-                            ${!isSelf ? `<button class="btn btn-sm btn-outline" style="color:#E74C3C; border-color:#E74C3C" onclick="abrirModalDesligar('${a.cpf}')">Desligar Associado</button>` : '<small style="color:var(--text-muted)">Voc� (Diretoria)</small>'}
+                            ${!isSelf ? `<button class="btn btn-sm btn-outline" style="color:#E74C3C; border-color:#E74C3C" onclick="abrirModalDesligar('${a.cpf}')">Desligar Associado</button>` : '<small style="color:var(--text-muted)">Você (Diretoria)</small>'}
                         </td>
                     </tr>
                 `;
