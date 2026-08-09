@@ -1471,6 +1471,26 @@ const INITIAL_LANCAMENTOS_DATA = [
     }
 ];
 
+
+// MOCK DATA INICIAL E DECLARAÃ‡Ã•ES GLOBAIS
+const MOCK_DATA_INITIAL = {
+    associados: [
+        { id: '1', cpf: '000.000.000-00', senha: '123', nome: 'Diretoria ACBCSJ', nome_guerra: 'Diretoria', perfil: 'diretoria', status: 'ativo', obm: 'SÃ£o JosÃ©', profissao: 'Diretoria' },
+        { id: '2', cpf: '111.111.111-11', senha: '123', nome: 'Sd. Silva (Exemplo)', nome_guerra: 'Sd. Silva', perfil: 'associado', status: 'ativo', obm: 'SÃ£o JosÃ©', profissao: 'Bombeiro ComunitÃ¡rio' }
+    ],
+    financeiro: [],
+    mensalidades: [],
+    documentos: [
+        { id: 'doc_1', titulo: 'Estatuto Social da ACBCSJ', categoria: 'Documentos Oficiais', visibilidade: 'todos', data: '15/01/2026', link: null, arquivo_nome: 'Estatuto_ACBCSJ.pdf' },
+        { id: 'doc_2', titulo: 'Ata da ReuniÃ£o de Posse 2026', categoria: 'Atas', visibilidade: 'todos', data: '20/01/2026', link: null, arquivo_nome: 'Ata_Posse_2026.pdf' }
+    ],
+    programacao: [],
+    mensagens: []
+};
+
+let currentUser = null;
+let currentChart = null;
+
 // ARMAZENAMENTO ILIMITADO DE ARQUIVOS VIA INDEXEDDB (SEM O LIMITE DE 5MB DO LOCALSTORAGE)
 const idbStorage = {
     dbName: 'ACBCSJ_IndexedDB',
@@ -1589,7 +1609,7 @@ function initMockData() {
             try {
                 localStorage.setItem('acbcsj_documentos', JSON.stringify(storedDocs));
             } catch (err) {
-                console.warn('Concluída limpeza do localStorage');
+                console.warn('ConcluÃ­da limpeza do localStorage');
             }
         }
     } else {
@@ -1614,48 +1634,58 @@ function setupCPFMasks() {
 
 // AUTENTICAÇÃO E LOGIN
 function loginWithCPF(cpf, password, roleHint = null) {
-    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    
-    // Se for teste direto via atalho
-    if (roleHint === 'diretoria') {
-        currentUser = list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || MOCK_DATA_INITIAL.associados[0];
-    } else if (roleHint === 'associado') {
-        currentUser = list.find(a => a.perfil === 'associado' && a.status === 'ativo') || MOCK_DATA_INITIAL.associados[1];
-    } else {
-        const found = list.find(a => a.cpf === cpf);
-        if (!found) {
-            alert('CPF não encontrado no sistema da ACBCSJ. Faça sua solicitação de pré-cadastro.');
+    try {
+        const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || (typeof MOCK_DATA_INITIAL !== 'undefined' ? MOCK_DATA_INITIAL.associados : []);
+        
+        if (roleHint === 'diretoria') {
+            currentUser = list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || (typeof MOCK_DATA_INITIAL !== 'undefined' ? MOCK_DATA_INITIAL.associados[0] : null);
+        } else if (roleHint === 'associado') {
+            currentUser = list.find(a => a.perfil === 'associado' && a.status === 'ativo') || (typeof MOCK_DATA_INITIAL !== 'undefined' ? MOCK_DATA_INITIAL.associados[1] : null);
+        } else {
+            const cleanInputCPF = (cpf || '').replace(/\D/g, '');
+            const found = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanInputCPF || a.cpf === cpf);
+            
+            if (!found) {
+                alert('CPF não encontrado no sistema da ACBCSJ. Verifique os números digitados ou faça sua solicitação de pré-cadastro.');
+                return;
+            }
+
+            if (found.status === 'pendente') {
+                alert('⚠️ ACESSO BLOQUEADO!\n\nSua solicitação de cadastro ainda está em análise pela Diretoria da ACBCSJ. Aguarde a aprovação para conseguir logar.');
+                return;
+            }
+
+            if (found.status === 'desligado') {
+                alert('🚫 ACESSO TOTALMENTE BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da Associação Corpo de Bombeiros Comunitários de São José.\nIntegrantes desligados não possuem permissão de acesso ao sistema.');
+                return;
+            }
+
+            const apenasNumerosCPF = (found.cpf || '').replace(/\D/g, '');
+            const senhaEsperada = (found.senha || apenasNumerosCPF.substring(0, 4)).trim();
+
+            if (password && password.trim() !== senhaEsperada) {
+                alert("Senha incorreta.\n\nLembre-se que sua senha inicial de acesso são os 4 primeiros dígitos numéricos do seu CPF (" + senhaEsperada + ").");
+                return;
+            }
+
+            currentUser = found;
+        }
+
+        if (!currentUser) {
+            alert('Não foi possível carregar os dados do usuário. Tente novamente.');
             return;
         }
 
-        if (found.status === 'pendente') {
-            alert('⚠️ ACESSO BLOQUEADO!\n\nSua solicitação de cadastro ainda está em análise pela Diretoria da ACBCSJ. Aguarde a aprovação para conseguir logar.');
-            return;
-        }
-
-        if (found.status === 'desligado') {
-            alert('🚫 ACESSO TOTALMENTE BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da Associação Corpo de Bombeiros Comunitários de São José.\nIntegrantes desligados não possuem permissão de acesso ao sistema.');
-            return;
-        }
-
-        // Validação de senha (automática: 4 primeiros dígitos do CPF ou senha definida)
-        const apenasNumerosCPF = (found.cpf || '').replace(/\D/g, '');
-        const senhaEsperada = found.senha || apenasNumerosCPF.substring(0, 4);
-
-        if (password && password !== senhaEsperada) {
-            alert(`Senha incorreta. Lembre-se que sua senha inicial de acesso são os 4 primeiros dígitos do seu CPF (${senhaEsperada}).`);
-            return;
-        }
-
-        currentUser = found;
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('appDashboard').style.display = 'flex';
+        
+        renderUserHeader();
+        renderSidebarMenu();
+        navigateTab(currentUser.perfil === 'diretoria' ? 'overview-diretoria' : 'overview-associado');
+    } catch (err) {
+        console.error('Erro ao efetuar login:', err);
+        alert('Ocorreu um erro ao carregar os dados de login.');
     }
-
-    document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('appDashboard').style.display = 'flex';
-    
-    renderUserHeader();
-    renderSidebarMenu();
-    navigateTab(currentUser.perfil === 'diretoria' ? 'overview-diretoria' : 'overview-associado');
 }
 
 function logout() {
@@ -1672,7 +1702,8 @@ function renderUserHeader() {
     badge.className = `user-role-badge role-${currentUser.perfil}`;
 }
 
-// MENU LATERAL DINÂMICO CONFORME PERFIL
+// MENU LATERAL DINÃ‚MICO CONFORME PERFIL
+
 function renderSidebarMenu() {
     const menuNav = document.getElementById('sidebarNav');
     if (!menuNav) return;
