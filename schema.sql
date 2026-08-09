@@ -24,7 +24,9 @@ CREATE TABLE IF NOT EXISTS public.associados (
     status VARCHAR(20) NOT NULL DEFAULT 'pendente', -- 'ativo', 'pendente', 'desligado'
     data_cadastro VARCHAR(100),
     data_desligamento VARCHAR(100),
-    motivo_desligamento TEXT
+    motivo_desligamento TEXT,
+    carta_desligamento_url TEXT,
+    carta_desligamento_nome TEXT
 );
 
 -- 2. TABELA DE CONTROLE FINANCEIRO (ENTRADAS E SAÍDAS / FORNECEDORES)
