@@ -2270,13 +2270,69 @@ function renderDocumentos() {
                                 ${vencimentoBadge}
                             </div>
                         </div>
-                        <div style="display:flex; gap:8px;">
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             <button class="btn btn-sm btn-outline" onclick="abrirDocumento('${d.id}')">📖 Visualizar / Download</button>
-                            ${isDiretoria ? `<button class="btn btn-sm btn-outline" style="color:#E74C3C;" onclick="excluirDocumento('${d.id}')">Excluir</button>` : ''}
+                            ${isDiretoria ? `<button class="btn btn-sm btn-outline" style="color:var(--accent-gold); border-color:var(--accent-gold);" onclick="abrirModalEditarDoc('${d.id}')">✏️ Editar Categoria/Acesso</button>` : ''}
+                            ${isDiretoria ? `<button class="btn btn-sm btn-outline" style="color:#E74C3C;" onclick="excluirDocumento('${d.id}')">🗑️ Excluir</button>` : ''}
                         </div>
                     </div>
                 `;
             }).join('');
+        }
+    }
+}
+
+function abrirModalEditarDoc(id) {
+    const docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
+    const d = docs.find(item => item.id === id);
+    if (!d) return;
+
+    document.getElementById('editDocId').value = d.id;
+    document.getElementById('editDocTitulo').value = d.titulo || '';
+    document.getElementById('editDocCategoria').value = d.categoria || 'Atas';
+    document.getElementById('editDocVisibilidade').value = d.visibilidade || 'todos';
+    document.getElementById('editDocDataVencimento').value = d.data_vencimento || '';
+    const fileInput = document.getElementById('editDocArquivo');
+    if (fileInput) fileInput.value = '';
+
+    openModal('modalEditarDocumento');
+}
+
+function salvarEdicaoDocumento(e) {
+    e.preventDefault();
+    const id = document.getElementById('editDocId').value;
+    const titulo = document.getElementById('editDocTitulo').value.trim();
+    const categoria = document.getElementById('editDocCategoria').value;
+    const visibilidade = document.getElementById('editDocVisibilidade').value;
+    const dataVencimento = document.getElementById('editDocDataVencimento').value;
+    const fileInput = document.getElementById('editDocArquivo');
+    const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+    let docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
+    const index = docs.findIndex(d => d.id === id);
+    if (index >= 0) {
+        docs[index].titulo = titulo;
+        docs[index].categoria = categoria;
+        docs[index].visibilidade = visibilidade;
+        docs[index].data_vencimento = dataVencimento || null;
+
+        const concluirSalvar = () => {
+            localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
+            alert('Documento e permissões atualizados com sucesso!');
+            closeModal('modalEditarDocumento');
+            renderDocumentos();
+        };
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                docs[index].link = event.target.result;
+                docs[index].arquivo_nome = file.name;
+                concluirSalvar();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            concluirSalvar();
         }
     }
 }

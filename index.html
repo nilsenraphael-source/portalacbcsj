@@ -571,8 +571,126 @@
                 </div>
 
                 <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalDesligarAssociado')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: #E74C3C; border-color: #E74C3C;">Confirmar Desligamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE NOVO DOCUMENTO (DIRETORIA) -->
+    <div id="modalNovoDocumento" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: var(--accent-gold);">Publicar Novo Documento / Ata</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Adicione novos arquivos com categoria, vencimento e nível de permissão.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalNovoDocumento')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarNovoDocumento(event)">
+                <div class="form-group">
+                    <label>Título / Nome do Documento <span class="req-star">*</span></label>
+                    <input type="text" id="docTitulo" class="form-control" placeholder="Ex: Ata da Assembleia Geral de Eleição" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Categoria do Documento <span class="req-star">*</span></label>
+                        <select id="docCategoria" class="form-control" required>
+                            <option value="">Selecione uma Categoria...</option>
+                            <option value="Atas">Atas</option>
+                            <option value="Documentos Oficiais">Documentos Oficiais</option>
+                            <option value="Documentos Operacionais">Documentos Operacionais</option>
+                            <option value="Documentos Administrativos">Documentos Administrativos</option>
+                            <option value="Jurídico">Jurídico</option>
+                            <option value="Formulários">Formulários</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Visibilidade / Acesso <span class="req-star">*</span></label>
+                        <select id="docVisibilidade" class="form-control" required>
+                            <option value="todos" selected>Todos os Integrantes (Público)</option>
+                            <option value="diretoria">Apenas Diretoria (Restrito)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Data de Vencimento do Documento <small style="color: var(--text-muted); font-weight: normal;">(Opcional)</small></label>
+                    <input type="date" id="docDataVencimento" class="form-control">
+                    <small style="color: var(--text-muted); display: block; margin-top: 4px;">Deixe em branco se o documento não possui prazo de validade/vencimento.</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Arquivo do Documento (PDF, Imagem, Word, etc.) <span class="req-star">*</span></label>
+                    <input type="file" id="docArquivo" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx" required>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('modalNovoDocumento')">Cancelar</button>
                     <button type="submit" class="btn btn-gold">Publicar Documento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDITAR DOCUMENTO (DIRETORIA) -->
+    <div id="modalEditarDocumento" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: var(--accent-gold);">Editar Documento / Categoria / Acesso</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Altere a categoria, visibilidade ou atualize o arquivo do documento.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalEditarDocumento')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarEdicaoDocumento(event)">
+                <input type="hidden" id="editDocId">
+
+                <div class="form-group">
+                    <label>Título / Nome do Documento <span class="req-star">*</span></label>
+                    <input type="text" id="editDocTitulo" class="form-control" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Categoria do Documento <span class="req-star">*</span></label>
+                        <select id="editDocCategoria" class="form-control" required>
+                            <option value="Atas">Atas</option>
+                            <option value="Documentos Oficiais">Documentos Oficiais</option>
+                            <option value="Documentos Operacionais">Documentos Operacionais</option>
+                            <option value="Documentos Administrativos">Documentos Administrativos</option>
+                            <option value="Jurídico">Jurídico</option>
+                            <option value="Formulários">Formulários</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Visibilidade / Acesso <span class="req-star">*</span></label>
+                        <select id="editDocVisibilidade" class="form-control" required>
+                            <option value="todos">Todos os Integrantes (Público)</option>
+                            <option value="diretoria">Apenas Diretoria (Restrito)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Data de Vencimento <small style="color: var(--text-muted); font-weight: normal;">(Opcional)</small></label>
+                    <input type="date" id="editDocDataVencimento" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>Substituir Arquivo <small style="color: var(--text-muted); font-weight: normal;">(Opcional - selecione apenas se quiser trocar o arquivo atual)</small></label>
+                    <input type="file" id="editDocArquivo" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx">
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarDocumento')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">Salvar Alterações</button>
                 </div>
             </form>
         </div>
