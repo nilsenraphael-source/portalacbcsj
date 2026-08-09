@@ -216,14 +216,10 @@
 
                 <!-- ABA 3: GESTÃO FINANCEIRA (DIRETORIA) -->
                 <div id="tab-gestao-financeira" class="tab-content" style="display: none;">
-                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div class="page-header">
                         <div>
                             <h2 class="page-title">Controle Financeiro, Entradas & Saídas</h2>
                             <p style="font-size: 13px; color: var(--text-muted);">Lançamentos de receitas, despesas, fornecedores e balancetes da ACBCSJ.</p>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn btn-sm btn-gold" onclick="abrirModalNovoLancamento('receita')">➕ Inserir Receita (Entrada)</button>
-                            <button class="btn btn-sm btn-outline" style="color: #E74C3C; border-color: #E74C3C;" onclick="abrirModalNovoLancamento('despesa')">➖ Inserir Despesa (Saída)</button>
                         </div>
                     </div>
 
@@ -690,70 +686,6 @@
                 <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarDocumento')">Cancelar</button>
                     <button type="submit" class="btn btn-gold">Salvar Alterações</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL DE NOVO LANÇAMENTO FINANCEIRO (RECEITA / DESPESA) -->
-    <div id="modalNovoLancamento" class="modal-backdrop">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <div>
-                    <h3 class="card-title" id="modalLancamentoTitle" style="color: var(--accent-gold);">Inserir Lançamento Financeiro</h3>
-                    <p style="font-size: 12px; color: var(--text-muted);">Cadastre uma receita (entrada) ou despesa (saída) com transparência e comprovante.</p>
-                </div>
-                <button class="modal-close" onclick="closeModal('modalNovoLancamento')">&times;</button>
-            </div>
-
-            <form onsubmit="salvarNovoLancamento(event)">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div class="form-group">
-                        <label>Tipo de Lançamento <span class="req-star">*</span></label>
-                        <select id="finTipo" class="form-control" required onchange="atualizarCategoriasLancamento(this.value)">
-                            <option value="receita">➕ Receita (Entrada)</option>
-                            <option value="despesa">➖ Despesa (Saída)</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Valor (R$) <span class="req-star">*</span></label>
-                        <input type="number" step="0.01" min="0.01" id="finValor" class="form-control" placeholder="0,00" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Descrição / Histórico <span class="req-star">*</span></label>
-                    <input type="text" id="finDescricao" class="form-control" placeholder="Ex: Mensalidades do Mês / Compra de Materiais Operacionais" required>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div class="form-group">
-                        <label>Categoria <span class="req-star">*</span></label>
-                        <select id="finCategoria" class="form-control" required>
-                            <option value="Mensalidade / Contribuição">Mensalidade / Contribuição</option>
-                            <option value="Doação / Convênio">Doação / Convênio</option>
-                            <option value="Despesa Operacional">Despesa Operacional</option>
-                            <option value="Manutenção de Viatura">Manutenção de Viatura</option>
-                            <option value="Administrativo / Consumo">Administrativo / Consumo</option>
-                            <option value="Outros">Outros</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Data do Lançamento <span class="req-star">*</span></label>
-                        <input type="date" id="finData" class="form-control" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Comprovante / Nota Fiscal / Recibo <small style="color: var(--text-muted); font-weight: normal;">(Opcional - PDF ou Imagem)</small></label>
-                    <input type="file" id="finComprovante" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
-                </div>
-
-                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('modalNovoLancamento')">Cancelar</button>
-                    <button type="submit" class="btn btn-gold" id="btnSalvarLancamento">Salvar Lançamento</button>
                 </div>
             </form>
         </div>
