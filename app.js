@@ -1,22 +1,19 @@
-﻿// SISTEMA ACBCSJ - ASSOCIAÃ‡ÃƒO CORPO DE BOMBEIROS COMUNITÃRIOS DE SÃƒO JOSÃ‰
+// SISTEMA ACBCSJ - ASSOCIA�?�fO CORPO DE BOMBEIROS COMUNITÁRIOS DE S�fO JOS�?
 
-// MOCK DATA INICIAL E DECLARAÃ‡Ã•ES GLOBAIS
+// MOCK DATA INICIAL E DECLARA�?�.ES GLOBAIS
 const MOCK_DATA_INITIAL = {
     associados: [
-        { id: '1', cpf: '000.000.000-00', senha: '123', nome: 'Diretoria ACBCSJ', nome_guerra: 'Diretoria', perfil: 'diretoria', status: 'ativo', obm: 'SÃ£o JosÃ©', profissao: 'Diretoria' },
-        { id: '2', cpf: '111.111.111-11', senha: '123', nome: 'Sd. Silva (Exemplo)', nome_guerra: 'Sd. Silva', perfil: 'associado', status: 'ativo', obm: 'SÃ£o JosÃ©', profissao: 'Bombeiro ComunitÃ¡rio' }
+        { id: '1', cpf: '000.000.000-00', senha: '123', nome: 'Diretoria ACBCSJ', nome_guerra: 'Diretoria', perfil: 'diretoria', status: 'ativo', obm: 'São José', profissao: 'Diretoria' },
+        { id: '2', cpf: '111.111.111-11', senha: '123', nome: 'Sd. Silva (Exemplo)', nome_guerra: 'Sd. Silva', perfil: 'associado', status: 'ativo', obm: 'São José', profissao: 'Bombeiro Comunitário' }
     ],
-    financeiro: [
-        { id: 'f1', descricao: 'DoaÃ§Ã£o de Equipamentos Especiais', valor: 3500.00, tipo: 'receita', data: '10/01/2026', categoria: 'DoaÃ§Ãµes' },
-        { id: 'f2', descricao: 'ManutenÃ§Ã£o Preventiva de Viatura', valor: 450.00, tipo: 'despesa', data: '14/01/2026', categoria: 'ManutenÃ§Ã£o' }
-    ],
+    financeiro: [],
     mensalidades: [
         { id: 'm1', associado_cpf: '111.111.111-11', mes: 'Janeiro/2026', valor: 20.00, status: 'pago', data_pagamento: '05/01/2026' },
         { id: 'm2', associado_cpf: '111.111.111-11', mes: 'Fevereiro/2026', valor: 20.00, status: 'pago', data_pagamento: '02/02/2026' }
     ],
     documentos: [
         { id: 'doc_1', titulo: 'Estatuto Social da ACBCSJ', categoria: 'Documentos Oficiais', visibilidade: 'todos', data: '15/01/2026', link: null, arquivo_nome: 'Estatuto_ACBCSJ.pdf' },
-        { id: 'doc_2', titulo: 'Ata da ReuniÃ£o de Posse 2026', categoria: 'Atas', visibilidade: 'todos', data: '20/01/2026', link: null, arquivo_nome: 'Ata_Posse_2026.pdf' }
+        { id: 'doc_2', titulo: 'Ata da Reunião de Posse 2026', categoria: 'Atas', visibilidade: 'todos', data: '20/01/2026', link: null, arquivo_nome: 'Ata_Posse_2026.pdf' }
     ],
     programacao: [],
     mensagens: []
@@ -84,7 +81,7 @@ const idbStorage = {
                 const store = tx.objectStore('files');
                 store.delete(id);
                 tx.oncomplete = () => resolve(true);
-                tx.onerror = () => resolve(false);
+                tx.onerror = (e) => reject(e.target.error);
             });
         } catch (e) {
             return false;
@@ -92,7 +89,7 @@ const idbStorage = {
     }
 };
 
-// INICIALIZAÇÃO
+// INICIALIZA�?�fO
 document.addEventListener('DOMContentLoaded', () => {
     initMockData();
     setupCPFMasks();
@@ -102,8 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initMockData() {
     let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     
-    // Se estiver vazio ou contiver itens com codificação antiga desformatada, recarrega com dados limpos
-    const needsReset = list.length === 0 || list.some(a => (a.obm && a.obm.includes('Ã')) || (a.cidade && a.cidade.includes('Ã')) || (a.nome && a.nome.includes('Ã')));
+    const needsReset = list.length === 0 || list.some(a => (a.obm && a.obm.includes('�f')) || (a.cidade && a.cidade.includes('�f')) || (a.nome && a.nome.includes('�f')));
 
     if (needsReset) {
         list = [...MOCK_DATA_INITIAL.associados];
@@ -122,13 +118,13 @@ function initMockData() {
 
     localStorage.setItem('acbcsj_associados', JSON.stringify(list));
 
-    localStorage.setItem('acbcsj_financeiro', JSON.stringify(INITIAL_LANCAMENTOS_DATA));
-    localStorage.setItem('acbcsj_mensalidades_grid', JSON.stringify(INITIAL_MENSAL_DATA));
+    // ZERA TODOS OS LAN�?AMENTOS FINANCEIROS CONFORME SOLICITA�?�fO
+    localStorage.setItem('acbcsj_financeiro', JSON.stringify([]));
     localStorage.setItem('acbcsj_mensalidades', JSON.stringify(MOCK_DATA_INITIAL.mensalidades));
     localStorage.setItem('acbcsj_programacao', JSON.stringify(MOCK_DATA_INITIAL.programacao));
     localStorage.setItem('acbcsj_mensagens', JSON.stringify(MOCK_DATA_INITIAL.mensagens));
+    localStorage.removeItem('acbcsj_mensalidades_grid');
 
-    // MIGRATION / CLEANUP DE DOCUMENTOS: Move arquivos pesados do localStorage para o IndexedDB para zerar o uso de cota do navegador
     let storedDocs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
     if (storedDocs.length > 0) {
         let cleaned = false;
@@ -143,7 +139,7 @@ function initMockData() {
             try {
                 localStorage.setItem('acbcsj_documentos', JSON.stringify(storedDocs));
             } catch (err) {
-                console.warn('ConcluÃ­da limpeza do localStorage');
+                console.warn('Concluída limpeza do localStorage');
             }
         }
     } else {
@@ -166,7 +162,7 @@ function setupCPFMasks() {
     });
 }
 
-// AUTENTICAÇÃO E LOGIN
+// AUTENTICA�?�fO E LOGIN
 function loginWithCPF(cpf, password, roleHint = null) {
     try {
         const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || (typeof MOCK_DATA_INITIAL !== 'undefined' ? MOCK_DATA_INITIAL.associados : []);
@@ -185,12 +181,12 @@ function loginWithCPF(cpf, password, roleHint = null) {
             }
 
             if (found.status === 'pendente') {
-                alert('⚠️ ACESSO BLOQUEADO!\n\nSua solicitação de cadastro ainda está em análise pela Diretoria da ACBCSJ. Aguarde a aprovação para conseguir logar.');
+                alert('�s�️ ACESSO BLOQUEADO!\n\nSua solicitação de cadastro ainda está em análise pela Diretoria da ACBCSJ. Aguarde a aprovação para conseguir logar.');
                 return;
             }
 
             if (found.status === 'desligado') {
-                alert('🚫 ACESSO TOTALMENTE BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da Associação Corpo de Bombeiros Comunitários de São José.\nIntegrantes desligados não possuem permissão de acesso ao sistema.');
+                alert('�Ys� ACESSO TOTALMENTE BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da Associação Corpo de Bombeiros Comunitários de São José.\nIntegrantes desligados não possuem permissão de acesso ao sistema.');
                 return;
             }
 
@@ -228,7 +224,7 @@ function logout() {
     document.getElementById('authScreen').style.display = 'flex';
 }
 
-// RENDERIZAÇÃO DO CABEÇALHO DO USUÁRIO
+// RENDERIZA�?�fO DO CABE�?ALHO DO USUÁRIO
 function renderUserHeader() {
     document.getElementById('headerUserName').textContent = currentUser.nome;
     const badge = document.getElementById('headerUserRole');
@@ -236,8 +232,7 @@ function renderUserHeader() {
     badge.className = `user-role-badge role-${currentUser.perfil}`;
 }
 
-// MENU LATERAL DINÃ‚MICO CONFORME PERFIL
-
+// MENU LATERAL DIN�,MICO CONFORME PERFIL
 function renderSidebarMenu() {
     const menuNav = document.getElementById('sidebarNav');
     if (!menuNav) return;
@@ -245,30 +240,30 @@ function renderSidebarMenu() {
 
     if (currentUser.perfil === 'diretoria') {
         menuNav.innerHTML = `
-            <div class="nav-item active" onclick="navigateTab('overview-diretoria')">📊 Painel Geral</div>
-            <div class="nav-item" onclick="navigateTab('gestao-associados')">👥 Controle de Associados</div>
-            <div class="nav-item" onclick="navigateTab('associados-desligados')">📋 Associados Desligados</div>
-            <div class="nav-item" onclick="navigateTab('gestao-financeira')">💰 Lançamentos Financeiros</div>
-            <div class="nav-item" onclick="navigateTab('documentos-associado')">📑 Documentos & Atas</div>
-            <div class="nav-item" onclick="navigateTab('mensagens-diretoria')">📬 Caixa de Mensagens</div>
+            <div class="nav-item active" onclick="navigateTab('overview-diretoria')">�Y"S Painel Geral</div>
+            <div class="nav-item" onclick="navigateTab('gestao-associados')">�Y'� Controle de Associados</div>
+            <div class="nav-item" onclick="navigateTab('associados-desligados')">�Y"< Associados Desligados</div>
+            <div class="nav-item" onclick="navigateTab('gestao-financeira')">�Y'� Lançamentos Financeiros</div>
+            <div class="nav-item" onclick="navigateTab('documentos-associado')">�Y"' Documentos & Atas</div>
+            <div class="nav-item" onclick="navigateTab('mensagens-diretoria')">�Y"� Caixa de Mensagens</div>
         `;
     } else {
         menuNav.innerHTML = `
-            <div class="nav-item active" onclick="navigateTab('overview-associado')">🏠 Meu Painel</div>
-            <div class="nav-item" onclick="navigateTab('balancetes-associado')">📈 Balancetes & Contas</div>
-            <div class="nav-item" onclick="navigateTab('documentos-associado')">📁 Documentos & Convites</div>
-            <div class="nav-item" onclick="navigateTab('enviar-mensagem')">💬 Fale com a Diretoria</div>
+            <div class="nav-item active" onclick="navigateTab('overview-associado')">�Y�� Meu Painel</div>
+            <div class="nav-item" onclick="navigateTab('balancetes-associado')">�Y"^ Balancetes & Contas</div>
+            <div class="nav-item" onclick="navigateTab('documentos-associado')">�Y"� Documentos & Convites</div>
+            <div class="nav-item" onclick="navigateTab('enviar-mensagem')">�Y'� Fale com a Diretoria</div>
         `;
     }
 }
 
-// NAVEGAÇÃO ENTRE ABAS
+// NAVEGA�?�fO ENTRE ABAS
 function navigateTab(tabId) {
     if (currentUser) {
         const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
         const currentDbState = list.find(a => a.cpf === currentUser.cpf);
         if (currentDbState && currentDbState.status === 'desligado') {
-            alert('🚫 ACESSO REVOGADO!\n\nSeu cadastro consta como DESLIGADO da Associação. Você foi desconectado do sistema.');
+            alert('�Ys� ACESSO REVOGADO!\n\nSeu cadastro consta como DESLIGADO da Associação. Você foi desconectado do sistema.');
             logout();
             return;
         }
@@ -280,11 +275,9 @@ function navigateTab(tabId) {
     const activeTab = document.getElementById(`tab-${tabId}`);
     if (activeTab) activeTab.style.display = 'block';
 
-    // Destacar item de menu ativo
     const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick')?.includes(tabId));
     if (activeNav) activeNav.classList.add('active');
 
-    // Executar atualizações de tela específicas
     if (tabId === 'overview-diretoria') renderDiretoriaOverview();
     if (tabId === 'gestao-associados') renderGestaoAssociados();
     if (tabId === 'associados-desligados') renderAssociadosDesligados();
@@ -295,26 +288,22 @@ function navigateTab(tabId) {
     if (tabId === 'mensagens-diretoria') renderMensagensDiretoria();
 }
 
-// LÓGICA DA DIRETORIA: PAINEL GERAL E TABELAS
+// L�"GICA DA DIRETORIA: PAINEL GERAL E TABELAS
 function renderDiretoriaOverview() {
     const associados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
     const pendentes = associados.filter(a => a.status === 'pendente');
 
-    // Captura o ano selecionado no filtro (padrão: 2026)
     const selectAno = document.getElementById('diretoriaFiltroAno');
     const anoFiltro = selectAno ? selectAno.value : '2026';
 
-    // Atualiza labels visuais de ano
     document.querySelectorAll('.lblAnoSelecionado').forEach(el => {
         el.textContent = anoFiltro === 'todos' ? 'Todos' : anoFiltro;
     });
 
-    // 1. Total Ativos Gerais
     const totalAtivos = associados.filter(a => a.status === 'ativo').length;
     document.getElementById('metricTotalAssociados').textContent = totalAtivos;
 
-    // 2. Novas Associações no Ano Selecionado
     const novosNoAno = associados.filter(a => {
         if (!a.data_cadastro) return false;
         return anoFiltro === 'todos' || a.data_cadastro.includes(anoFiltro);
@@ -322,7 +311,6 @@ function renderDiretoriaOverview() {
     const elNovos = document.getElementById('metricNovosAno');
     if (elNovos) elNovos.textContent = novosNoAno;
 
-    // 3. Desligamentos no Ano Selecionado
     const desligadosNoAno = associados.filter(a => {
         if (a.status !== 'desligado') return false;
         if (anoFiltro === 'todos') return true;
@@ -334,43 +322,100 @@ function renderDiretoriaOverview() {
     const elDesligados = document.getElementById('metricDesligadosAno');
     if (elDesligados) elDesligados.textContent = desligadosNoAno;
 
-    // 4. Solicitações Pendentes
-    document.getElementById('metricCadastrosPendentes').textContent = pendentes.length;
+    let totalReceitas = 0;
+    financeiro.filter(f => f.tipo === 'receita').forEach(f => totalReceitas += Number(f.valor));
+    document.getElementById('metricSaldoFinanceiro').textContent = `R$ ${totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
-    // 5. Saldo em Caixa
-    const totalReceitas = financeiro.filter(f => f.tipo === 'receita').reduce((sum, item) => sum + Number(item.valor), 0);
-    const totalDespesas = financeiro.filter(f => f.tipo === 'despesa').reduce((sum, item) => sum + Number(item.valor), 0);
-    const saldo = totalReceitas - totalDespesas;
-    document.getElementById('metricSaldoCaixa').textContent = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    const elPendenteCount = document.getElementById('metricNovasSolicitacoes');
+    if (elPendenteCount) elPendenteCount.textContent = pendentes.length;
 
-    // Tabela de aprovação rápida
-    const container = document.getElementById('tablePendentesBody');
-    if (container) {
+    const containerPendentes = document.getElementById('tableSolicitacoesPendentesBody');
+    if (containerPendentes) {
         if (pendentes.length === 0) {
-            container.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhuma solicitação de pré-cadastro pendente.</td></tr>`;
+            containerPendentes.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhuma solicitação pendente no momento.</td></tr>`;
         } else {
-            container.innerHTML = pendentes.map(p => `
+            containerPendentes.innerHTML = pendentes.map(p => `
                 <tr>
                     <td><b>${p.nome_guerra || p.nome}</b><br><small style="color:var(--text-muted)">${p.nome}</small></td>
                     <td>${p.cpf}</td>
-                    <td>${p.telefone || '-'}</td>
-                    <td><small style="color:var(--accent-gold);">${p.data_cadastro || '-'}</small></td>
+                    <td>${p.obm || '-'}</td>
+                    <td>${p.data_cadastro || '-'}</td>
                     <td>
-                        <button class="btn btn-sm btn-primary" onclick="aprovarAssociado('${p.cpf}')">Aprovar</button>
-                        <button class="btn btn-sm btn-outline" onclick="verFichaAssociado('${p.cpf}')">Ver Ficha</button>
-                        <button class="btn btn-sm btn-outline" style="color:#E74C3C" onclick="abrirModalDesligar('${p.cpf}')">Rejeitar</button>
+                        <button class="btn btn-sm btn-gold" onclick="aprovarAssociado('${p.cpf}')">Aprovar</button>
+                        <button class="btn btn-sm btn-outline" style="color:#E74C3C; border-color:#E74C3C" onclick="rejeitarAssociado('${p.cpf}')">Recusar</button>
                     </td>
                 </tr>
             `).join('');
         }
     }
+
+    renderGraficoDiretoria(associados, financeiro);
 }
 
-// EXIBIR APENAS ASSOCIADOS ATIVOS COM CONTROLE DE PERFIL PELA DIRETORIA
+function renderGraficoDiretoria(associados, financeiro) {
+    const ctx = document.getElementById('chartGeralDiretoria');
+    if (!ctx) return;
+
+    if (currentChart) {
+        currentChart.destroy();
+    }
+
+    const ativos = associados.filter(a => a.status === 'ativo').length;
+    const pendentes = associados.filter(a => a.status === 'pendente').length;
+    const desligados = associados.filter(a => a.status === 'desligado').length;
+
+    currentChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Associados Ativos', 'Solicitações Pendentes', 'Desligados'],
+            datasets: [{
+                data: [ativos, pendentes, desligados],
+                backgroundColor: ['#D4AF37', '#F39C12', '#E74C3C'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#E0E0E0', font: { family: 'Inter' } }
+                }
+            }
+        }
+    });
+}
+
+function aprovarAssociado(cpf) {
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const item = list.find(a => a.cpf === cpf);
+    if (item) {
+        item.status = 'ativo';
+        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+        dbService.saveAssociado(item);
+        alert(`Pré-cadastro de ${item.nome} aprovado com sucesso!`);
+        renderDiretoriaOverview();
+        renderGestaoAssociados();
+    }
+}
+
+function rejeitarAssociado(cpf) {
+    if (confirm('Deseja realmente recusar esta solicitação de cadastro?')) {
+        let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+        list = list.filter(a => a.cpf !== cpf);
+        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+        dbService.deleteAssociado(cpf);
+        alert('Solicitação recusada e removida.');
+        renderDiretoriaOverview();
+    }
+}
+
+// GEST�fO DE ASSOCIADOS
 function renderGestaoAssociados() {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const ativos = list.filter(a => a.status === 'ativo');
-    const container = document.getElementById('tableTodosAssociadosBody');
+    const container = document.getElementById('tableAssociadosBody');
     const isDiretoria = currentUser && currentUser.perfil === 'diretoria';
 
     if (container) {
@@ -378,10 +423,9 @@ function renderGestaoAssociados() {
             container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum associado ativo cadastrado.</td></tr>`;
         } else {
             container.innerHTML = ativos.map(a => {
-                const isSelf = a.cpf === currentUser.cpf;
-                
-                // Se for DIRETORIA, exibe um seletor dropdown para alternar o perfil
-                let perfilControl = `<span class="badge badge-${a.perfil === 'diretoria' ? 'warning' : 'info'}">${a.perfil.toUpperCase()}</span>`;
+                const isSelf = currentUser && a.cpf === currentUser.cpf;
+                let perfilControl = `<span class="badge badge-info">${a.perfil ? a.perfil.toUpperCase() : 'ASSOCIADO'}</span>`;
+
                 if (isDiretoria) {
                     perfilControl = `
                         <select class="form-control" style="padding: 4px 8px; font-size: 12px; font-weight: 600; width: 130px; ${a.perfil === 'diretoria' ? 'border-color: var(--accent-gold); color: var(--accent-gold);' : ''}" 
@@ -399,7 +443,7 @@ function renderGestaoAssociados() {
                         <td>${a.cpf}</td>
                         <td>${a.telefone || a.email || '-'}</td>
                         <td>${perfilControl}</td>
-                        <td><button class="btn btn-sm btn-gold" onclick="verFichaAssociado('${a.cpf}')">📋 Ver Ficha Completa</button></td>
+                        <td><button class="btn btn-sm btn-gold" onclick="verFichaAssociado('${a.cpf}')">�Y"< Ver Ficha Completa</button></td>
                         <td>
                             ${!isSelf ? `<button class="btn btn-sm btn-outline" style="color:#E74C3C; border-color:#E74C3C" onclick="abrirModalDesligar('${a.cpf}')">Desligar Associado</button>` : '<small style="color:var(--text-muted)">Você (Diretoria)</small>'}
                         </td>
@@ -410,10 +454,9 @@ function renderGestaoAssociados() {
     }
 }
 
-// FUN��O PARA ALTERAR O PERFIL DO INTEGRANTE (APENAS DIRETORIA)
 function alterarPerfilAssociado(cpf, novoPerfil) {
     if (!currentUser || currentUser.perfil !== 'diretoria') {
-        alert('Apenas membros da Diretoria possuem permiss�o para alterar o perfil de integrantes.');
+        alert('Apenas membros da Diretoria possuem permissão para alterar o perfil de integrantes.');
         renderGestaoAssociados();
         return;
     }
@@ -434,7 +477,6 @@ function alterarPerfilAssociado(cpf, novoPerfil) {
     }
 }
 
-// EXIBIR ASSOCIADOS DESLIGADOS
 function renderAssociadosDesligados() {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const desligados = list.filter(a => a.status === 'desligado');
@@ -449,10 +491,10 @@ function renderAssociadosDesligados() {
                     <td>${d.cpf}</td>
                     <td><small style="color:#FF6B6B;">${d.data_desligamento || '-'}</small></td>
                     <td>
-                        <span style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">${d.motivo_desligamento || 'N�o especificado'}</span>
+                        <span style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">${d.motivo_desligamento || 'Não especificado'}</span>
                         ${d.carta_desligamento_url ? `
                             <button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 8px; color:var(--accent-gold); border-color:var(--accent-gold)" onclick="abrirCartaDesligamento('${d.cpf}')">
-                                ?? Ver Carta de Desligamento
+                                �Y"< Ver Carta de Desligamento
                             </button>
                         ` : '<small style="color:#FF6B6B; font-style:italic;">Sem carta anexada</small>'}
                     </td>
@@ -467,75 +509,16 @@ function renderAssociadosDesligados() {
     }
 }
 
-// FICHA COMPLETA DO ASSOCIADO
-function verFichaAssociado(cpf) {
-    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const a = list.find(item => item.cpf === cpf);
-    if (!a) {
-        alert('Associado n�o encontrado.');
-        return;
-    }
-
-    document.getElementById('fichaNomeTitle').textContent = `Ficha Cadastral: ${a.nome_guerra || a.nome}`;
-
-    const body = document.getElementById('fichaContentBody');
-    body.innerHTML = `
-        <div style="grid-column: 1 / -1; background-color:#15181C; padding:12px; border-radius:6px; border:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-            <div><b>Status do Cadastro:</b> <span class="badge badge-${a.status === 'ativo' ? 'success' : (a.status === 'desligado' ? 'danger' : 'warning')}">${a.status.toUpperCase()}</span></div>
-            <div style="font-size:11px; color:var(--text-muted)">Cadastrado em: <b>${a.data_cadastro || '-'}</b></div>
-        </div>
-
-        <div><b>Nome de Guerra:</b> ${a.nome_guerra || '-'}</div>
-        <div><b>Nome Completo:</b> ${a.nome}</div>
-        <div><b>CPF:</b> ${a.cpf}</div>
-        <div><b>Data de Nascimento:</b> ${a.data_nascimento || '-'}</div>
-        <div><b>Sexo:</b> ${a.sexo || '-'}</div>
-        <div><b>Telefone / WhatsApp:</b> ${a.telefone || '-'}</div>
-        <div><b>OBM de Lota��o:</b> <b style="color: var(--accent-gold);">${a.obm || '-'}</b></div>
-        <div><b>Profiss�o:</b> ${a.profissao || '-'}</div>
-        <div><b>Perfil no Portal:</b> <b style="color: var(--accent-gold);">${(a.perfil || 'associado').toUpperCase()}</b></div>
-        
-        <div style="grid-column: 1 / -1; margin-top:8px; border-top:1px dashed var(--border-color); padding-top:8px;"><b>Filia��o:</b></div>
-        <div><b>Nome da M�e:</b> ${a.nome_mae || '-'}</div>
-        <div><b>Nome do Pai:</b> ${a.nome_pai || '-'}</div>
-
-        <div style="grid-column: 1 / -1; margin-top:8px; border-top:1px dashed var(--border-color); padding-top:8px;"><b>Endere�o Residencial:</b></div>
-        <div><b>Logradouro / Rua:</b> ${a.logradouro || '-'}, N� ${a.numero || '-'}</div>
-        <div><b>Complemento:</b> ${a.complemento || 'Nenhum'}</div>
-        <div><b>CEP:</b> ${a.cep || '-'}</div>
-        <div><b>Bairro:</b> ${a.bairro || '-'}</div>
-        <div style="grid-column: 1 / -1;"><b>Cidade:</b> ${a.cidade || '-'}</div>
-
-        ${a.status === 'desligado' ? `
-            <div style="grid-column: 1 / -1; margin-top:10px; background-color:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.4); padding:12px; border-radius:6px; color:#FF6B6B;">
-                <div><b>Data/Hora do Desligamento:</b> ${a.data_desligamento || '-'}</div>
-                <div><b>Motivo do Desligamento:</b> ${a.motivo_desligamento || '-'}</div>
-                <div style="margin-top: 8px;">
-                    <b>Carta de Desligamento:</b> 
-                    ${a.carta_desligamento_url ? `
-                        <button class="btn btn-sm btn-gold" style="margin-left: 8px; font-size: 11px;" onclick="abrirCartaDesligamento('${a.cpf}')">
-                            ?? Baixar / Visualizar Carta (${a.carta_desligamento_nome || 'Arquivo'})
-                        </button>
-                    ` : '<i>Nenhuma carta anexada.</i>'}
-                </div>
-            </div>
-        ` : ''}
-    `;
-
-    openModal('modalFichaAssociado');
-}
-
-// DESLIGAMENTO COM REGISTRO DE MOTIVO, CARTA DE DESLIGAMENTO (OPCIONAL) E DATA/HORA
 function abrirModalDesligar(cpf) {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const a = list.find(item => item.cpf === cpf);
-    if (!a) return;
+    const item = list.find(a => a.cpf === cpf);
+    if (!item) return;
 
-    document.getElementById('desligarCPF').value = a.cpf;
-    document.getElementById('desligarNomeDisplay').value = `${a.nome_guerra || a.nome} (${a.nome}) - CPF: ${a.cpf}`;
+    document.getElementById('desligarCPF').value = cpf;
+    document.getElementById('desligarNomeTarget').textContent = item.nome_guerra || item.nome;
+    document.getElementById('desligarData').value = new Date().toISOString().split('T')[0];
     document.getElementById('desligarMotivo').value = '';
-    const fileInput = document.getElementById('desligarCartaArquivo');
-    if (fileInput) fileInput.value = '';
+    document.getElementById('desligarCartaFile').value = '';
 
     openModal('modalDesligarAssociado');
 }
@@ -543,34 +526,36 @@ function abrirModalDesligar(cpf) {
 function confirmarDesligamento(e) {
     e.preventDefault();
     const cpf = document.getElementById('desligarCPF').value;
+    const data = document.getElementById('desligarData').value;
     const motivo = document.getElementById('desligarMotivo').value.trim();
-    const fileInput = document.getElementById('desligarCartaArquivo');
-    const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+    const fileInput = document.getElementById('desligarCartaFile');
+    const file = fileInput.files ? fileInput.files[0] : null;
 
-    if (!motivo) {
-        alert('Por favor, informe o motivo do desligamento.');
-        return;
-    }
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const item = list.find(a => a.cpf === cpf);
+    if (!item) return;
 
-    const agora = new Date();
-    const dataHoraDesligamento = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const [ano, mes, dia] = data.split('-');
+    const dataBR = `${dia}/${mes}/${ano}`;
 
-    const processarSalvarDesligamento = (fileDataUrl = null, fileName = null) => {
-        let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-        const item = list.find(a => a.cpf === cpf);
-        if (item) {
-            item.status = 'desligado';
-            item.data_desligamento = dataHoraDesligamento;
-            item.motivo_desligamento = motivo;
-            if (fileDataUrl) {
-                item.carta_desligamento_url = fileDataUrl;
-                item.carta_desligamento_nome = fileName;
-            }
+    const concluirDesligamento = async (cartaUrl = null) => {
+        item.status = 'desligado';
+        item.data_desligamento = dataBR;
+        item.motivo_desligamento = motivo || 'Desligamento a pedido ou administrativo';
 
-            localStorage.setItem('acbcsj_associados', JSON.stringify(list));
-            dbService.saveAssociado(item);
+        if (cartaUrl) {
+            await idbStorage.setFile(`carta_${cpf}`, cartaUrl);
+            item.carta_desligamento_url = true;
+        }
 
-            alert(`Associado ${item.nome_guerra || item.nome} foi desligado com sucesso em ${dataHoraDesligamento}.${fileDataUrl ? '\nA Carta de Desligamento foi salva e registrada no sistema.' : ''}`);
+        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+        dbService.saveAssociado(item);
+
+        if (currentUser && currentUser.cpf === cpf) {
+            alert('�Ys� Seu cadastro foi desligado. Você será desconectado do sistema.');
+            logout();
+        } else {
+            alert(`Associado ${item.nome_guerra || item.nome} desligado com sucesso.`);
             closeModal('modalDesligarAssociado');
             renderGestaoAssociados();
             renderAssociadosDesligados();
@@ -581,51 +566,44 @@ function confirmarDesligamento(e) {
     if (file) {
         const reader = new FileReader();
         reader.onload = function (event) {
-            processarSalvarDesligamento(event.target.result, file.name);
+            concluirDesligamento(event.target.result);
         };
         reader.readAsDataURL(file);
     } else {
-        processarSalvarDesligamento();
+        concluirDesligamento();
     }
 }
 
-// FUN��O PARA ABRIR OU BAIXAR A CARTA DE DESLIGAMENTO
-function abrirCartaDesligamento(cpf) {
-    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const a = list.find(item => item.cpf === cpf);
-    if (!a || !a.carta_desligamento_url) {
-        alert('Carta de desligamento n�o encontrada.');
+async function abrirCartaDesligamento(cpf) {
+    const fileContent = await idbStorage.getFile(`carta_${cpf}`);
+    if (!fileContent) {
+        alert('Carta de desligamento não encontrada para este associado.');
         return;
     }
-
-    // Criar um link tempor�rio para download ou visualiza��o em nova aba
     const win = window.open();
     if (win) {
         win.document.write(`
             <html>
-                <head><title>Carta de Desligamento - ${a.nome_guerra || a.nome}</title></head>
+                <head><title>Carta de Desligamento - ACBCSJ</title></head>
                 <body style="margin:0; background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh;">
-                    <iframe src="${a.carta_desligamento_url}" style="width:100%; height:100vh; border:none;"></iframe>
+                    <iframe src="${fileContent}" style="width:100%; height:100vh; border:none;"></iframe>
                 </body>
             </html>
         `);
-    } else {
-        const link = document.createElement('a');
-        link.href = a.carta_desligamento_url;
-        link.download = a.carta_desligamento_nome || `Carta_Desligamento_${a.cpf}.pdf`;
-        link.click();
     }
 }
 
 function reativarAssociado(cpf) {
-    if (confirm('Deseja reativar este associado no sistema? Ele voltar� para a lista de Associados Ativos.')) {
+    if (confirm('Deseja realmente reativar este associado no sistema da ACBCSJ?')) {
         let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
         const item = list.find(a => a.cpf === cpf);
         if (item) {
             item.status = 'ativo';
+            item.data_desligamento = null;
+            item.motivo_desligamento = null;
             localStorage.setItem('acbcsj_associados', JSON.stringify(list));
             dbService.saveAssociado(item);
-            alert(`Associado ${item.nome_guerra || item.nome} foi reativado!`);
+            alert(`Associado ${item.nome_guerra || item.nome} reativado com sucesso.`);
             renderAssociadosDesligados();
             renderGestaoAssociados();
             renderDiretoriaOverview();
@@ -633,20 +611,8 @@ function reativarAssociado(cpf) {
     }
 }
 
-function aprovarAssociado(cpf) {
-    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const item = list.find(a => a.cpf === cpf);
-    if (item) {
-        item.status = 'ativo';
-        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
-        dbService.saveAssociado(item);
-        alert(`Associado ${item.nome} aprovado com sucesso!`);
-        renderDiretoriaOverview();
-    }
-}
-
 function excluirAssociado(cpf) {
-    if (confirm('Tem certeza que deseja excluir este associado do sistema? Esta a��o � permanente.')) {
+    if (confirm('Deseja realmente excluir permanentemente este registro de associado?')) {
         let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
         list = list.filter(a => a.cpf !== cpf);
         localStorage.setItem('acbcsj_associados', JSON.stringify(list));
@@ -658,587 +624,78 @@ function excluirAssociado(cpf) {
     }
 }
 
-// L�GICA DO ASSOCIADO & GR�FICOS
-
-function renderBalancetesAssociado() {
-    const financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-    const totalReceitas = financeiro.filter(f => f.tipo === 'receita').reduce((sum, i) => sum + Number(i.valor), 0);
-    const totalDespesas = financeiro.filter(f => f.tipo === 'despesa').reduce((sum, i) => sum + Number(i.valor), 0);
-
-    const ctx = document.getElementById('chartBalancete');
-    if (ctx && typeof Chart !== 'undefined') {
-        if (currentChart) currentChart.destroy();
-        currentChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Entradas / Receitas', 'Sa�das / Despesas'],
-                datasets: [{
-                    data: [totalReceitas, totalDespesas],
-                    backgroundColor: ['#2ECC71', '#E74C3C'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { labels: { color: '#F4F5F7' } }
-                }
-            }
-        });
+// L�"GICA DO ASSOCIADO & GRÁFICOS
+function renderAssociadoOverview() {
+    const welcome = document.getElementById('associadoWelcomeName');
+    if (welcome && currentUser) {
+        welcome.textContent = currentUser.nome_guerra || currentUser.nome;
     }
-}
+    const mensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades')) || [];
+    const minhas = mensalidades.filter(m => m.associado_cpf === currentUser.cpf);
 
-function renderDocumentos() {
-    const docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
-    const isDiretoria = currentUser && currentUser.perfil === 'diretoria';
-    
-    // Renderiza botão de inserção de documentos apenas para a Diretoria
-    const actionContainer = document.getElementById('headerDocsAction');
-    if (actionContainer) {
-        if (isDiretoria) {
-            actionContainer.innerHTML = `<button class="btn btn-gold" onclick="openModal('modalNovoDocumento')">➕ Inserir Novo Documento</button>`;
-        } else {
-            actionContainer.innerHTML = '';
-        }
-    }
-
-    // Filtra documentos: se for associado comum, oculta os restritos à Diretoria
-    const docsFiltrados = isDiretoria ? docs : docs.filter(d => d.visibilidade !== 'diretoria');
-
-    const container = document.getElementById('listDocsAssociado');
+    const container = document.getElementById('tableMinhasMensalidadesBody');
     if (container) {
-        if (docsFiltrados.length === 0) {
-            container.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted);">Nenhum documento disponível no momento.</div>`;
+        if (minhas.length === 0) {
+            container.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhuma mensalidade registrada para o seu CPF até o momento.</td></tr>`;
         } else {
-            const hoje = new Date().toISOString().split('T')[0];
-
-            container.innerHTML = docsFiltrados.map(d => {
-                // Cálculo de Vencimento
-                let vencimentoBadge = '';
-                if (d.data_vencimento) {
-                    const isVencido = d.data_vencimento < hoje;
-                    const dataFmt = d.data_vencimento.split('-').reverse().join('/');
-                    if (isVencido) {
-                        vencimentoBadge = `<span style="color: #E74C3C; font-weight: bold; margin-left: 8px;">⚠️ Vencido em ${dataFmt}</span>`;
-                    } else {
-                        vencimentoBadge = `<span style="color: var(--text-muted); margin-left: 8px;">📅 Vence em: ${dataFmt}</span>`;
-                    }
-                } else {
-                    vencimentoBadge = `<span style="color: var(--text-muted); margin-left: 8px;">Sem vencimento</span>`;
-                }
-
-                // Badge de Visibilidade
-                const visibBadge = d.visibilidade === 'diretoria' 
-                    ? `<span class="badge badge-warning" style="margin-left: 6px;">🔒 Apenas Diretoria</span>` 
-                    : `<span class="badge badge-info" style="margin-left: 6px;">🌐 Todos</span>`;
-
-                return `
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; border-bottom:1px solid var(--border-color); flex-wrap:wrap; gap:12px;">
-                        <div>
-                            <div style="font-size:15px; font-weight:bold; color:var(--text-main);">
-                                ${d.titulo}
-                                <span class="badge badge-warning" style="margin-left:8px; background:rgba(255,215,0,0.15); color:var(--accent-gold);">${d.categoria || 'Geral'}</span>
-                                ${visibBadge}
-                            </div>
-                            <div style="font-size:12px; margin-top:4px;">
-                                <span style="color:var(--text-muted)">Publicado em: ${d.data || '-'}</span>
-                                ${vencimentoBadge}
-                            </div>
-                        </div>
-                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                            <button class="btn btn-sm btn-outline" onclick="abrirDocumento('${d.id}')">📖 Visualizar / Download</button>
-                            ${isDiretoria ? `<button class="btn btn-sm btn-outline" style="color:var(--accent-gold); border-color:var(--accent-gold);" onclick="abrirModalEditarDoc('${d.id}')">✏️ Editar Categoria/Acesso</button>` : ''}
-                            ${isDiretoria ? `<button class="btn btn-sm btn-outline" style="color:#E74C3C;" onclick="excluirDocumento('${d.id}')">🗑️ Excluir</button>` : ''}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-    }
-}
-
-function abrirModalEditarDoc(id) {
-    const docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
-    const d = docs.find(item => item.id === id);
-    if (!d) return;
-
-    document.getElementById('editDocId').value = d.id;
-    document.getElementById('editDocTitulo').value = d.titulo || '';
-    document.getElementById('editDocCategoria').value = d.categoria || 'Atas';
-    document.getElementById('editDocVisibilidade').value = d.visibilidade || 'todos';
-    document.getElementById('editDocDataVencimento').value = d.data_vencimento || '';
-    const fileInput = document.getElementById('editDocArquivo');
-    if (fileInput) fileInput.value = '';
-
-    openModal('modalEditarDocumento');
-}
-
-function salvarEdicaoDocumento(e) {
-    e.preventDefault();
-    const id = document.getElementById('editDocId').value;
-    const titulo = document.getElementById('editDocTitulo').value.trim();
-    const categoria = document.getElementById('editDocCategoria').value;
-    const visibilidade = document.getElementById('editDocVisibilidade').value;
-    const dataVencimento = document.getElementById('editDocDataVencimento').value;
-    const fileInput = document.getElementById('editDocArquivo');
-    const file = fileInput && fileInput.files ? fileInput.files[0] : null;
-
-    let docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
-    const index = docs.findIndex(d => d.id === id);
-    if (index >= 0) {
-        docs[index].titulo = titulo;
-        docs[index].categoria = categoria;
-        docs[index].visibilidade = visibilidade;
-        docs[index].data_vencimento = dataVencimento || null;
-
-        const concluirSalvar = () => {
-            try {
-                localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
-            } catch (err) {
-                console.warn('Salvo com metadados no sistema.');
-            }
-            try {
-                dbService.saveDocumento(docs[index]);
-            } catch (e) {
-                console.warn('Erro ao salvar no banco:', e);
-            }
-            alert('Documento e permissões atualizados com sucesso!');
-            closeModal('modalEditarDocumento');
-            renderDocumentos();
-        };
-
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = async function (event) {
-                const fileDataUrl = event.target.result;
-                docs[index].arquivo_nome = file.name;
-                docs[index].link = null; // Mantém nulo no localStorage para evitar estouro da quota de 5MB
-                await idbStorage.setFile(id, fileDataUrl);
-                concluirSalvar();
-            };
-            reader.readAsDataURL(file);
-        } else {
-            concluirSalvar();
-        }
-    }
-}
-
-function salvarNovoDocumento(e) {
-    e.preventDefault();
-    const titulo = document.getElementById('docTitulo').value.trim();
-    const categoria = document.getElementById('docCategoria').value;
-    const visibilidade = document.getElementById('docVisibilidade').value;
-    const dataVencimento = document.getElementById('docDataVencimento').value;
-    const fileInput = document.getElementById('docArquivo');
-    const file = fileInput && fileInput.files ? fileInput.files[0] : null;
-
-    if (!titulo || !categoria || !file) {
-        alert('Por favor, preencha o título, selecione a categoria e anexe o arquivo do documento.');
-        return;
-    }
-
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Salvando...';
-    }
-
-    const docId = 'doc_' + Date.now();
-    const reader = new FileReader();
-    reader.onload = async function (event) {
-        const fileDataUrl = event.target.result;
-        const fileName = file.name;
-
-        // Salva o arquivo pesado no IndexedDB sem limites do localStorage
-        await idbStorage.setFile(docId, fileDataUrl);
-
-        let docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
-        const novoDoc = {
-            id: docId,
-            titulo: titulo,
-            categoria: categoria,
-            visibilidade: visibilidade,
-            data_vencimento: dataVencimento || null,
-            data: new Date().toLocaleDateString('pt-BR'),
-            link: null, // Conteúdo do arquivo salvo no IndexedDB
-            arquivo_nome: fileName
-        };
-
-        docs.unshift(novoDoc);
-
-        try {
-            localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
-        } catch (err) {
-            console.warn('Metadados salvos');
-        }
-
-        try {
-            dbService.saveDocumento(novoDoc);
-        } catch (e) {
-            console.warn('Erro ao salvar no banco:', e);
-        }
-
-        alert(`Documento "${titulo}" publicado com sucesso!`);
-        e.target.reset();
-        closeModal('modalNovoDocumento');
-        renderDocumentos();
-
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Publicar Documento';
-        }
-    };
-
-    reader.readAsDataURL(file);
-}
-
-async function abrirDocumento(id) {
-    const docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
-    const doc = docs.find(d => d.id === id);
-    if (!doc) {
-        alert('Documento não encontrado.');
-        return;
-    }
-
-    let fileContent = doc.link;
-    if (!fileContent) {
-        fileContent = await idbStorage.getFile(id);
-    }
-
-    if (!fileContent) {
-        alert('Arquivo do documento não disponível para visualização.');
-        return;
-    }
-
-    if (fileContent.startsWith('data:')) {
-        const win = window.open();
-        if (win) {
-            win.document.write(`
-                <html>
-                    <head><title>${doc.titulo} - ACBCSJ</title></head>
-                    <body style="margin:0; background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh;">
-                        <iframe src="${fileContent}" style="width:100%; height:100vh; border:none;"></iframe>
-                    </body>
-                </html>
-            `);
-        } else {
-            const a = document.createElement('a');
-            a.href = fileContent;
-            a.download = doc.arquivo_nome || `${doc.titulo}.pdf`;
-            a.click();
-        }
-    } else {
-        window.open(fileContent, '_blank');
-    }
-}
-
-async function excluirDocumento(id) {
-    if (confirm('Deseja realmente excluir este documento do repositório?')) {
-        let docs = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
-        docs = docs.filter(d => d.id !== id);
-        try {
-            localStorage.setItem('acbcsj_documentos', JSON.stringify(docs));
-        } catch (err) {}
-        await idbStorage.deleteFile(id);
-        alert('Documento excluído com sucesso.');
-        renderDocumentos();
-    }
-}
-
-
-function renderMensagensDiretoria() {
-    const msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
-    const container = document.getElementById('listMensagensDiretoria');
-    if (container) {
-        if (msgs.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-muted)">Nenhuma mensagem ou ideia enviada recentemente.</p>`;
-        } else {
-            container.innerHTML = msgs.map(m => `
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between">
-                        <b>${m.assunto}</b>
-                        <small style="color:var(--text-muted)">${m.data}</small>
-                    </div>
-                    <div style="font-size:12px; color:var(--accent-gold); margin-bottom:8px">Por: ${m.associado_nome}</div>
-                    <p style="font-size:13px">${m.conteudo}</p>
-                </div>
+            container.innerHTML = minhas.map(m => `
+                <tr>
+                    <td>${m.mes}</td>
+                    <td>R$ ${Number(m.valor).toFixed(2)}</td>
+                    <td><span class="badge badge-${m.status === 'pago' ? 'success' : 'warning'}">${m.status.toUpperCase()}</span></td>
+                    <td>${m.data_pagamento || '-'}</td>
+                </tr>
             `).join('');
         }
     }
 }
 
-// PRÉ-CADASTRO E ENVIOS
-function toggleSemPai(checkbox) {
-    const inputPai = document.getElementById('regNomePai');
-    if (checkbox.checked) {
-        inputPai.value = 'Sem registro paterno / Não declarado';
-        inputPai.disabled = true;
-    } else {
-        inputPai.value = '';
-        inputPai.disabled = false;
-    }
-}
+function renderBalancetesAssociado() {
+    const ctx = document.getElementById('chartBalanceteAssociado');
+    if (!ctx) return;
 
-function submitPreCadastro(e) {
-    e.preventDefault();
-    
-    // Captura da Data e Hora Exata do Cadastro gerada pelo Sistema
-    const agora = new Date();
-    const dataHoraCadastro = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    let totalReceitas = 0;
+    let totalDespesas = 0;
 
-    // Captura dos campos na ordem exigida
-    const nomeGuerra = document.getElementById('regNomeGuerra').value.trim();
-    const nomeCompleto = document.getElementById('regNomeCompleto').value.trim();
-    const dataNascimento = document.getElementById('regDataNascimento').value;
-    const cpf = document.getElementById('regCPF').value.trim();
-    const nomeMae = document.getElementById('regNomeMae').value.trim();
-    const semPai = document.getElementById('regSemPai').checked;
-    const nomePai = semPai ? 'Sem registro paterno / Não declarado' : (document.getElementById('regNomePai').value.trim() || 'Não declarado');
-    const sexo = document.getElementById('regSexo').value;
-    const telefone = document.getElementById('regTelefone').value.trim();
-    const obm = document.getElementById('regOBM').value;
-    const profissao = document.getElementById('regProfissao').value.trim();
-    const logradouro = document.getElementById('regLogradouro').value.trim();
-    const numero = document.getElementById('regNumero').value.trim();
-    const complemento = document.getElementById('regComplemento').value.trim();
-    const cep = document.getElementById('regCEP').value.trim();
-    const bairro = document.getElementById('regBairro').value.trim();
-    const cidade = document.getElementById('regCidade').value.trim();
-    const termoAceito = document.getElementById('regTermoAceito').checked;
+    financeiro.forEach(f => {
+        if (f.tipo === 'receita') totalReceitas += Number(f.valor);
+        else totalDespesas += Number(f.valor);
+    });
 
-    if (!obm) {
-        alert('Por favor, selecione a OBM de Lotação.');
-        return;
-    }
-
-    if (!profissao) {
-        alert('Por favor, preencha o campo Profissão.');
-        return;
-    }
-
-    if (!termoAceito) {
-        alert('Você precisa aceitar os Termos de Responsabilidade para enviar a solicitação.');
-        return;
-    }
-
-    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    if (list.find(a => a.cpf === cpf)) {
-        alert('Este CPF já possui uma solicitação ou cadastro ativo no sistema da ACBCSJ.');
-        return;
-    }
-
-    // Geração automática de senha: os 4 primeiros dígitos numéricos do CPF
-    const apenasNumerosCPF = cpf.replace(/\D/g, '');
-    const senhaAutomatica = apenasNumerosCPF.substring(0, 4);
-
-    const novoAssociado = {
-        id: Date.now().toString(),
-        cpf: cpf,
-        senha: senhaAutomatica,
-        nome_guerra: nomeGuerra,
-        nome: nomeCompleto,
-        data_nascimento: dataNascimento,
-        nome_mae: nomeMae,
-        nome_pai: nomePai,
-        sexo: sexo,
-        telefone: telefone,
-        obm: obm,
-        profissao: profissao,
-        logradouro: logradouro,
-        numero: numero,
-        complemento: complemento,
-        cep: cep,
-        bairro: bairro,
-        cidade: cidade,
-        perfil: 'associado',
-        status: 'pendente',
-        data_cadastro: dataHoraCadastro
-    };
-
-    list.push(novoAssociado);
-    localStorage.setItem('acbcsj_associados', JSON.stringify(list));
-    dbService.saveAssociado(novoAssociado);
-
-    alert(`Solicitação de cadastro de ${nomeGuerra} (${nomeCompleto}) enviada com sucesso em ${dataHoraCadastro}!\n\n⚠️ O acesso estará BLOQUEADO até a APROVAÇÃO pela Diretoria.\n🔑 Após a aprovação, sua senha de acesso será os 4 primeiros dígitos do seu CPF (${senhaAutomatica}).`);
-    e.target.reset();
-    if (document.getElementById('regSemPai')) {
-        document.getElementById('regSemPai').checked = false;
-        document.getElementById('regNomePai').disabled = false;
-    }
-    closeModal('modalPreCadastro');
-}
-
-function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-
-
-
-// ==========================================
-// GESTÃƒO FINANCEIRA, RECEITAS, DESPESAS E MENSALIDADES (PLANILHA MENSAL.XLSX)
-// ==========================================
-
-function abrirModalNovoLancamento(tipo) {
-    const selTipo = document.getElementById('finTipo');
-    const modalTitle = document.getElementById('modalLancamentoTitle');
-    const dataInput = document.getElementById('finData');
-    
-    if (selTipo) {
-        selTipo.value = tipo || 'receita';
-        atualizarCategoriasLancamento(selTipo.value);
-    }
-    
-    if (modalTitle) {
-        modalTitle.textContent = tipo === 'despesa' ? 'âž– Inserir Despesa (SaÃ­da)' : 'âž• Inserir Receita (Entrada)';
-    }
-
-    if (dataInput && !dataInput.value) {
-        const hoje = new Date().toISOString().split('T')[0];
-        dataInput.value = hoje;
-    }
-
-    openModal('modalNovoLancamento');
-}
-
-function atualizarCategoriasLancamento(tipo) {
-    const catSelect = document.getElementById('finCategoria');
-    if (!catSelect) return;
-    
-    catSelect.innerHTML = '';
-    if (tipo === 'receita') {
-        catSelect.innerHTML = `
-            <option value="Mensalidade / ContribuiÃ§Ã£o">Mensalidade / ContribuiÃ§Ã£o</option>
-            <option value="DoaÃ§Ã£o / ConvÃªnio">DoaÃ§Ã£o / ConvÃªnio</option>
-            <option value="Evento / Rifa">Evento / Rifa</option>
-            <option value="Outras Receitas">Outras Receitas</option>
-        `;
-    } else {
-        catSelect.innerHTML = `
-            <option value="Despesa Operacional">Despesa Operacional</option>
-            <option value="ManutenÃ§Ã£o de Viatura">ManutenÃ§Ã£o de Viatura</option>
-            <option value="Administrativo / Consumo">Administrativo / Consumo</option>
-            <option value="Encargos / Tarifas">Encargos / Tarifas</option>
-            <option value="Outras Despesas">Outras Despesas</option>
-        `;
-    }
-}
-
-function salvarNovoLancamento(e) {
-    e.preventDefault();
-    const tipo = document.getElementById('finTipo').value;
-    const valor = parseFloat(document.getElementById('finValor').value);
-    const descricao = document.getElementById('finDescricao').value.trim();
-    const categoria = document.getElementById('finCategoria').value;
-    const dataInput = document.getElementById('finData').value;
-    const fileInput = document.getElementById('finComprovante');
-    const file = fileInput && fileInput.files ? fileInput.files[0] : null;
-
-    if (!valor || valor <= 0 || !descricao || !dataInput) {
-        alert('Por favor, preencha a descriÃ§Ã£o, valor vÃ¡lido e a data do lanÃ§amento.');
-        return;
-    }
-
-    const [ano, mes, dia] = dataInput.split('-');
-    const dataBR = `${dia}/${mes}/${ano}`;
-    const mesesNomes = ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-    const mesNome = mesesNomes[parseInt(mes, 10) - 1] || 'Janeiro';
-
-    const lancId = 'lanc_' + Date.now();
-
-    const concluirSalvarLancamento = async (fileDataUrl = null, fileName = null) => {
-        let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-        const novoLancamento = {
-            id: lancId,
-            descricao: descricao,
-            categoria: categoria,
-            valor: valor,
-            tipo: tipo,
-            data: dataBR,
-            data_iso: dataInput,
-            mes: mesNome,
-            comprovante_nome: fileName
-        };
-
-        if (fileDataUrl) {
-            await idbStorage.setFile(lancId, fileDataUrl);
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Total Arrecadado', 'Total de Despesas'],
+            datasets: [{
+                label: 'Valores em R$',
+                data: [totalReceitas, totalDespesas],
+                backgroundColor: ['#2ECC71', '#E74C3C']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { ticks: { color: '#E0E0E0' } },
+                x: { ticks: { color: '#E0E0E0' } }
+            }
         }
-
-        list.unshift(novoLancamento);
-
-        try {
-            localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
-        } catch (err) {
-            console.warn('Salvo no sistema.');
-        }
-
-        try {
-            dbService.addFinanceiro(novoLancamento);
-        } catch (err) {}
-
-        alert(`LanÃ§amento de ${tipo.toUpperCase()} (R$ ${valor.toFixed(2).replace('.', ',')}) cadastrado com sucesso!`);
-        e.target.reset();
-        closeModal('modalNovoLancamento');
-        renderGestaoFinanceira();
-    };
-
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function (event) {
-            concluirSalvarLancamento(event.target.result, file.name);
-        };
-        reader.readAsDataURL(file);
-    } else {
-        concluirSalvarLancamento();
-    }
-}
-
-function excluirLancamentoFinanceiro(id) {
-    if (confirm('Deseja realmente remover este lanÃ§amento financeiro?')) {
-        let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-        list = list.filter(item => item.id !== id);
-        localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
-        idbStorage.deleteFile(id);
-        alert('LanÃ§amento removido com sucesso.');
-        renderGestaoFinanceira();
-    }
-}
-
-async function abrirComprovanteLancamento(id) {
-    const fileContent = await idbStorage.getFile(id);
-    if (!fileContent) {
-        alert('Comprovante nÃ£o disponÃ­vel para este lanÃ§amento.');
-        return;
-    }
-    const win = window.open();
-    if (win) {
-        win.document.write(`
-            <html>
-                <head><title>Comprovante Financeiro - ACBCSJ</title></head>
-                <body style="margin:0; background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh;">
-                    <iframe src="${fileContent}" style="width:100%; height:100vh; border:none;"></iframe>
-                </body>
-            </html>
-        `);
-    } else {
-        alert('VisualizaÃ§Ã£o bloqueada pelo navegador.');
-    }
+    });
 }
 
 function renderGestaoFinanceira() {
     const list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-    const filtroTipoSelect = document.getElementById('finFiltroTipo');
-    const filtroTipo = filtroTipoSelect ? filtroTipoSelect.value : 'todos';
-
+    const container = document.getElementById('tableFinanceiroBody');
     let totalReceitas = 0;
     let totalDespesas = 0;
 
-    list.forEach(item => {
-        const val = parseFloat(item.valor) || 0;
-        if (item.tipo === 'receita') {
-            totalReceitas += val;
-        } else {
-            totalDespesas += val;
-        }
+    list.forEach(f => {
+        if (f.tipo === 'receita') totalReceitas += Number(f.valor);
+        else totalDespesas += Number(f.valor);
     });
 
     const saldo = totalReceitas - totalDespesas;
@@ -1254,88 +711,96 @@ function renderGestaoFinanceira() {
         elSaldo.style.color = saldo >= 0 ? 'var(--accent-gold)' : '#E74C3C';
     }
 
-    const container = document.getElementById('tableFinanceiroBody');
     if (container) {
-        let filtrados = list;
-        if (filtroTipo !== 'todos') {
-            filtrados = list.filter(i => i.tipo === filtroTipo);
-        }
-
-        if (filtrados.length === 0) {
+        if (list.length === 0) {
             container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum lançamento registrado.</td></tr>`;
         } else {
-            container.innerHTML = filtrados.map(item => `
+            container.innerHTML = list.map(f => `
                 <tr>
-                    <td><b>${item.data || '-'}</b></td>
-                    <td>${item.descricao}</td>
-                    <td><span class="badge badge-info">${item.categoria}</span></td>
-                    <td>
-                        <span class="badge badge-${item.tipo === 'receita' ? 'success' : 'danger'}">
-                            ${item.tipo === 'receita' ? '➕ RECEITA' : '➖ DESPESA'}
-                        </span>
-                    </td>
-                    <td style="font-weight: 700; color: ${item.tipo === 'receita' ? '#2ECC71' : '#E74C3C'};">
-                        ${item.tipo === 'receita' ? '+' : '-'} R$ ${(parseFloat(item.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td>
-                        <div style="display:flex; gap:6px;">
-                            ${item.comprovante_nome ? `<button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:var(--accent-gold); border-color:var(--accent-gold);" onclick="abrirComprovanteLancamento('${item.id}')">📎 Ver Recibo</button>` : ''}
-                            <button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:#E74C3C; border-color:#E74C3C;" onclick="excluirLancamentoFinanceiro('${item.id}')">🗑️ Excluir</button>
-                        </div>
-                    </td>
+                    <td>${f.data}</td>
+                    <td>${f.descricao}</td>
+                    <td><span class="badge badge-info">${f.categoria}</span></td>
+                    <td><span class="badge badge-${f.tipo === 'receita' ? 'success' : 'danger'}">${f.tipo.toUpperCase()}</span></td>
+                    <td style="font-weight: 700; color: ${f.tipo === 'receita' ? '#2ECC71' : '#E74C3C'};">R$ ${Number(f.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td>-</td>
                 </tr>
             `).join('');
         }
     }
 }
 
-function renderAssociadoOverview() {
-    const welcome = document.getElementById('associadoWelcomeName');
-    if (welcome && currentUser) {
-        welcome.textContent = currentUser.nome_guerra || currentUser.nome;
+function verFichaAssociado(cpf) {
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const item = list.find(a => (a.cpf || '').replace(/\D/g, '') === (cpf || '').replace(/\D/g, ''));
+    if (!item) {
+        alert('Ficha do associado não encontrada.');
+        return;
     }
 
-    const grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || INITIAL_MENSAL_DATA || [];
-    const container = document.getElementById('tableMinhasMensalidadesBody');
-    if (!container || !currentUser) return;
+    const titleEl = document.getElementById('fichaNomeTitle');
+    if (titleEl) {
+        titleEl.textContent = `📋 Ficha Cadastral — ${item.nome_guerra || item.nome}`;
+    }
 
-    const socio = grid.find(s => {
-        const ng = (s.nome_guerra || '').toLowerCase();
-        const nc = (s.nome_completo || '').toLowerCase();
-        const userNg = (currentUser.nome_guerra || '').toLowerCase();
-        const userNc = (currentUser.nome || '').toLowerCase();
-        return (ng && userNg && ng === userNg) || (nc && userNc && nc === userNc) || (userNc && nc.includes(userNc));
-    }) || grid[0];
-
-    const mesesNomes = [
-        { key: 'jan', nome: 'Janeiro 2026' },
-        { key: 'fev', nome: 'Fevereiro 2026' },
-        { key: 'mar', nome: 'Março 2026' },
-        { key: 'abr', nome: 'Abril 2026' },
-        { key: 'mai', nome: 'Maio 2026' },
-        { key: 'jun', nome: 'Junho 2026' },
-        { key: 'jul', nome: 'Julho 2026' },
-        { key: 'ago', nome: 'Agosto 2026' },
-        { key: 'set', nome: 'Setembro 2026' },
-        { key: 'out', nome: 'Outubro 2026' },
-        { key: 'nov', nome: 'Novembro 2026' },
-        { key: 'dez', nome: 'Dezembro 2026' }
-    ];
-
-    container.innerHTML = mesesNomes.map(m => {
-        const val = socio ? (parseFloat(socio[m.key]) || 0) : 0;
-        const pago = val > 0;
-        return `
-            <tr>
-                <td><b>${m.nome}</b></td>
-                <td style="font-weight: 700; color: ${pago ? '#2ECC71' : 'var(--text-muted)'};">
-                    R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </td>
-                <td>
-                    <span class="badge badge-${pago ? 'success' : 'warning'}">
-                        ${pago ? '✅ PAGO / BAIXADO' : '⏳ EM ABERTO / PENDENTE'}
-                    </span>
-            </tr>
+    const container = document.getElementById('fichaContentBody');
+    if (container) {
+        container.innerHTML = `
+            <div style="background: rgba(255,255,255,0.04); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted); font-size: 11px; display: block; text-transform: uppercase; margin-bottom: 4px;">Nome de Guerra</span>
+                <strong style="font-size: 16px; color: var(--accent-gold);">${item.nome_guerra || item.nome}</strong>
+            </div>
+            <div style="background: rgba(255,255,255,0.04); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted); font-size: 11px; display: block; text-transform: uppercase; margin-bottom: 4px;">Nome Completo</span>
+                <strong style="font-size: 14px; color: var(--text-color);">${item.nome || '-'}</strong>
+            </div>
+            <div style="background: rgba(255,255,255,0.04); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted); font-size: 11px; display: block; text-transform: uppercase; margin-bottom: 4px;">CPF Registrado</span>
+                <strong style="font-size: 14px;">${item.cpf || '-'}</strong>
+            </div>
+            <div style="background: rgba(255,255,255,0.04); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted); font-size: 11px; display: block; text-transform: uppercase; margin-bottom: 4px;">Telefone / WhatsApp</span>
+                <strong style="font-size: 14px;">${item.telefone || 'Não informado'}</strong>
+            </div>
+            <div style="background: rgba(255,255,255,0.04); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted); font-size: 11px; display: block; text-transform: uppercase; margin-bottom: 4px;">E-mail</span>
+                <strong style="font-size: 14px;">${item.email || 'Não informado'}</strong>
+            </div>
+            <div style="background: rgba(255,255,255,0.04); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted); font-size: 11px; display: block; text-transform: uppercase; margin-bottom: 4px;">OBM / Unidade</span>
+                <strong style="font-size: 14px;">${item.obm || 'São José'}</strong>
+            </div>
+            <div style="background: rgba(255,255,255,0.04); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted); font-size: 11px; display: block; text-transform: uppercase; margin-bottom: 4px;">Status no Sistema</span>
+                <span class="badge badge-${item.status === 'ativo' ? 'success' : (item.status === 'desligado' ? 'danger' : 'warning')}" style="font-size: 12px; padding: 4px 8px;">
+                    ${(item.status || 'ativo').toUpperCase()}
+                </span>
+            </div>
+            <div style="background: rgba(255,255,255,0.04); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted); font-size: 11px; display: block; text-transform: uppercase; margin-bottom: 4px;">Perfil de Acesso</span>
+                <span class="badge badge-info" style="font-size: 12px; padding: 4px 8px;">
+                    ${(item.perfil || 'associado').toUpperCase()}
+                </span>
+            </div>
         `;
-    }).join('');
+    }
+
+    openModal('modalFichaAssociado');
+}
+
+function openModal(modalId) {
+    const m = document.getElementById(modalId);
+    if (m) m.style.display = 'flex';
+}
+
+function closeModal(modalId) {
+    const m = document.getElementById(modalId);
+    if (m) m.style.display = 'none';
+}
+
+function setupNavigation() {
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-wrapper')) {
+            event.target.style.display = 'none';
+        }
+    };
 }
