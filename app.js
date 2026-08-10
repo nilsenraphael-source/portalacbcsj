@@ -1265,6 +1265,7 @@ function renderSidebarMenu() {
         menuNav.innerHTML = `
             <div class="nav-item active" onclick="navigateTab('overview-diretoria')">📊 Painel Geral</div>
             <div class="nav-item" onclick="navigateTab('gestao-associados')">👥 Controle de Associados</div>
+            <div class="nav-item" onclick="navigateTab('gestao-mensalidades')">💳 Mensalidades dos Associados</div>
             <div class="nav-item" onclick="navigateTab('associados-desligados')">📋 Associados Desligados</div>
             <div class="nav-item" onclick="navigateTab('gestao-financeira')">💰 Lançamentos Financeiros</div>
             <div class="nav-item" onclick="navigateTab('documentos-associado')">📑 Documentos & Atas</div>
@@ -1305,6 +1306,7 @@ function navigateTab(tabId) {
     // Executar atualizações de tela específicas
     if (tabId === 'overview-diretoria') renderDiretoriaOverview();
     if (tabId === 'gestao-associados') renderGestaoAssociados();
+    if (tabId === 'gestao-mensalidades') renderGestaoMensalidades();
     if (tabId === 'associados-desligados') renderAssociadosDesligados();
     if (tabId === 'gestao-financeira') renderGestaoFinanceira();
     if (tabId === 'overview-associado') renderAssociadoOverview();
@@ -2426,4 +2428,384 @@ function salvarMeusDados(e) {
     alert('Seus dados cadastrais foram atualizados com sucesso!');
     closeModal('modalEditarMeusDados');
     renderAssociadoOverview();
+// GESTÃO DE MENSALIDADES DOS ASSOCIADOS (DIRETORIA)
+
+function renderGestaoMensalidades() {
+    const selAno = document.getElementById('selAnoMensalidades');
+    const ano = selAno ? selAno.value : '2026';
+
+    const lbls = document.querySelectorAll('.lblAnoMensalidadeMetrica');
+    lbls.forEach(el => el.textContent = ano);
+
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const ativos = list.filter(a => a.status === 'ativo' || !a.status);
+
+    const storageKey = `acbcsj_mensalidades_grid_${ano}`;
+    let grid = JSON.parse(localStorage.getItem(storageKey));
+
+    if (!grid) {
+        if (ano === '2026') {
+            grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || INITIAL_MENSAL_DATA || [];
+        } else {
+            grid = ativos.map(a => ({
+                nome_guerra: a.nome_guerra || a.nome,
+                nome_completo: a.nome,
+                cpf: a.cpf,
+                jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0
+            }));
+        }
+        localStorage.setItem(storageKey, JSON.stringify(grid));
+    }
+
+    const searchInput = document.getElementById('searchAssociadoMensalidade');
+    const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    const filterStatus = document.getElementById('filterStatusMensalidade')?.value || 'todos';
+
+    const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+    let totalArrecadadoAno = 0;
+    let emDiaCount = 0;
+    let pendentesCount = 0;
+
+    let associadosProcessados = ativos.map(socio => {
+        const itemGrid = grid.find(g => {
+            const gCpf = (g.cpf || '').replace(/\D/g, '');
+            const sCpf = (socio.cpf || '').replace(/\D/g, '');
+            if (gCpf && sCpf && gCpf === sCpf) return true;
+            const ng = (typeof g.nome_guerra === 'string' ? g.nome_guerra : '').toLowerCase();
+            const sNg = (typeof socio.nome_guerra === 'string' ? socio.nome_guerra : '').toLowerCase();
+            const sNc = (typeof socio.nome === 'string' ? socio.nome : '').toLowerCase();
+            return (ng && sNg && ng === sNg) || (sNc && ng && sNc.includes(ng));
+        }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+
+        let totalPagoSocio = 0;
+        let mesesDevidos = 0;
+
+        mesesKeys.forEach((key, index) => {
+            const val = parseFloat(itemGrid[key]) || 0;
+            totalPagoSocio += val;
+            totalArrecadadoAno += val;
+
+            const mesNum = index + 1;
+            const hoje = new Date();
+            const anoAtual = hoje.getFullYear();
+            const mesAtualNum = hoje.getMonth() + 1;
+
+            if (parseInt(ano, 10) < anoAtual || (parseInt(ano, 10) === anoAtual && mesNum <= mesAtualNum)) {
+                if (val < 20.00) {
+                    mesesDevidos++;
+                }
+            }
+        });
+
+        const isEmDia = mesesDevidos === 0;
+        if (isEmDia) emDiaCount++; else pendentesCount++;
+
+        return {
+            ...socio,
+            gridData: itemGrid,
+            totalPagoSocio,
+            mesesDevidos,
+            isEmDia
+        };
+    });
+
+    const elArrecadado = document.getElementById('metricTotalArrecadadoMensalidades');
+    const elEmDia = document.getElementById('metricAssociadosEmDia');
+    const elPendentes = document.getElementById('metricAssociadosPendentes');
+
+    if (elArrecadado) elArrecadado.textContent = `R$ ${totalArrecadadoAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    if (elEmDia) elEmDia.textContent = `${emDiaCount} associados`;
+    if (elPendentes) elPendentes.textContent = `${pendentesCount} associados`;
+
+    if (searchTerm) {
+        associadosProcessados = associadosProcessados.filter(a => {
+            const ng = (a.nome_guerra || '').toLowerCase();
+            const nc = (a.nome || '').toLowerCase();
+            const cpf = (a.cpf || '').replace(/\D/g, '');
+            return ng.includes(searchTerm) || nc.includes(searchTerm) || cpf.includes(searchTerm);
+        });
+    }
+
+    if (filterStatus === 'em_dia') {
+        associadosProcessados = associadosProcessados.filter(a => a.isEmDia);
+    } else if (filterStatus === 'atrasado') {
+        associadosProcessados = associadosProcessados.filter(a => !a.isEmDia);
+    }
+
+    const container = document.getElementById('tableGestaoMensalidadesBody');
+    if (container) {
+        if (associadosProcessados.length === 0) {
+            container.innerHTML = `<tr><td colspan="16" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum associado encontrado para os filtros selecionados.</td></tr>`;
+        } else {
+            container.innerHTML = associadosProcessados.map(a => {
+                const cellsMeses = mesesKeys.map(k => {
+                    const val = parseFloat(a.gridData[k]) || 0;
+                    if (val >= 20.00) {
+                        return `<td><span class="badge badge-success" style="font-size:10px; padding:2px 4px;">R$ ${val}</span></td>`;
+                    } else if (val > 0) {
+                        return `<td><span class="badge badge-warning" style="font-size:10px; padding:2px 4px;">R$ ${val}</span></td>`;
+                    } else {
+                        return `<td style="color:var(--text-muted); font-size:11px;">-</td>`;
+                    }
+                }).join('');
+
+                const statusBadge = a.isEmDia 
+                    ? `<span class="badge badge-success" style="font-size:11px;">✅ EM DIA</span>` 
+                    : `<span class="badge badge-danger" style="font-size:11px;" title="${a.mesesDevidos} mês(es) pendente(s)">⏳ EM ATRASO (${a.mesesDevidos})</span>`;
+
+                return `
+                    <tr>
+                        <td style="text-align: left;">
+                            <b>${a.nome_guerra || a.nome}</b><br>
+                            <small style="color: var(--text-muted);">${a.cpf}</small>
+                        </td>
+                        ${cellsMeses}
+                        <td style="font-weight: 700; color: var(--accent-gold);">
+                            R$ ${a.totalPagoSocio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div style="display: flex; gap: 4px; justify-content: center;">
+                                <button class="btn btn-sm btn-gold" style="padding: 2px 6px; font-size: 11px;" onclick="abrirModalDarBaixa('${a.cpf}')">💳 Baixar</button>
+                                <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px;" onclick="verExtratoAssociado('${a.cpf}')">📋 Extrato</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+}
+
+// BAIXA DE MENSALIDADE VIA PIX
+function abrirModalDarBaixa(cpf = null) {
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const ativos = list.filter(a => a.status === 'ativo' || !a.status);
+
+    const selectAssoc = document.getElementById('baixaAssociadoCPF');
+    if (selectAssoc) {
+        selectAssoc.innerHTML = ativos.map(a => `
+            <option value="${a.cpf}" ${cpf && a.cpf === cpf ? 'selected' : ''}>
+                ${a.nome_guerra || a.nome} (CPF: ${a.cpf})
+            </option>
+        `).join('');
+    }
+
+    const selAnoGeral = document.getElementById('selAnoMensalidades');
+    const anoAtualTab = selAnoGeral ? selAnoGeral.value : '2026';
+    const selectAno = document.getElementById('baixaAnoRef');
+    if (selectAno) selectAno.value = anoAtualTab;
+
+    document.getElementById('baixaValor').value = '20.00';
+    document.getElementById('baixaData').value = new Date().toISOString().split('T')[0];
+    document.getElementById('baixaComprovantePix').value = '';
+    document.getElementById('baixaObs').value = '';
+
+    atualizarCheckboxesBaixa();
+    openModal('modalDarBaixaMensalidade');
+}
+
+function atualizarCheckboxesBaixa() {
+    const selectAssoc = document.getElementById('baixaAssociadoCPF');
+    const selectAno = document.getElementById('baixaAnoRef');
+    if (!selectAssoc || !selectAno) return;
+
+    const cpf = selectAssoc.value;
+    const ano = selectAno.value;
+
+    const storageKey = `acbcsj_mensalidades_grid_${ano}`;
+    const grid = JSON.parse(localStorage.getItem(storageKey)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
+
+    const socioGrid = grid.find(g => (g.cpf || '').replace(/\D/g, '') === (cpf || '').replace(/\D/g, '')) || {};
+
+    const checkboxes = document.querySelectorAll('input[name="baixaMeses"]');
+    checkboxes.forEach(cb => {
+        const val = parseFloat(socioGrid[cb.value]) || 0;
+        if (val >= 20.00) {
+            cb.checked = false;
+            cb.disabled = true;
+            cb.parentElement.style.opacity = '0.5';
+            cb.parentElement.title = 'Mês já quitado totalmente';
+        } else {
+            cb.disabled = false;
+            cb.parentElement.style.opacity = '1';
+            cb.parentElement.title = '';
+        }
+    });
+}
+
+function salvarBaixaMensalidade(e) {
+    e.preventDefault();
+    const cpf = document.getElementById('baixaAssociadoCPF').value;
+    const ano = document.getElementById('baixaAnoRef').value;
+    const valorTotal = parseFloat(document.getElementById('baixaValor').value) || 0;
+    const dataInput = document.getElementById('baixaData').value;
+    const comprovantePix = document.getElementById('baixaComprovantePix').value.trim();
+    const obs = document.getElementById('baixaObs').value.trim();
+
+    const checkedMeses = Array.from(document.querySelectorAll('input[name="baixaMeses"]:checked')).map(c => c.value);
+
+    if (!cpf || !ano || valorTotal <= 0 || !dataInput) {
+        alert('Por favor, preencha o associado, o ano, o valor pago e a data.');
+        return;
+    }
+
+    if (checkedMeses.length === 0) {
+        alert('Selecione ao menos um mês para aplicar esta baixa de mensalidade.');
+        return;
+    }
+
+    const listAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const associado = listAssociados.find(a => a.cpf === cpf) || { nome: 'Associado', nome_guerra: 'Associado' };
+    const nomeAssoc = associado.nome_guerra || associado.nome;
+
+    const storageKey = `acbcsj_mensalidades_grid_${ano}`;
+    let grid = JSON.parse(localStorage.getItem(storageKey)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
+
+    let socioGrid = grid.find(g => (g.cpf || '').replace(/\D/g, '') === (cpf || '').replace(/\D/g, ''));
+    if (!socioGrid) {
+        socioGrid = {
+            nome_guerra: associado.nome_guerra || associado.nome,
+            nome_completo: associado.nome,
+            cpf: associado.cpf,
+            jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0
+        };
+        grid.push(socioGrid);
+    }
+
+    const valorPorMes = valorTotal / checkedMeses.length;
+    checkedMeses.forEach(k => {
+        socioGrid[k] = (parseFloat(socioGrid[k]) || 0) + valorPorMes;
+    });
+
+    localStorage.setItem(storageKey, JSON.stringify(grid));
+    if (ano === '2026') {
+        localStorage.setItem('acbcsj_mensalidades_grid', JSON.stringify(grid));
+    }
+
+    let historico = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+    const [anoD, mesD, diaD] = dataInput.split('-');
+    const dataBR = `${diaD}/${mesD}/${anoD}`;
+    const mesesNomesMap = { jan:'Jan', fev:'Fev', mar:'Mar', abr:'Abr', mai:'Mai', jun:'Jun', jul:'Jul', ago:'Ago', set:'Set', out:'Out', nov:'Nov', dez:'Dez' };
+    const mesesTexto = checkedMeses.map(m => mesesNomesMap[m]).join(', ');
+
+    const novaBaixa = {
+        id: 'baixa_' + Date.now(),
+        cpf: cpf,
+        associado_nome: nomeAssoc,
+        ano: ano,
+        valor: valorTotal,
+        data: dataBR,
+        data_iso: dataInput,
+        forma: 'PIX',
+        comprovante_pix: comprovantePix || 'Comprovante PIX confirmado',
+        meses_quitados: mesesTexto,
+        obs: obs || `Baixa de mensalidade PIX (${mesesTexto}/${ano})`
+    };
+
+    historico.unshift(novaBaixa);
+    localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(historico));
+
+    let financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const mesesNomes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const mesNomeFin = mesesNomes[parseInt(mesD, 10) - 1] || 'Janeiro';
+
+    const novoLancamentoCaixa = {
+        id: 'rec_pix_' + Date.now(),
+        descricao: `Mensalidade PIX (${mesesTexto}/${ano}) - ${nomeAssoc}`,
+        categoria: 'Mensalidade / Contribuição',
+        valor: valorTotal,
+        tipo: 'receita',
+        data: dataBR,
+        data_iso: dataInput,
+        mes: mesNomeFin,
+        comprovante_nome: comprovantePix ? `PIX: ${comprovantePix}` : 'PIX Confirmado'
+    };
+
+    financeiro.unshift(novoLancamentoCaixa);
+    localStorage.setItem('acbcsj_financeiro', JSON.stringify(financeiro));
+
+    try {
+        dbService.addFinanceiro(novoLancamentoCaixa);
+    } catch (err) {}
+
+    alert(`Baixa de R$ ${valorTotal.toFixed(2).replace('.', ',')} realizada com sucesso via PIX para ${nomeAssoc}!\n\nLançamento sincronizado automaticamente com o Caixa Financeiro.`);
+    closeModal('modalDarBaixaMensalidade');
+    renderGestaoMensalidades();
+    renderGestaoFinanceira();
+}
+
+function verExtratoAssociado(cpf) {
+    const listAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const a = listAssociados.find(socio => socio.cpf === cpf);
+    if (!a) {
+        alert('Associado não encontrado.');
+        return;
+    }
+
+    const historicoGeral = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+    const historicoAssociado = historicoGeral.filter(h => h.cpf === cpf);
+
+    const subText = document.getElementById('extratoAssociadoSub');
+    if (subText) subText.textContent = `Extrato individual de mensalidades de ${a.nome_guerra || a.nome} (CPF: ${a.cpf})`;
+
+    const totalPagoTodosAnos = historicoAssociado.reduce((sum, h) => sum + (parseFloat(h.valor) || 0), 0);
+
+    const body = document.getElementById('extratoAssociadoBody');
+    if (body) {
+        body.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 11px; color: var(--text-muted);">ASSOCIADO</div>
+                    <div style="font-size: 15px; font-weight: bold; color: var(--accent-gold);">${a.nome_guerra || a.nome}</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">${a.nome}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 11px; color: var(--text-muted);">TOTAL CONTRIBUÍDO VIA PIX</div>
+                    <div style="font-size: 16px; font-weight: bold; color: #2ECC71;">R$ ${totalPagoTodosAnos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">${historicoAssociado.length} lançamentos efetuados</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 11px; color: var(--text-muted);">OBM / SITUAÇÃO</div>
+                    <div style="font-size: 14px; font-weight: bold;">${a.obm || 'São José'}</div>
+                    <span class="badge badge-success" style="font-size: 10px;">CADASTRO ATIVO</span>
+                </div>
+            </div>
+
+            <h4 style="font-size: 14px; color: var(--accent-gold); margin-bottom: 10px;">💳 Histórico de Baixas PIX Efetuadas:</h4>
+            ${historicoAssociado.length === 0 ? `
+                <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 6px;">Nenhum pagamento registrado no histórico individual até o momento.</p>
+            ` : `
+                <div class="table-responsive">
+                    <table class="custom-table" style="font-size: 12px;">
+                        <thead>
+                            <tr>
+                                <th>Data Pagamento</th>
+                                <th>Exercício / Ano</th>
+                                <th>Meses Quitados</th>
+                                <th>Valor (R$)</th>
+                                <th>Forma / Comprovante PIX</th>
+                                <th>Observações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${historicoAssociado.map(h => `
+                                <tr>
+                                    <td><b>${h.data}</b></td>
+                                    <td><span class="badge badge-info">${h.ano}</span></td>
+                                    <td><b>${h.meses_quitados}</b></td>
+                                    <td style="font-weight: 700; color: #2ECC71;">+ R$ ${(parseFloat(h.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                    <td><span class="badge badge-success">PIX</span> <small>${h.comprovante_pix || ''}</small></td>
+                                    <td>${h.obs || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `}
+        `;
+    }
+
+    openModal('modalExtratoAssociado');
 }

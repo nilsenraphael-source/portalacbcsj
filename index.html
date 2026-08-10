@@ -190,6 +190,86 @@
                     </div>
                 </div>
 
+                <!-- ABA DE GESTÃO DE MENSALIDADES DOS ASSOCIADOS (DIRETORIA) -->
+                <div id="tab-gestao-mensalidades" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">💳 Gestão de Mensalidades dos Associados</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Controle de arrecadação mensal (R$ 20,00/mês via PIX) por exercício anual.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="font-size: 13px; font-weight: 600; color: var(--accent-gold);">Exercício / Ano:</label>
+                            <select id="selAnoMensalidades" class="form-control" style="width: 110px; padding: 6px 10px; font-weight: bold;" onchange="renderGestaoMensalidades()">
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026" selected>2026</option>
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                            </select>
+                            <button class="btn btn-gold" onclick="abrirModalDarBaixa()">💳 + Baixar Mensalidade (PIX)</button>
+                        </div>
+                    </div>
+
+                    <!-- MÉTRICAS DE ARRECADAÇÃO DE MENSALIDADES -->
+                    <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 20px;">
+                        <div class="metric-card">
+                            <div class="title">ARRECADADO EM MENSALIDADES (<span class="lblAnoMensalidadeMetrica">2026</span>)</div>
+                            <div id="metricTotalArrecadadoMensalidades" class="value" style="color: #2ECC71;">R$ 0,00</div>
+                            <div class="subtext" style="color: var(--text-muted);">Lançamentos confirmados via PIX</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="title">ASSOCIADOS EM DIA</div>
+                            <div id="metricAssociadosEmDia" class="value" style="color: var(--accent-gold);">0</div>
+                            <div class="subtext" style="color: var(--status-success);">Quitações em dia</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="title">ASSOCIADOS COM PENDÊNCIA</div>
+                            <div id="metricAssociadosPendentes" class="value" style="color: #E74C3C;">0</div>
+                            <div class="subtext" style="color: var(--text-muted);">Possuem mensalidades em aberto</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <h3 class="card-title">Grade Anual de Mensalidades (R$ 20,00/mês)</h3>
+                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <input type="text" id="searchAssociadoMensalidade" class="form-control" placeholder="🔍 Buscar por nome ou CPF..." style="width: 220px; padding: 6px 12px; font-size: 12px;" oninput="renderGestaoMensalidades()">
+                                <select id="filterStatusMensalidade" class="form-control" style="width: 150px; padding: 6px 12px; font-size: 12px;" onchange="renderGestaoMensalidades()">
+                                    <option value="todos">Todos os Status</option>
+                                    <option value="em_dia">Apenas Em Dia</option>
+                                    <option value="atrasado">Com Mensalidades Atrasadas</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 12px; text-align: center;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left; min-width: 160px;">Associado</th>
+                                        <th>Jan</th>
+                                        <th>Fev</th>
+                                        <th>Mar</th>
+                                        <th>Abr</th>
+                                        <th>Mai</th>
+                                        <th>Jun</th>
+                                        <th>Jul</th>
+                                        <th>Ago</th>
+                                        <th>Set</th>
+                                        <th>Out</th>
+                                        <th>Nov</th>
+                                        <th>Dez</th>
+                                        <th>Total Pago</th>
+                                        <th>Status</th>
+                                        <th style="min-width: 140px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableGestaoMensalidadesBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- ABA DE ASSOCIADOS DESLIGADOS (DIRETORIA) -->
                 <div id="tab-associados-desligados" class="tab-content" style="display: none;">
                     <div class="page-header">
@@ -854,6 +934,119 @@
                     <button type="submit" class="btn btn-gold" style="width: auto;">Salvar Minhas Alterações</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL PARA DAR BAIXA EM MENSALIDADES (DIRETORIA) -->
+    <div id="modalDarBaixaMensalidade" class="modal-backdrop">
+        <div class="modal-content modal-content-lg">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title">💳 Registrar Pagamento de Mensalidade (PIX)</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Lance o pagamento de mensalidade (R$ 20,00/mês) quitando um ou múltiplos meses via PIX.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalDarBaixaMensalidade')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarBaixaMensalidade(event)">
+                <div class="form-grid">
+                    <!-- Associado -->
+                    <div class="form-group form-group-full">
+                        <label>Associado <span class="req-star">*</span></label>
+                        <select id="baixaAssociadoCPF" class="form-control" required onchange="atualizarCheckboxesBaixa()">
+                            <!-- Preenchido via JS -->
+                        </select>
+                    </div>
+
+                    <!-- Ano de Referência -->
+                    <div class="form-group">
+                        <label>Exercício / Ano <span class="req-star">*</span></label>
+                        <select id="baixaAnoRef" class="form-control" required onchange="atualizarCheckboxesBaixa()">
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                        </select>
+                    </div>
+
+                    <!-- Valor Pago -->
+                    <div class="form-group">
+                        <label>Valor Pago (R$) <span class="req-star">*</span></label>
+                        <input type="number" step="0.01" min="0.01" id="baixaValor" class="form-control" value="20.00" required>
+                    </div>
+
+                    <!-- Data do Pagamento -->
+                    <div class="form-group">
+                        <label>Data do Pagamento <span class="req-star">*</span></label>
+                        <input type="date" id="baixaData" class="form-control" required>
+                    </div>
+
+                    <!-- Forma de Pagamento (Fixo PIX) -->
+                    <div class="form-group">
+                        <label>Forma de Pagamento <span class="req-star">*</span></label>
+                        <input type="text" id="baixaForma" class="form-control" value="PIX" readonly style="background: var(--bg-hover); font-weight: bold; color: var(--accent-gold);">
+                    </div>
+
+                    <!-- Identificador PIX / Comprovante -->
+                    <div class="form-group form-group-full">
+                        <label>Identificador / Chave PIX / Comprovante <small style="color: var(--text-muted); font-weight: normal;">(Opcional)</small></label>
+                        <input type="text" id="baixaComprovantePix" class="form-control" placeholder="Ex: Chave E-mail, N° da Transação ou Autenticação PIX">
+                    </div>
+
+                    <!-- Seleção dos Meses Quitados -->
+                    <div class="form-group-full" style="border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 5px;">
+                        <label style="font-weight: bold; color: var(--accent-gold);">Marque os Meses a Quitar com este Pagamento (R$ 20,00 por mês):</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="jan"> Jan</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="fev"> Fev</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="mar"> Mar</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="abr"> Abr</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="mai"> Mai</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="jun"> Jun</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="jul"> Jul</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="ago"> Ago</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="set"> Set</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="out"> Out</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="nov"> Nov</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="dez"> Dez</label>
+                        </div>
+                    </div>
+
+                    <!-- Observações -->
+                    <div class="form-group form-group-full">
+                        <label>Observações / Histórico</label>
+                        <input type="text" id="baixaObs" class="form-control" placeholder="Ex: Pagamento acumulado via PIX referente aos meses atrasados">
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalDarBaixaMensalidade')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold" style="width: auto;">Confirmar Baixa (PIX)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EXTRATO FINANCEIRO COMPLETO DO ASSOCIADO -->
+    <div id="modalExtratoAssociado" class="modal-backdrop">
+        <div class="modal-content modal-content-lg">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title">📋 Extrato Financeiro de Mensalidades (PIX)</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);" id="extratoAssociadoSub">Histórico completo de pagamentos e quitações.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalExtratoAssociado')">&times;</button>
+            </div>
+
+            <div id="extratoAssociadoBody">
+                <!-- Conteúdo montado via JS -->
+            </div>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalExtratoAssociado')">Fechar</button>
+                <button type="button" class="btn btn-gold" onclick="window.print()">🖨️ Imprimir Extrato</button>
+            </div>
         </div>
     </div>
 
