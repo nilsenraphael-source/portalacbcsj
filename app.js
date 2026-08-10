@@ -2428,6 +2428,8 @@ function salvarMeusDados(e) {
     alert('Seus dados cadastrais foram atualizados com sucesso!');
     closeModal('modalEditarMeusDados');
     renderAssociadoOverview();
+}
+
 // GESTÃO DE MENSALIDADES DOS ASSOCIADOS (DIRETORIA)
 
 function renderGestaoMensalidades() {
