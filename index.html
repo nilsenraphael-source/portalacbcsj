@@ -275,10 +275,22 @@
 
                 <!-- ABA 4: PAINEL DO ASSOCIADO -->
                 <div id="tab-overview-associado" class="tab-content" style="display: none;">
-                    <div class="page-header">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                         <div>
                             <h2 class="page-title">Bem-vindo(a), <span id="associadoWelcomeName">Associado</span></h2>
-                            <p style="font-size: 13px; color: var(--text-muted);">Acompanhe suas mensalidades e contribuições lançadas na ACBCSJ.</p>
+                            <p style="font-size: 13px; color: var(--text-muted);">Acompanhe suas mensalidades, contribuições e mantenha seus dados atualizados na ACBCSJ.</p>
+                        </div>
+                        <button class="btn btn-gold btn-sm" onclick="abrirModalEditarMeusDados()">✏️ Atualizar Meus Dados Cadastrais</button>
+                    </div>
+
+                    <!-- CARTÃO DE RESUMO DOS DADOS CADASTRAIS DO USUÁRIO -->
+                    <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, #1C2026 0%, #15181C 100%); border-left: 4px solid var(--accent-gold);">
+                        <div class="card-header">
+                            <h3 class="card-title">👤 Meus Dados Cadastrais</h3>
+                            <button class="btn btn-outline btn-sm" onclick="abrirModalEditarMeusDados()">Editar Dados</button>
+                        </div>
+                        <div id="myProfileDetailsDisplay" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; font-size: 13px;">
+                            <!-- Preenchido via JS em renderAssociadoOverview() -->
                         </div>
                     </div>
 
@@ -754,6 +766,86 @@
                 <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('modalNovoLancamento')">Cancelar</button>
                     <button type="submit" class="btn btn-gold" id="btnSalvarLancamento">Salvar Lançamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE DADOS CADASTRAIS PELO PRÓPRIO USUÁRIO -->
+    <div id="modalEditarMeusDados" class="modal-backdrop">
+        <div class="modal-content modal-content-lg">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title">✏️ Atualizar Meus Dados Cadastrais</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Altere seu telefone, OBM, profissão e endereço residencial sempre que necessário.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalEditarMeusDados')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarMeusDados(event)">
+                <div class="form-grid">
+                    <!-- Telefone / WhatsApp -->
+                    <div class="form-group">
+                        <label>Telefone / WhatsApp <span class="req-star">*</span></label>
+                        <input type="text" id="editMeusTelefone" class="form-control" placeholder="(48) 99999-9999" required>
+                    </div>
+
+                    <!-- OBM -->
+                    <div class="form-group">
+                        <label>OBM (Organização de Bombeiro Militar)</label>
+                        <input type="text" id="editMeusOBM" class="form-control" placeholder="Ex: São José, Florianópolis, Palhoça">
+                    </div>
+
+                    <!-- Profissão -->
+                    <div class="form-group form-group-full">
+                        <label>Profissão / Ocupação</label>
+                        <input type="text" id="editMeusProfissao" class="form-control" placeholder="Ex: Bombeiro Comunitário, Autônomo, Engenheiro">
+                    </div>
+
+                    <div class="form-group-full" style="border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 5px;">
+                        <h4 style="font-size: 13px; color: var(--accent-gold); margin-bottom: 10px;">🏠 Endereço Residencial Completo:</h4>
+                    </div>
+
+                    <!-- Logradouro -->
+                    <div class="form-group form-group-full">
+                        <label>Logradouro (Rua, Avenida...) <span class="req-star">*</span></label>
+                        <input type="text" id="editMeusLogradouro" class="form-control" placeholder="Ex: Rua Luiz Fagundes" required>
+                    </div>
+
+                    <!-- Número -->
+                    <div class="form-group">
+                        <label>Número <span class="req-star">*</span></label>
+                        <input type="text" id="editMeusNumero" class="form-control" placeholder="Ex: 123" required>
+                    </div>
+
+                    <!-- Complemento -->
+                    <div class="form-group">
+                        <label>Complemento</label>
+                        <input type="text" id="editMeusComplemento" class="form-control" placeholder="Ex: Apto 302 / Bloco B">
+                    </div>
+
+                    <!-- CEP -->
+                    <div class="form-group">
+                        <label>CEP</label>
+                        <input type="text" id="editMeusCEP" class="form-control" placeholder="88100-000">
+                    </div>
+
+                    <!-- Bairro -->
+                    <div class="form-group">
+                        <label>Bairro <span class="req-star">*</span></label>
+                        <input type="text" id="editMeusBairro" class="form-control" placeholder="Ex: Praia Comprida" required>
+                    </div>
+
+                    <!-- Cidade -->
+                    <div class="form-group form-group-full">
+                        <label>Cidade <span class="req-star">*</span></label>
+                        <input type="text" id="editMeusCidade" class="form-control" placeholder="Ex: São José / Florianópolis" required>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarMeusDados')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold" style="width: auto;">Salvar Minhas Alterações</button>
                 </div>
             </form>
         </div>

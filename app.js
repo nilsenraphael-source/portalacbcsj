@@ -50,11 +50,7 @@ const INITIAL_MENSAL_DATA = [
     },
     {
         "nome_guerra":  "Andreia",
-        "nome_completo":  [
-                              [
-
-                              ]
-                          ],
+        "nome_completo":  "Andreia",
         "jan":  0,
         "fev":  0,
         "mar":  80,
@@ -1188,9 +1184,13 @@ function loginWithCPF(cpf, password, roleHint = null) {
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('appDashboard').style.display = 'flex';
         
-        renderUserHeader();
-        renderSidebarMenu();
-        navigateTab(currentUser.perfil === 'diretoria' ? 'overview-diretoria' : 'overview-associado');
+        try {
+            renderUserHeader();
+            renderSidebarMenu();
+            navigateTab(currentUser.perfil === 'diretoria' ? 'overview-diretoria' : 'overview-associado');
+        } catch (uiErr) {
+            console.error('Aviso ao carregar telas pós-login:', uiErr);
+        }
     } catch (err) {
         console.error('Erro ao efetuar login:', err);
         alert('Ocorreu um erro ao carregar os dados de login.');
@@ -2270,16 +2270,30 @@ function renderAssociadoOverview() {
         welcome.textContent = currentUser.nome_guerra || currentUser.nome;
     }
 
+    // Renderiza resumo dos dados cadastrais pessoais do usuário
+    const profileContainer = document.getElementById('myProfileDetailsDisplay');
+    if (profileContainer && currentUser) {
+        const end = [currentUser.logradouro, currentUser.numero ? `Nº ${currentUser.numero}` : '', currentUser.complemento].filter(Boolean).join(', ');
+        profileContainer.innerHTML = `
+            <div><b>📞 Telefone / WhatsApp:</b> ${currentUser.telefone || 'Não informado'}</div>
+            <div><b>🚒 OBM:</b> ${currentUser.obm || 'São José'}</div>
+            <div><b>💼 Profissão:</b> ${currentUser.profissao || 'Não informada'}</div>
+            <div><b>🏠 Endereço:</b> ${end || 'Não informado'}</div>
+            <div><b>📍 Bairro / Cidade:</b> ${currentUser.bairro || 'São José'} - ${currentUser.cidade || 'SC'} (CEP: ${currentUser.cep || '-'})</div>
+            <div><b>🆔 CPF:</b> ${currentUser.cpf}</div>
+        `;
+    }
+
     const grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || INITIAL_MENSAL_DATA || [];
     const container = document.getElementById('tableMinhasMensalidadesBody');
     if (!container || !currentUser) return;
 
     const socio = grid.find(s => {
-        const ng = (s.nome_guerra || '').toLowerCase();
-        const nc = (s.nome_completo || '').toLowerCase();
-        const userNg = (currentUser.nome_guerra || '').toLowerCase();
-        const userNc = (currentUser.nome || '').toLowerCase();
-        return (ng && userNg && ng === userNg) || (nc && userNc && nc === userNc) || (userNc && nc.includes(userNc));
+        const ng = (typeof s.nome_guerra === 'string' ? s.nome_guerra : (Array.isArray(s.nome_guerra) ? '' : String(s.nome_guerra || ''))).toLowerCase();
+        const nc = (typeof s.nome_completo === 'string' ? s.nome_completo : (Array.isArray(s.nome_completo) ? '' : String(s.nome_completo || ''))).toLowerCase();
+        const userNg = (typeof currentUser.nome_guerra === 'string' ? currentUser.nome_guerra : (Array.isArray(currentUser.nome_guerra) ? '' : String(currentUser.nome_guerra || ''))).toLowerCase();
+        const userNc = (typeof currentUser.nome === 'string' ? currentUser.nome : (Array.isArray(currentUser.nome) ? '' : String(currentUser.nome || ''))).toLowerCase();
+        return (ng && userNg && ng === userNg) || (nc && userNc && nc === userNc) || (userNc && nc && nc.includes(userNc));
     }) || grid[0];
 
     const mesesNomes = [
@@ -2313,4 +2327,60 @@ function renderAssociadoOverview() {
             </tr>
         `;
     }).join('');
+}
+
+// EDIÇÃO DOS DADOS CADASTRAIS PELO PRÓPRIO INTEGRANTE
+function abrirModalEditarMeusDados() {
+    if (!currentUser) return;
+    document.getElementById('editMeusTelefone').value = currentUser.telefone || '';
+    document.getElementById('editMeusOBM').value = currentUser.obm || 'São José';
+    document.getElementById('editMeusProfissao').value = currentUser.profissao || '';
+    document.getElementById('editMeusLogradouro').value = currentUser.logradouro || '';
+    document.getElementById('editMeusNumero').value = currentUser.numero || '';
+    document.getElementById('editMeusComplemento').value = currentUser.complemento || '';
+    document.getElementById('editMeusCEP').value = currentUser.cep || '';
+    document.getElementById('editMeusBairro').value = currentUser.bairro || '';
+    document.getElementById('editMeusCidade').value = currentUser.cidade || 'São José / SC';
+
+    openModal('modalEditarMeusDados');
+}
+
+function salvarMeusDados(e) {
+    e.preventDefault();
+    if (!currentUser) return;
+
+    const telefone = document.getElementById('editMeusTelefone').value.trim();
+    const obm = document.getElementById('editMeusOBM').value.trim();
+    const profissao = document.getElementById('editMeusProfissao').value.trim();
+    const logradouro = document.getElementById('editMeusLogradouro').value.trim();
+    const numero = document.getElementById('editMeusNumero').value.trim();
+    const complemento = document.getElementById('editMeusComplemento').value.trim();
+    const cep = document.getElementById('editMeusCEP').value.trim();
+    const bairro = document.getElementById('editMeusBairro').value.trim();
+    const cidade = document.getElementById('editMeusCidade').value.trim();
+
+    currentUser.telefone = telefone;
+    currentUser.obm = obm;
+    currentUser.profissao = profissao;
+    currentUser.logradouro = logradouro;
+    currentUser.numero = numero;
+    currentUser.complemento = complemento;
+    currentUser.cep = cep;
+    currentUser.bairro = bairro;
+    currentUser.cidade = cidade;
+
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const index = list.findIndex(a => a.cpf === currentUser.cpf);
+    if (index >= 0) {
+        list[index] = { ...list[index], ...currentUser };
+    }
+    localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+
+    try {
+        dbService.saveAssociado(currentUser);
+    } catch (err) {}
+
+    alert('Seus dados cadastrais foram atualizados com sucesso!');
+    closeModal('modalEditarMeusDados');
+    renderAssociadoOverview();
 }
