@@ -2669,6 +2669,65 @@ function renderGestaoMensalidades() {
                             <div style="display: flex; gap: 4px; justify-content: center;">
                                 <button class="btn btn-sm btn-gold" style="padding: 2px 6px; font-size: 11px;" onclick="abrirModalDarBaixa('${a.cpf}')">💳 Baixar</button>
                                 <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px;" onclick="verExtratoAssociado('${a.cpf}')">📋 Extrato</button>
+                                <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px; color: var(--accent-gold); border-color: var(--accent-gold);" onclick="verExtratoAssociado('${a.cpf}')">✏️ Editar</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+
+    // PROCESSA ASSOCIADOS DESLIGADOS NA PARTE INFERIOR
+    const desligados = list.filter(a => a.status === 'desligado');
+    const containerDesligados = document.getElementById('tableMensalidadesDesligadosBody');
+    if (containerDesligados) {
+        if (desligados.length === 0) {
+            containerDesligados.innerHTML = `<tr><td colspan="16" style="text-align: center; color: var(--text-muted); padding: 15px;">Nenhum associado desligado registrado no sistema.</td></tr>`;
+        } else {
+            containerDesligados.innerHTML = desligados.map(socio => {
+                const itemGrid = grid.find(g => {
+                    const gCpf = (g.cpf || '').replace(/\D/g, '');
+                    const sCpf = (socio.cpf || '').replace(/\D/g, '');
+                    if (gCpf && sCpf && gCpf === sCpf) return true;
+                    const ng = (typeof g.nome_guerra === 'string' ? g.nome_guerra : '').toLowerCase();
+                    const sNg = (typeof socio.nome_guerra === 'string' ? socio.nome_guerra : '').toLowerCase();
+                    const sNc = (typeof socio.nome === 'string' ? socio.nome : '').toLowerCase();
+                    return (ng && sNg && ng === sNg) || (sNc && ng && sNc.includes(ng));
+                }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+
+                let totalPagoSocio = 0;
+                const cellsMeses = mesesKeys.map(k => {
+                    const val = parseFloat(itemGrid[k]) || 0;
+                    totalPagoSocio += val;
+                    if (val >= 20.00) {
+                        return `<td><span class="badge badge-success" style="font-size:10px; padding:2px 4px;">R$ ${val}</span></td>`;
+                    } else if (val > 0) {
+                        return `<td><span class="badge badge-warning" style="font-size:10px; padding:2px 4px;">R$ ${val}</span></td>`;
+                    } else {
+                        return `<td style="color:var(--text-muted); font-size:11px;">-</td>`;
+                    }
+                }).join('');
+
+                const dataDeslig = socio.data_desligamento || 'Data não registrada';
+
+                return `
+                    <tr style="background: rgba(231, 76, 60, 0.05);">
+                        <td style="text-align: left;">
+                            <b>${socio.nome_guerra || socio.nome}</b><br>
+                            <small style="color: var(--text-muted);">${socio.cpf}</small><br>
+                            <span class="badge badge-danger" style="font-size: 9px; margin-top: 2px;">🚫 DESLIGADO em ${dataDeslig}</span>
+                        </td>
+                        ${cellsMeses}
+                        <td style="font-weight: 700; color: var(--accent-gold);">
+                            R$ ${totalPagoSocio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td><span class="badge badge-secondary" style="font-size: 10px;">DESLIGADO</span></td>
+                        <td>
+                            <div style="display: flex; gap: 4px; justify-content: center;">
+                                <button class="btn btn-sm btn-gold" style="padding: 2px 6px; font-size: 11px;" onclick="abrirModalDarBaixa('${socio.cpf}')">💳 Baixar</button>
+                                <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px;" onclick="verExtratoAssociado('${socio.cpf}')">📋 Extrato</button>
+                                <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px; color: var(--accent-gold); border-color: var(--accent-gold);" onclick="verExtratoAssociado('${socio.cpf}')">✏️ Editar</button>
                             </div>
                         </td>
                     </tr>
@@ -2681,13 +2740,12 @@ function renderGestaoMensalidades() {
 // BAIXA DE MENSALIDADE VIA PIX
 function abrirModalDarBaixa(cpf = null) {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const ativos = list.filter(a => a.status === 'ativo' || !a.status);
 
     const selectAssoc = document.getElementById('baixaAssociadoCPF');
     if (selectAssoc) {
-        selectAssoc.innerHTML = ativos.map(a => `
+        selectAssoc.innerHTML = list.map(a => `
             <option value="${a.cpf}" ${cpf && a.cpf === cpf ? 'selected' : ''}>
-                ${a.nome_guerra || a.nome} (CPF: ${a.cpf})
+                ${a.nome_guerra || a.nome} ${a.status === 'desligado' ? '(DESLIGADO)' : ''} (CPF: ${a.cpf})
             </option>
         `).join('');
     }
