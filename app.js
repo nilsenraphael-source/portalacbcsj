@@ -974,7 +974,50 @@ const INITIAL_MENSAL_DATA = [
     }
 ];
 
-const INITIAL_LANCAMENTOS_DATA = [];
+const INITIAL_LANCAMENTOS_DATA = [
+    { id: 'desp_1', descricao: 'Taxa "Cesta de Relacionamento" Sicred', categoria: 'Tarifas Banco', valor: 35.00, tipo: 'despesa', data: '20/01/2026', data_iso: '2026-01-20', mes: 'Janeiro' },
+    { id: 'desp_2', descricao: 'Sandro Martins (Copo B4 / FECABOM)', categoria: 'Outros', valor: 50.00, tipo: 'despesa', data: '26/01/2026', data_iso: '2026-01-26', mes: 'Janeiro' },
+    { id: 'desp_3', descricao: 'Tarifas Caixa Economica Federal', categoria: 'Tarifas Banco', valor: 0.17, tipo: 'despesa', data: '31/01/2026', data_iso: '2026-01-31', mes: 'Janeiro' },
+    { id: 'desp_4', descricao: 'Certificado Digital', categoria: 'Outros', valor: 170.00, tipo: 'despesa', data: '09/02/2026', data_iso: '2026-02-09', mes: 'Fevereiro' },
+    { id: 'desp_5', descricao: 'Brinde Reunião Comando (Camila C Soares)', categoria: 'Presentes', valor: 47.61, tipo: 'despesa', data: '20/02/2026', data_iso: '2026-02-20', mes: 'Fevereiro' },
+    { id: 'desp_6', descricao: 'Taxa "Cesta de Relacionamento" Sicred', categoria: 'Tarifas Banco', valor: 35.00, tipo: 'despesa', data: '20/02/2026', data_iso: '2026-02-20', mes: 'Fevereiro' },
+    { id: 'desp_7', descricao: 'Lancheira aniversários Compra 1', categoria: 'Presentes', valor: 1945.00, tipo: 'despesa', data: '23/02/2026', data_iso: '2026-02-23', mes: 'Fevereiro' },
+    { id: 'desp_8', descricao: 'Lancheira aniversários Compra 2', categoria: 'Presentes', valor: 775.80, tipo: 'despesa', data: '23/02/2026', data_iso: '2026-02-23', mes: 'Fevereiro' },
+    { id: 'desp_9', descricao: 'Tarifas Caixa Economica Federal', categoria: 'Tarifas Banco', valor: 0.17, tipo: 'despesa', data: '28/02/2026', data_iso: '2026-02-28', mes: 'Fevereiro' },
+    { id: 'desp_10', descricao: 'Estampa das lancheiras (Adriano Lima)', categoria: 'Presentes', valor: 800.00, tipo: 'despesa', data: '12/03/2026', data_iso: '2026-03-12', mes: 'Março' },
+    { id: 'desp_11', descricao: 'Taxa "Cesta de Relacionamento" Sicred', categoria: 'Tarifas Banco', valor: 35.00, tipo: 'despesa', data: '20/03/2026', data_iso: '2026-03-20', mes: 'Março' },
+    { id: 'desp_12', descricao: 'Tarifas Caixa Economica Federal', categoria: 'Tarifas Banco', valor: 0.88, tipo: 'despesa', data: '30/03/2026', data_iso: '2026-03-30', mes: 'Março' },
+    { id: 'desp_13', descricao: 'Coffee Break Treinamento APH (João Valdeci Moraes)', categoria: 'Treinamentos', valor: 240.00, tipo: 'despesa', data: '13/04/2026', data_iso: '2026-04-13', mes: 'Abril' },
+    { id: 'desp_14', descricao: 'Coffee Break Treinamento APH (Camila Soares)', categoria: 'Treinamentos', valor: 132.08, tipo: 'despesa', data: '13/04/2026', data_iso: '2026-04-13', mes: 'Abril' },
+    { id: 'desp_15', descricao: 'Taxa "Cesta de Relacionamento" Sicred', categoria: 'Tarifas Banco', valor: 35.00, tipo: 'despesa', data: '20/04/2026', data_iso: '2026-04-20', mes: 'Abril' },
+    { id: 'desp_16', descricao: 'Cartório (Gabriel F.Farias)', categoria: 'Cartório ou Documentação em geral', valor: 193.67, tipo: 'despesa', data: '24/04/2026', data_iso: '2026-04-24', mes: 'Abril' },
+    { id: 'desp_17', descricao: 'Taxa "Cesta de Relacionamento" Sicred', categoria: 'Tarifas Banco', valor: 35.00, tipo: 'despesa', data: '20/05/2026', data_iso: '2026-05-20', mes: 'Maio' },
+    { id: 'desp_18', descricao: 'Taxa de funcionamento PMSJ', categoria: 'Cartório ou Documentação em geral', valor: 440.66, tipo: 'despesa', data: '11/06/2026', data_iso: '2026-06-11', mes: 'Junho' },
+    { id: 'desp_19', descricao: 'Certificado Digital (Safe2pay)', categoria: 'Cartório ou Documentação em geral', valor: 184.00, tipo: 'despesa', data: '11/06/2026', data_iso: '2026-06-11', mes: 'Junho' },
+    { id: 'desp_20', descricao: 'Decoração e descartaveis - Jogo Copa do Mundo (Yanka)', categoria: 'Mercado', valor: 80.85, tipo: 'despesa', data: '18/06/2026', data_iso: '2026-06-18', mes: 'Junho' },
+    { id: 'desp_21', descricao: 'Mercado - Jogo Copa do Mundo (MundialMIX)', categoria: 'Mercado', valor: 248.35, tipo: 'despesa', data: '22/06/2026', data_iso: '2026-06-22', mes: 'Junho' },
+    { id: 'desp_22', descricao: 'Mercado - Jogo Copa do Mundo (Yanka)', categoria: 'Mercado', valor: 35.66, tipo: 'despesa', data: '22/06/2026', data_iso: '2026-06-22', mes: 'Junho' },
+    { id: 'desp_23', descricao: 'Taxa "Cesta de Relacionamento" Sicred', categoria: 'Tarifas Banco', valor: 35.00, tipo: 'despesa', data: '22/06/2026', data_iso: '2026-06-22', mes: 'Junho' },
+    { id: 'desp_24', descricao: 'Pães - Jogo Copa do Mundo (Industria de Paes)', categoria: 'Mercado', valor: 36.00, tipo: 'despesa', data: '23/06/2026', data_iso: '2026-06-23', mes: 'Junho' },
+    { id: 'desp_25', descricao: 'Tarifas Caixa Economica Federal', categoria: 'Tarifas Banco', valor: 0.71, tipo: 'despesa', data: '30/06/2026', data_iso: '2026-06-30', mes: 'Junho' },
+    { id: 'desp_26', descricao: 'Coffee Break - Palestra (Kiko)', categoria: 'Treinamentos', valor: 384.00, tipo: 'despesa', data: '17/07/2026', data_iso: '2026-07-17', mes: 'Julho' },
+    { id: 'desp_27', descricao: 'Taxa "Cesta de Relacionamento" Sicredi', categoria: 'Tarifas Banco', valor: 35.00, tipo: 'despesa', data: '20/07/2026', data_iso: '2026-07-20', mes: 'Julho' },
+    { id: 'desp_28', descricao: 'Refri - Palestra (Yanka)', categoria: 'Treinamentos', valor: 38.88, tipo: 'despesa', data: '22/07/2026', data_iso: '2026-07-22', mes: 'Julho' },
+    { id: 'desp_29', descricao: 'Chocolate Palestrante Sgt Reinaldo - Palestra (Camila)', categoria: 'Treinamentos', valor: 19.93, tipo: 'despesa', data: '27/07/2026', data_iso: '2026-07-27', mes: 'Julho' },
+    // RECEITAS
+    { id: 'rec_1', descricao: 'Rendimentos Caixa Economica Federal', categoria: 'Rendimentos', valor: 0.40, tipo: 'receita', data: '31/01/2026', data_iso: '2026-01-31', mes: 'Janeiro' },
+    { id: 'rec_2', descricao: 'Rendimentos Caixa Economica Federal', categoria: 'Rendimentos', valor: 0.54, tipo: 'receita', data: '28/02/2026', data_iso: '2026-02-28', mes: 'Fevereiro' },
+    { id: 'rec_3', descricao: 'Rendimentos Caixa Economica Federal', categoria: 'Rendimentos', valor: 0.62, tipo: 'receita', data: '30/03/2026', data_iso: '2026-03-30', mes: 'Março' },
+    { id: 'rec_4', descricao: 'Rendimentos Caixa Economica Federal', categoria: 'Rendimentos', valor: 1.34, tipo: 'receita', data: '30/04/2026', data_iso: '2026-04-30', mes: 'Abril' },
+    { id: 'rec_5', descricao: 'Rendimentos SICREDI', categoria: 'Rendimentos', valor: 11.31, tipo: 'receita', data: '04/05/2026', data_iso: '2026-05-04', mes: 'Maio' },
+    { id: 'rec_6', descricao: 'Rendimentos Caixa Economica Federal', categoria: 'Rendimentos', valor: 1.28, tipo: 'receita', data: '31/05/2026', data_iso: '2026-05-31', mes: 'Maio' },
+    { id: 'rec_7', descricao: 'Jogo Copa do Mundo - Acompanhante (Linder)', categoria: 'Rendimentos', valor: 25.00, tipo: 'receita', data: '11/06/2026', data_iso: '2026-06-11', mes: 'Junho' },
+    { id: 'rec_8', descricao: 'jogo Copa do Mundo - Acompanhante (Antunes)', categoria: 'Rendimentos', valor: 25.00, tipo: 'receita', data: '15/06/2026', data_iso: '2026-06-15', mes: 'Junho' },
+    { id: 'rec_9', descricao: 'Jogo Copa do Mundo - Acompanhante (Humberto)', categoria: 'Rendimentos', valor: 25.00, tipo: 'receita', data: '17/06/2026', data_iso: '2026-06-17', mes: 'Junho' },
+    { id: 'rec_10', descricao: 'Jogo Copa do Mundo - Acompanhante (Kassandra)', categoria: 'Rendimentos', valor: 25.00, tipo: 'receita', data: '24/06/2026', data_iso: '2026-06-24', mes: 'Junho' },
+    { id: 'rec_11', descricao: 'Rendimentos Caixa Economica Federal', categoria: 'Rendimentos', valor: 1.35, tipo: 'receita', data: '30/06/2026', data_iso: '2026-06-30', mes: 'Junho' },
+    { id: 'rec_12', descricao: 'Rendimentos Caixa Economica Federal', categoria: 'Rendimentos', valor: 1.35, tipo: 'receita', data: '31/07/2026', data_iso: '2026-07-31', mes: 'Julho' }
+];
 
 
 // MOCK DATA INICIAL E DECLARAÃ‡Ã•ES GLOBAIS
@@ -1093,7 +1136,7 @@ function initMockData() {
 
     localStorage.setItem('acbcsj_associados', JSON.stringify(list));
 
-    localStorage.setItem('acbcsj_financeiro', JSON.stringify([]));
+    localStorage.setItem('acbcsj_financeiro', JSON.stringify(INITIAL_LANCAMENTOS_DATA));
     localStorage.setItem('acbcsj_mensalidades_grid', JSON.stringify(INITIAL_MENSAL_DATA));
     localStorage.setItem('acbcsj_mensalidades', JSON.stringify(MOCK_DATA_INITIAL.mensalidades));
     localStorage.setItem('acbcsj_programacao', JSON.stringify(MOCK_DATA_INITIAL.programacao));
