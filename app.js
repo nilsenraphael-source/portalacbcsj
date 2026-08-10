@@ -2309,13 +2309,75 @@ function renderGestaoFinanceira() {
     }
 }
 
+// CÁLCULO DE VENCIMENTO DIA 15 E STATUS DE MENSALIDADE
+function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
+    const valor = parseFloat(valorPago) || 0;
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtualNum = hoje.getMonth() + 1; // 1 a 12
+    const diaAtual = hoje.getDate(); // 1 a 31
+
+    const anoNum = parseInt(anoStr, 10);
+    const dataVencimentoStr = `15/${String(mesIndex).padStart(2, '0')}/${anoNum}`;
+
+    if (valor >= 20.00) {
+        return {
+            status: 'pago',
+            badge: `<span class="badge badge-success">✅ PAGO VIA PIX (R$ ${valor.toFixed(2).replace('.', ',')})</span>`,
+            vencimento: dataVencimentoStr,
+            isVencido: false,
+            debitAmount: 0
+        };
+    } else if (valor > 0) {
+        const falta = 20.00 - valor;
+        const isV = (anoNum < anoAtual || (anoNum === anoAtual && (mesIndex < mesAtualNum || (mesIndex === mesAtualNum && diaAtual > 15))));
+        return {
+            status: 'parcial',
+            badge: `<span class="badge badge-warning">⚠️ PAGO PARCIAL (R$ ${valor.toFixed(2).replace('.', ',')}) - Falta R$ ${falta.toFixed(2).replace('.', ',')}</span>`,
+            vencimento: dataVencimentoStr,
+            isVencido: isV,
+            debitAmount: falta
+        };
+    } else {
+        let isVencido = false;
+        if (anoNum < anoAtual) {
+            isVencido = true;
+        } else if (anoNum === anoAtual) {
+            if (mesIndex < mesAtualNum) {
+                isVencido = true;
+            } else if (mesIndex === mesAtualNum) {
+                if (diaAtual > 15) {
+                    isVencido = true;
+                }
+            }
+        }
+
+        if (isVencido) {
+            return {
+                status: 'vencido',
+                badge: `<span class="badge badge-danger">🔴 ⚠️ VENCIDO (Venceu em ${dataVencimentoStr})</span>`,
+                vencimento: dataVencimentoStr,
+                isVencido: true,
+                debitAmount: 20.00
+            };
+        } else {
+            return {
+                status: 'a_vencer',
+                badge: `<span class="badge badge-info" style="color: #F39C12; border: 1px solid #F39C12; background: rgba(243,156,18,0.1);">⏳ A VENCER (Vence em ${dataVencimentoStr})</span>`,
+                vencimento: dataVencimentoStr,
+                isVencido: false,
+                debitAmount: 0
+            };
+        }
+    }
+}
+
 function renderAssociadoOverview() {
     const welcome = document.getElementById('associadoWelcomeName');
     if (welcome && currentUser) {
         welcome.textContent = currentUser.nome_guerra || currentUser.nome;
     }
 
-    // Renderiza resumo dos dados cadastrais pessoais do usuário
     const profileContainer = document.getElementById('myProfileDetailsDisplay');
     if (profileContainer && currentUser) {
         const end = [currentUser.logradouro, currentUser.numero ? `Nº ${currentUser.numero}` : '', currentUser.complemento].filter(Boolean).join(', ');
@@ -2329,49 +2391,85 @@ function renderAssociadoOverview() {
         `;
     }
 
-    const grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || INITIAL_MENSAL_DATA || [];
+    const selAno = document.getElementById('selAnoMeuPainel');
+    const ano = selAno ? selAno.value : '2026';
+    const lbls = document.querySelectorAll('.lblAnoMeuPainel');
+    lbls.forEach(el => el.textContent = ano);
+
+    const storageKey = `acbcsj_mensalidades_grid_${ano}`;
+    const grid = JSON.parse(localStorage.getItem(storageKey)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
     const container = document.getElementById('tableMinhasMensalidadesBody');
     if (!container || !currentUser) return;
 
-    const socio = grid.find(s => {
-        const ng = (typeof s.nome_guerra === 'string' ? s.nome_guerra : (Array.isArray(s.nome_guerra) ? '' : String(s.nome_guerra || ''))).toLowerCase();
-        const nc = (typeof s.nome_completo === 'string' ? s.nome_completo : (Array.isArray(s.nome_completo) ? '' : String(s.nome_completo || ''))).toLowerCase();
-        const userNg = (typeof currentUser.nome_guerra === 'string' ? currentUser.nome_guerra : (Array.isArray(currentUser.nome_guerra) ? '' : String(currentUser.nome_guerra || ''))).toLowerCase();
-        const userNc = (typeof currentUser.nome === 'string' ? currentUser.nome : (Array.isArray(currentUser.nome) ? '' : String(currentUser.nome || ''))).toLowerCase();
-        return (ng && userNg && ng === userNg) || (nc && userNc && nc === userNc) || (userNc && nc && nc.includes(userNc));
-    }) || grid[0];
+    const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
 
-    const mesesNomes = [
-        { key: 'jan', nome: 'Janeiro 2026' },
-        { key: 'fev', nome: 'Fevereiro 2026' },
-        { key: 'mar', nome: 'Março 2026' },
-        { key: 'abr', nome: 'Abril 2026' },
-        { key: 'mai', nome: 'Maio 2026' },
-        { key: 'jun', nome: 'Junho 2026' },
-        { key: 'jul', nome: 'Julho 2026' },
-        { key: 'ago', nome: 'Agosto 2026' },
-        { key: 'set', nome: 'Setembro 2026' },
-        { key: 'out', nome: 'Outubro 2026' },
-        { key: 'nov', nome: 'Novembro 2026' },
-        { key: 'dez', nome: 'Dezembro 2026' }
+    const socio = grid.find(s => {
+        const sCpf = (s.cpf || '').replace(/\D/g, '');
+        if (sCpf && cleanUserCpf && sCpf === cleanUserCpf) return true;
+        const ng = (typeof s.nome_guerra === 'string' ? s.nome_guerra : '').toLowerCase();
+        const nc = (typeof s.nome_completo === 'string' ? s.nome_completo : '').toLowerCase();
+        const userNg = (typeof currentUser.nome_guerra === 'string' ? currentUser.nome_guerra : '').toLowerCase();
+        const userNc = (typeof currentUser.nome === 'string' ? currentUser.nome : '').toLowerCase();
+        return (ng && userNg && ng === userNg) || (nc && userNc && nc === userNc) || (userNc && nc && nc.includes(userNc));
+    }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+
+    const mesesList = [
+        { index: 1, key: 'jan', nome: 'Janeiro' },
+        { index: 2, key: 'fev', nome: 'Fevereiro' },
+        { index: 3, key: 'mar', nome: 'Março' },
+        { index: 4, key: 'abr', nome: 'Abril' },
+        { index: 5, key: 'mai', nome: 'Maio' },
+        { index: 6, key: 'jun', nome: 'Junho' },
+        { index: 7, key: 'jul', nome: 'Julho' },
+        { index: 8, key: 'ago', nome: 'Agosto' },
+        { index: 9, key: 'set', nome: 'Setembro' },
+        { index: 10, key: 'out', nome: 'Outubro' },
+        { index: 11, key: 'nov', nome: 'Novembro' },
+        { index: 12, key: 'dez', nome: 'Dezembro' }
     ];
 
-    container.innerHTML = mesesNomes.map(m => {
-        const val = socio ? (parseFloat(socio[m.key]) || 0) : 0;
-        const pago = val > 0;
+    let totalPagoAno = 0;
+    let totalDebitos = 0;
+    let temDebitoVencido = false;
+
+    const rowsHtml = mesesList.map(m => {
+        const valPago = parseFloat(socio[m.key]) || 0;
+        totalPagoAno += valPago;
+
+        const info = calcularStatusMensalidade(m.index, ano, valPago);
+        if (info.isVencido) {
+            temDebitoVencido = true;
+            totalDebitos += info.debitAmount;
+        }
+
         return `
             <tr>
-                <td><b>${m.nome}</b></td>
-                <td style="font-weight: 700; color: ${pago ? '#2ECC71' : 'var(--text-muted)'};">
-                    R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                <td><b>${m.nome} / ${ano}</b></td>
+                <td><span class="badge badge-info">${info.vencimento}</span></td>
+                <td>R$ 20,00</td>
+                <td style="font-weight: 700; color: ${valPago > 0 ? '#2ECC71' : 'var(--text-muted)'};">
+                    R$ ${valPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
-                <td>
-                    <span class="badge badge-${pago ? 'success' : 'warning'}">
-                        ${pago ? '✅ PAGO / BAIXADO' : '⏳ EM ABERTO / PENDENTE'}
-                    </span>
+                <td>${info.badge}</td>
             </tr>
         `;
     }).join('');
+
+    container.innerHTML = rowsHtml;
+
+    const elTotalPago = document.getElementById('myMetricTotalPago');
+    const elDebitos = document.getElementById('myMetricDebitos');
+    const elSituacao = document.getElementById('myMetricSituacao');
+
+    if (elTotalPago) elTotalPago.textContent = `R$ ${totalPagoAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    if (elDebitos) elDebitos.textContent = `R$ ${totalDebitos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    if (elSituacao) {
+        if (temDebitoVencido) {
+            elSituacao.innerHTML = `<span class="badge badge-danger">🔴 POSSUI PENDÊNCIAS (Vencidas após dia 15)</span>`;
+        } else {
+            elSituacao.innerHTML = `<span class="badge badge-success">🟢 EM DIA COM A ASSOCIAÇÃO</span>`;
+        }
+    }
 }
 
 // EDIÇÃO DOS DADOS CADASTRAIS PELO PRÓPRIO INTEGRANTE
@@ -2824,10 +2922,36 @@ function recalcularGridAssociado(cpf, ano) {
     const storageKey = `acbcsj_mensalidades_grid_${ano}`;
     let grid = JSON.parse(localStorage.getItem(storageKey)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
     const historicoGeral = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
-    const baixasDoAno = historicoGeral.filter(h => (h.cpf || '').replace(/\D/g, '') === (cpf || '').replace(/\D/g, '') && h.ano === ano);
+    const cleanCpf = (cpf || '').replace(/\D/g, '');
+    const baixasDoAno = historicoGeral.filter(h => (h.cpf || '').replace(/\D/g, '') === cleanCpf && h.ano === ano);
 
-    let socioGrid = grid.find(g => (g.cpf || '').replace(/\D/g, '') === (cpf || '').replace(/\D/g, ''));
+    const listAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const assocObj = listAssociados.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
+
+    let socioGrid = grid.find(g => {
+        const gCpf = (g.cpf || '').replace(/\D/g, '');
+        if (gCpf && cleanCpf && gCpf === cleanCpf) return true;
+        if (assocObj) {
+            const ng = (typeof g.nome_guerra === 'string' ? g.nome_guerra : '').toLowerCase();
+            const sNg = (typeof assocObj.nome_guerra === 'string' ? assocObj.nome_guerra : '').toLowerCase();
+            const sNc = (typeof assocObj.nome === 'string' ? assocObj.nome : '').toLowerCase();
+            return (ng && sNg && ng === sNg) || (sNc && ng && sNc.includes(ng));
+        }
+        return false;
+    });
+
+    if (!socioGrid && assocObj) {
+        socioGrid = {
+            nome_guerra: assocObj.nome_guerra || assocObj.nome,
+            nome_completo: assocObj.nome,
+            cpf: assocObj.cpf,
+            jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0
+        };
+        grid.push(socioGrid);
+    }
+
     if (!socioGrid) return;
+    socioGrid.cpf = cpf;
 
     if (ano === '2026') {
         const basePlanilha = (INITIAL_MENSAL_DATA || []).find(b => {

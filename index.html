@@ -374,17 +374,49 @@
                         </div>
                     </div>
 
+                    <!-- CARTÃO E TABELA DE MENSALIDADES DO PRÓPRIO ASSOCIADO -->
                     <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">💳 Minhas Mensalidades & Contribuições (Ano 2026)</h3>
-                            <p style="font-size: 12px; color: var(--text-muted);">Histórico dos seus pagamentos e lançamentos confirmados mês a mês.</p>
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div>
+                                <h3 class="card-title">💳 Minhas Mensalidades & Contribuições</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Acompanhe em tempo real a situação de suas mensalidades (R$ 20,00/mês - Vencimento todo dia 15).</p>
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <label style="font-size: 12px; font-weight: 600; color: var(--accent-gold);">Ano:</label>
+                                <select id="selAnoMeuPainel" class="form-control" style="width: 100px; padding: 4px 8px; font-size: 12px; font-weight: bold;" onchange="renderAssociadoOverview()">
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026" selected>2026</option>
+                                    <option value="2027">2027</option>
+                                    <option value="2028">2028</option>
+                                </select>
+                            </div>
                         </div>
+
+                        <!-- MÉTRICAS PESSOAIS DO ASSOCIADO -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 15px; padding: 0 15px;">
+                            <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <div style="font-size: 11px; color: var(--text-muted);">TOTAL PAGO (<span class="lblAnoMeuPainel">2026</span>)</div>
+                                <div id="myMetricTotalPago" style="font-size: 16px; font-weight: bold; color: #2ECC71;">R$ 0,00</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <div style="font-size: 11px; color: var(--text-muted);">DÉBITOS VENCIDOS</div>
+                                <div id="myMetricDebitos" style="font-size: 16px; font-weight: bold; color: #E74C3C;">R$ 0,00</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <div style="font-size: 11px; color: var(--text-muted);">SITUAÇÃO GERAL</div>
+                                <div id="myMetricSituacao" style="font-size: 13px; font-weight: bold;">-</div>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
                             <table class="custom-table" style="font-size: 12px;">
                                 <thead>
                                     <tr>
                                         <th>Mês de Referência</th>
-                                        <th>Valor Lançado (R$)</th>
+                                        <th>Data de Vencimento</th>
+                                        <th>Valor Mensalidade</th>
+                                        <th>Valor Pago (R$)</th>
                                         <th>Status do Pagamento</th>
                                     </tr>
                                 </thead>
