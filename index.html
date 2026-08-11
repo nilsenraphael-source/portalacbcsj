@@ -474,6 +474,17 @@
                         </div>
                     </div>
 
+                    <!-- CARD DE COMUNICADOS & MENSAGENS DA DIRETORIA PARA O ASSOCIADO -->
+                    <div class="card" style="margin-bottom: 20px; border-left: 4px solid #3498DB;">
+                        <div class="card-header">
+                            <h3 class="card-title">📢 Comunicados & Avisos da Diretoria</h3>
+                            <p style="font-size: 12px; color: var(--text-muted);">Mensagens e avisos oficiais direcionados a você.</p>
+                        </div>
+                        <div id="containerMeusComunicadosDiretoria">
+                            <!-- Preenchido via JS em renderAssociadoOverview() -->
+                        </div>
+                    </div>
+
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">💳 Minhas Mensalidades & Contribuições (Ano 2026)</h3>
@@ -542,11 +553,22 @@
                     </div>
                 </div>
 
-                <!-- ABA 8: MENSAGENS RECEBIDAS (DIRETORIA) -->
+                <!-- ABA 8: MENSAGENS E COMUNICADOS (DIRETORIA) -->
                 <div id="tab-mensagens-diretoria" class="tab-content" style="display: none;">
-                    <div class="page-header">
-                        <h2 class="page-title">Caixa de Mensagens & Ideias dos Associados</h2>
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">📬 Central de Mensagens & Comunicados</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Gerencie sugestões de associados e envie mensagens para 1 pessoa, várias ou todos os integrantes.</p>
+                        </div>
+                        <button class="btn btn-gold" onclick="abrirModalEnviarComunicado()">✉️ + Novo Comunicado / Mensagem</button>
                     </div>
+
+                    <!-- ABAS DA CENTRAL DE MENSAGENS -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                        <button id="btnTabMsgsRecebidas" class="btn btn-sm btn-gold" onclick="alternarAbaMensagensDiretoria('recebidas')">📥 Mensagens Recebidas dos Associados</button>
+                        <button id="btnTabMsgsEnviadas" class="btn btn-sm btn-outline" onclick="alternarAbaMensagensDiretoria('enviadas')">📤 Comunicados Enviados pela Diretoria</button>
+                    </div>
+
                     <div id="listMensagensDiretoria"></div>
                 </div>
 
@@ -1245,6 +1267,73 @@
                 <button type="button" class="btn btn-outline" onclick="closeModal('modalBalanceteMensal')">Fechar</button>
                 <button type="button" class="btn btn-gold" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE ENVIAR COMUNICADO / MENSAGEM (DIRETORIA) -->
+    <div id="modalEnviarComunicado" class="modal-backdrop">
+        <div class="modal-content modal-content-lg" style="max-width: 650px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: var(--accent-gold);">✉️ Encaminhar Mensagem / Comunicado</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Envie um comunicado oficial para 1 associado específico, vários selecionados ou para TODOS.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalEnviarComunicado')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarNovoComunicado(event)">
+                <div class="form-group">
+                    <label>Destinatário(s) <span class="req-star">*</span></label>
+                    <select id="comunicadoTipoDestinatario" class="form-control" required onchange="toggleTipoDestinatario(this.value)">
+                        <option value="todos" selected>📢 Para TODOS os Associados Ativos</option>
+                        <option value="individual">👤 Para 1 Associado Específico</option>
+                        <option value="selecao">👥 Para VÁRIOS Associados (Seleção Personalizada)</option>
+                    </select>
+                </div>
+
+                <!-- PAINEL PARA DESTINATÁRIO ÚNICO (INDIVIDUAL) -->
+                <div id="divDestinatarioIndividual" class="form-group" style="display: none;">
+                    <label>Selecione o Associado <span class="req-star">*</span></label>
+                    <select id="comunicadoAssociadoUnico" class="form-control"></select>
+                </div>
+
+                <!-- PAINEL PARA MÚLTIPLOS DESTINATÁRIOS (SELEÇÃO) -->
+                <div id="divDestinatariosMultiplos" class="form-group" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="margin: 0;">Selecione os Associados Destinatários <span class="req-star">*</span></label>
+                        <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 6px;" onclick="marcarDesmarcarTodosComunicado()">☑️ Marcar / Desmarcar Todos</button>
+                    </div>
+                    <div id="checkboxesAssociadosComunicado" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Assunto / Título do Comunicado <span class="req-star">*</span></label>
+                        <input type="text" id="comunicadoAssunto" class="form-control" placeholder="Ex: Convocação para Reunião Extraordinária" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Prioridade <span class="req-star">*</span></label>
+                        <select id="comunicadoPrioridade" class="form-control" required>
+                            <option value="Informativo" selected>🟢 Informativo</option>
+                            <option value="Importante">🟡 Importante</option>
+                            <option value="Urgente">🔴 Urgente</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Conteúdo da Mensagem / Comunicado <span class="req-star">*</span></label>
+                    <textarea id="comunicadoMensagem" class="form-control" rows="5" placeholder="Escreva aqui a mensagem que os associados selecionados irão receber no portal..." required></textarea>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEnviarComunicado')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">✉️ Encaminhar Mensagem</button>
+                </div>
+            </form>
         </div>
     </div>
 

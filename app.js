@@ -1953,24 +1953,212 @@ async function excluirDocumento(id) {
 }
 
 
+// GESTÃO DE MENSAGENS E COMUNICADOS PELA DIRETORIA
+let abaMensagensAtiva = 'recebidas';
+
+function alternarAbaMensagensDiretoria(aba) {
+    abaMensagensAtiva = aba;
+    const btnRec = document.getElementById('btnTabMsgsRecebidas');
+    const btnEnv = document.getElementById('btnTabMsgsEnviadas');
+
+    if (btnRec && btnEnv) {
+        if (aba === 'recebidas') {
+            btnRec.className = 'btn btn-sm btn-gold';
+            btnEnv.className = 'btn btn-sm btn-outline';
+        } else {
+            btnRec.className = 'btn btn-sm btn-outline';
+            btnEnv.className = 'btn btn-sm btn-gold';
+        }
+    }
+
+    renderMensagensDiretoria();
+}
+
 function renderMensagensDiretoria() {
-    const msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
     const container = document.getElementById('listMensagensDiretoria');
-    if (container) {
+    if (!container) return;
+
+    if (abaMensagensAtiva === 'recebidas') {
+        const msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
         if (msgs.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-muted)">Nenhuma mensagem ou ideia enviada recentemente.</p>`;
+            container.innerHTML = `
+                <div class="card" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                    <p style="font-size: 14px;">📥 Nenhuma mensagem recebida de associados até o momento.</p>
+                </div>
+            `;
         } else {
             container.innerHTML = msgs.map(m => `
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between">
-                        <b>${m.assunto}</b>
-                        <small style="color:var(--text-muted)">${m.data}</small>
+                <div class="card" style="margin-bottom: 12px; border-left: 4px solid var(--accent-gold);">
+                    <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 6px;">
+                        <b style="font-size: 15px; color: var(--accent-gold);">${m.assunto || 'Sem assunto'}</b>
+                        <small style="color:var(--text-muted); font-size: 11px;">📅 ${m.data || '-'}</small>
                     </div>
-                    <div style="font-size:12px; color:var(--accent-gold); margin-bottom:8px">Por: ${m.associado_nome}</div>
-                    <p style="font-size:13px">${m.conteudo}</p>
+                    <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+                        👤 Enviado por: <b style="color: #fff;">${m.associado_nome || 'Associado'}</b>
+                    </div>
+                    <p style="font-size:13px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; white-space: pre-wrap; margin: 0;">${m.conteudo || m.mensagem || ''}</p>
                 </div>
             `).join('');
         }
+    } else {
+        const comunicados = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+        if (comunicados.length === 0) {
+            container.innerHTML = `
+                <div class="card" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                    <p style="font-size: 14px;">📤 Nenhum comunicado encaminhado pela Diretoria até o momento.</p>
+                    <button class="btn btn-gold btn-sm" style="margin-top: 10px;" onclick="abrirModalEnviarComunicado()">✉️ Encaminhar Primeiro Comunicado</button>
+                </div>
+            `;
+        } else {
+            container.innerHTML = comunicados.map(c => {
+                let badgePrio = '<span class="badge badge-info">🟢 Informativo</span>';
+                if (c.prioridade === 'Importante') badgePrio = '<span class="badge badge-warning">🟡 Importante</span>';
+                if (c.prioridade === 'Urgente') badgePrio = '<span class="badge badge-danger">🔴 Urgente</span>';
+
+                return `
+                    <div class="card" style="margin-bottom: 12px; border-left: 4px solid #3498DB;">
+                        <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 6px;">
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <b style="font-size: 15px; color: var(--accent-gold);">${c.assunto}</b>
+                                ${badgePrio}
+                            </div>
+                            <small style="color:var(--text-muted); font-size: 11px;">📅 ${c.data}</small>
+                        </div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+                            👥 Destinatários: <b style="color: #3498DB;">${c.destinatarios_resumo}</b>
+                        </div>
+                        <p style="font-size:13px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; white-space: pre-wrap; margin: 0 0 10px 0;">${c.mensagem}</p>
+                        <div style="display: flex; justify-content: flex-end;">
+                            <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 6px; color: #E74C3C; border-color: #E74C3C;" onclick="excluirComunicadoEnviado('${c.id}')">🗑️ Excluir Comunicado</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+}
+
+function abrirModalEnviarComunicado() {
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const ativos = list.filter(a => a.status === 'ativo' || !a.status);
+
+    // Preenche select individual
+    const selectUnico = document.getElementById('comunicadoAssociadoUnico');
+    if (selectUnico) {
+        selectUnico.innerHTML = ativos.map(a => `
+            <option value="${a.cpf}">${a.nome_guerra || a.nome} (CPF: ${a.cpf})</option>
+        `).join('');
+    }
+
+    // Preenche checkboxes para seleção de vários
+    const containerCheck = document.getElementById('checkboxesAssociadosComunicado');
+    if (containerCheck) {
+        containerCheck.innerHTML = ativos.map(a => `
+            <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.03); padding: 4px 6px; border-radius: 4px;">
+                <input type="checkbox" name="comunicadoMesesAssociados" value="${a.cpf}">
+                <span>${a.nome_guerra || a.nome}</span>
+            </label>
+        `).join('');
+    }
+
+    document.getElementById('comunicadoAssunto').value = '';
+    document.getElementById('comunicadoMensagem').value = '';
+    document.getElementById('comunicadoTipoDestinatario').value = 'todos';
+    document.getElementById('comunicadoPrioridade').value = 'Informativo';
+
+    toggleTipoDestinatario('todos');
+    openModal('modalEnviarComunicado');
+}
+
+function toggleTipoDestinatario(tipo) {
+    const divInd = document.getElementById('divDestinatarioIndividual');
+    const divMult = document.getElementById('divDestinatariosMultiplos');
+
+    if (divInd) divInd.style.display = tipo === 'individual' ? 'block' : 'none';
+    if (divMult) divMult.style.display = tipo === 'selecao' ? 'block' : 'none';
+}
+
+let todosMarcadosComunicado = false;
+function marcarDesmarcarTodosComunicado() {
+    todosMarcadosComunicado = !todosMarcadosComunicado;
+    const checkboxes = document.querySelectorAll('input[name="comunicadoMesesAssociados"]');
+    checkboxes.forEach(cb => cb.checked = todosMarcadosComunicado);
+}
+
+function salvarNovoComunicado(e) {
+    e.preventDefault();
+    const tipo = document.getElementById('comunicadoTipoDestinatario').value;
+    const assunto = document.getElementById('comunicadoAssunto').value.trim();
+    const prioridade = document.getElementById('comunicadoPrioridade').value;
+    const mensagem = document.getElementById('comunicadoMensagem').value.trim();
+
+    if (!assunto || !mensagem) {
+        alert('Por favor, informe o assunto e a mensagem.');
+        return;
+    }
+
+    const listAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    let cpfsDestinatarios = [];
+    let resumoDestinatarios = '';
+
+    if (tipo === 'todos') {
+        cpfsDestinatarios = ['TODOS'];
+        resumoDestinatarios = '📢 Todos os Associados Ativos';
+    } else if (tipo === 'individual') {
+        const cpfSel = document.getElementById('comunicadoAssociadoUnico').value;
+        const assoc = listAssociados.find(a => a.cpf === cpfSel);
+        if (!assoc) {
+            alert('Por favor, selecione um associado destinatário.');
+            return;
+        }
+        cpfsDestinatarios = [cpfSel];
+        resumoDestinatarios = `👤 ${assoc.nome_guerra || assoc.nome} (${assoc.cpf})`;
+    } else if (tipo === 'selecao') {
+        const checked = Array.from(document.querySelectorAll('input[name="comunicadoMesesAssociados"]:checked'));
+        if (checked.length === 0) {
+            alert('Por favor, selecione ao menos um associado para receber esta mensagem.');
+            return;
+        }
+        cpfsDestinatarios = checked.map(c => c.value);
+        const nomesSel = cpfsDestinatarios.map(cpf => {
+            const a = listAssociados.find(item => item.cpf === cpf);
+            return a ? (a.nome_guerra || a.nome) : cpf;
+        });
+        resumoDestinatarios = `👥 ${checked.length} integrantes selecionados (${nomesSel.slice(0, 3).join(', ')}${checked.length > 3 ? '...' : ''})`;
+    }
+
+    const agora = new Date();
+    const dataFormatada = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    const novoComunicado = {
+        id: 'comunicado_' + Date.now(),
+        remetente_cpf: currentUser.cpf,
+        remetente_nome: currentUser.nome_guerra || currentUser.nome || 'Diretoria ACBCSJ',
+        destinatario_tipo: tipo,
+        destinatarios_cpfs: cpfsDestinatarios,
+        destinatarios_resumo: resumoDestinatarios,
+        assunto: assunto,
+        prioridade: prioridade,
+        mensagem: mensagem,
+        data: dataFormatada
+    };
+
+    let comunicados = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+    comunicados.unshift(novoComunicado);
+    localStorage.setItem('acbcsj_comunicados_enviados', JSON.stringify(comunicados));
+
+    alert(`Comunicado "${assunto}" encaminhado com sucesso para ${resumoDestinatarios}!`);
+    closeModal('modalEnviarComunicado');
+    alternarAbaMensagensDiretoria('enviadas');
+}
+
+function excluirComunicadoEnviado(id) {
+    if (confirm('Deseja realmente remover este comunicado enviado?')) {
+        let comunicados = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+        comunicados = comunicados.filter(c => c.id !== id);
+        localStorage.setItem('acbcsj_comunicados_enviados', JSON.stringify(comunicados));
+        alert('Comunicado removido.');
+        renderMensagensDiretoria();
     }
 }
 
@@ -2231,9 +2419,38 @@ async function abrirComprovanteLancamento(id) {
     }
 }
 
+function extrairMesEAno(dataStr, dataIso) {
+    let str = dataIso || dataStr || '';
+    if (!str) return { mes: '', ano: '' };
+
+    // Formato YYYY-MM-DD
+    if (str.includes('-')) {
+        const parts = str.split('-');
+        if (parts.length >= 3) {
+            return {
+                ano: parts[0].trim(),
+                mes: String(parts[1]).padStart(2, '0')
+            };
+        }
+    }
+
+    // Formato DD/MM/YYYY
+    if (str.includes('/')) {
+        const parts = str.split('/');
+        if (parts.length >= 3) {
+            return {
+                ano: parts[2].trim(),
+                mes: String(parts[1]).padStart(2, '0')
+            };
+        }
+    }
+
+    return { mes: '', ano: '' };
+}
+
 function renderGestaoFinanceira() {
-    const list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-    const historicoGeralMens = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+    const listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
     const filtroAnoSelect = document.getElementById('finFiltroAno');
     const anoSelected = filtroAnoSelect ? filtroAnoSelect.value : '2026';
@@ -2248,44 +2465,79 @@ function renderGestaoFinanceira() {
     document.querySelectorAll('.lblAnoFinanceiro').forEach(el => el.textContent = anoSelected);
 
     const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-
-    // 1. PROCESSA LEVANTAMENTO MENSAL DO EXERCÍCIO (MESES 1 A 12)
-    const containerLevantamento = document.getElementById('tableLevantamentoMensalBody');
-    let demonstrativoMensal = [];
+    const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
     const storageKeyGrid = `acbcsj_mensalidades_grid_${anoSelected}`;
     const gridMensalidades = JSON.parse(localStorage.getItem(storageKeyGrid)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
-    const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+    // 1. CONSTRÓI LISTA COMBINADA DE TODOS OS LANÇAMENTOS (FINANCEIRO + MENSALIDADES)
+    let combinedList = [];
+
+    // A) Lançamentos gerais do caixa
+    listFinanceiro.forEach(item => {
+        const dateInfo = extrairMesEAno(item.data, item.data_iso);
+        combinedList.push({
+            id: item.id || ('fin_' + Math.random()),
+            data: item.data || '-',
+            data_iso: item.data_iso || '',
+            mes: dateInfo.mes,
+            ano: dateInfo.ano || anoSelected,
+            descricao: item.descricao || 'Sem descrição',
+            categoria: item.categoria || 'Geral',
+            tipo: item.tipo || 'despesa', // receita ou despesa
+            valor: parseFloat(item.valor) || 0,
+            comprovante_nome: item.comprovante_nome || '',
+            origem: 'financeiro'
+        });
+    });
+
+    // B) Lançamentos de Mensalidades PIX
+    listMensalidades.forEach(m => {
+        const dateInfo = extrairMesEAno(m.data, m.data_iso);
+        const anoItem = m.ano || dateInfo.ano || anoSelected;
+        combinedList.push({
+            id: m.id || ('mens_' + Math.random()),
+            data: m.data || '-',
+            data_iso: m.data_iso || '',
+            mes: dateInfo.mes,
+            ano: anoItem,
+            descricao: `💳 Mensalidade PIX — ${m.associado_nome || 'Associado'} (${m.meses_quitados || ''}/${anoItem})`,
+            categoria: 'Mensalidades Associados',
+            tipo: 'receita',
+            valor: parseFloat(m.valor) || 0,
+            comprovante_nome: m.comprovante_pix || '',
+            origem: 'mensalidade'
+        });
+    });
+
+    // 2. PROCESSA DEMONSTRATIVO & LEVANTAMENTO MENSAL (12 MESES DO EXERCÍCIO)
+    const containerLevantamento = document.getElementById('tableLevantamentoMensalBody');
+    let demonstrativoMensal = [];
 
     for (let i = 1; i <= 12; i++) {
         const strMes = String(i).padStart(2, '0');
         const nomeMes = mesesNomes[i - 1];
         const mKey = mesesKeys[i - 1];
 
-        // Sum Receitas Gerais from acbcsj_financeiro
-        let recsGerais = list
-            .filter(item => {
-                if (item.tipo !== 'receita') return false;
-                if (!item.data) return false;
-                const parts = item.data.split('/');
-                if (parts.length < 3) return false;
-                return parts[1] === strMes && parts[2] === anoSelected;
-            })
-            .reduce((sum, item) => sum + (parseFloat(item.valor) || 0), 0);
+        // Sum Receitas Gerais (excluindo mensalidades)
+        let recsGerais = combinedList
+            .filter(item => item.origem === 'financeiro' && item.tipo === 'receita' && item.ano === anoSelected && item.mes === strMes)
+            .reduce((sum, item) => sum + item.valor, 0);
 
-        // Sum Mensalidades PIX for this month
-        let mensPix = gridMensalidades.reduce((sum, g) => sum + (parseFloat(g[mKey]) || 0), 0);
+        // Sum Mensalidades PIX (do histórico de transações OU da grade anual)
+        let mensPixHistorico = combinedList
+            .filter(item => item.origem === 'mensalidade' && item.ano === anoSelected && item.mes === strMes)
+            .reduce((sum, item) => sum + item.valor, 0);
 
-        // Sum Despesas Gerais from acbcsj_financeiro
-        let despsGerais = list
-            .filter(item => {
-                if (item.tipo !== 'despesa') return false;
-                if (!item.data) return false;
-                const parts = item.data.split('/');
-                if (parts.length < 3) return false;
-                return parts[1] === strMes && parts[2] === anoSelected;
-            })
-            .reduce((sum, item) => sum + (parseFloat(item.valor) || 0), 0);
+        let mensPixGrid = gridMensalidades.reduce((sum, g) => sum + (parseFloat(g[mKey]) || 0), 0);
+
+        // Usa o valor da grade ou histórico para consistência total
+        let mensPix = Math.max(mensPixHistorico, mensPixGrid);
+
+        // Sum Despesas Gerais
+        let despsGerais = combinedList
+            .filter(item => item.tipo === 'despesa' && item.ano === anoSelected && item.mes === strMes)
+            .reduce((sum, item) => sum + item.valor, 0);
 
         const saldoMes = (recsGerais + mensPix) - despsGerais;
         const temMovimento = (recsGerais + mensPix + despsGerais) > 0;
@@ -2305,14 +2557,14 @@ function renderGestaoFinanceira() {
     if (containerLevantamento) {
         containerLevantamento.innerHTML = demonstrativoMensal.map(d => {
             const isMesSelecionado = mesSelected === d.mesNum;
-            const bgRow = isMesSelecionado ? 'background: rgba(241, 196, 15, 0.15); font-weight: bold;' : '';
+            const bgRow = isMesSelecionado ? 'background: rgba(241, 196, 15, 0.2); font-weight: bold; border-left: 4px solid var(--accent-gold);' : '';
             return `
                 <tr style="${bgRow}">
                     <td style="text-align: left;">
-                        <b>${d.nomeMes} / ${anoSelected}</b>
+                        <b>${d.nomeMes} / ${anoSelected}</b> ${isMesSelecionado ? '<span class="badge badge-gold" style="font-size:9px;">SELECIONADO</span>' : ''}
                     </td>
                     <td style="color: #2ECC71;">R$ ${d.receitasGerais.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                    <td style="color: #3498DB;">R$ ${d.mensalidadesPix.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td style="color: #3498DB; font-weight: bold;">R$ ${d.mensalidadesPix.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                     <td style="color: #E74C3C;">R$ ${d.despesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                     <td style="font-weight: 700; color: ${d.saldo >= 0 ? '#2ECC71' : '#E74C3C'};">
                         ${d.saldo >= 0 ? '+' : ''} R$ ${d.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -2324,7 +2576,7 @@ function renderGestaoFinanceira() {
                     </td>
                     <td>
                         <div style="display: flex; gap: 4px; justify-content: center;">
-                            <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px;" onclick="filtrarExtratoMes('${d.mesNum}')">🔍 Extrato</button>
+                            <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px;" onclick="filtrarExtratoMes('${d.mesNum}')">🔍 Ver Mês</button>
                             <button class="btn btn-sm btn-gold" style="padding: 2px 6px; font-size: 11px;" onclick="gerarBalanceteMensal(${d.mesIndex}, '${anoSelected}')">📄 Balancete</button>
                         </div>
                     </td>
@@ -2333,7 +2585,7 @@ function renderGestaoFinanceira() {
         }).join('');
     }
 
-    // 2. CALCULA MÉTRICAS DO PERÍODO SELECIONADO (MÊS OU ANO)
+    // 3. CALCULA MÉTRICAS DO PERÍODO SELECIONADO (MÊS OU ANO)
     let totalReceitasPer = 0;
     let totalMensalidadesPer = 0;
     let totalDespesasPer = 0;
@@ -2369,52 +2621,48 @@ function renderGestaoFinanceira() {
         elSaldo.style.color = saldoPer >= 0 ? 'var(--accent-gold)' : '#E74C3C';
     }
 
-    // 3. RENDERIZA EXTRATO FILTRADO
+    // 4. RENDERIZA A TABELA DE EXTRATO DE LANÇAMENTOS COMBINADOS (FINANCEIRO + MENSALIDADES)
     const container = document.getElementById('tableFinanceiroBody');
     if (container) {
-        let filtrados = list;
+        let filtrados = combinedList;
 
-        // Filtra por tipo
+        // Filtra por Exercício / Ano
+        filtrados = filtrados.filter(i => i.ano === anoSelected);
+
+        // Filtra por Período / Mês
+        if (mesSelected !== 'todos') {
+            filtrados = filtrados.filter(i => i.mes === mesSelected);
+        }
+
+        // Filtra por Tipo (todos, receita, despesa)
         if (filtroTipo !== 'todos') {
             filtrados = filtrados.filter(i => i.tipo === filtroTipo);
         }
 
-        // Filtra por Ano
-        filtrados = filtrados.filter(i => {
-            if (!i.data) return true;
-            const parts = i.data.split('/');
-            return parts.length >= 3 && parts[2] === anoSelected;
-        });
-
-        // Filtra por Mês
-        if (mesSelected !== 'todos') {
-            filtrados = filtrados.filter(i => {
-                if (!i.data) return false;
-                const parts = i.data.split('/');
-                return parts.length >= 2 && parts[1] === mesSelected;
-            });
-        }
-
         if (filtrados.length === 0) {
-            container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 15px;">Nenhum lançamento financeiro registrado para este período/filtro.</td></tr>`;
+            container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum lançamento financeiro ou mensalidade encontrada para o período (${strPeriodo}) com os filtros selecionados.</td></tr>`;
         } else {
             container.innerHTML = filtrados.map(item => `
-                <tr>
+                <tr style="${item.origem === 'mensalidade' ? 'background: rgba(52, 152, 219, 0.05);' : ''}">
                     <td><b>${item.data || '-'}</b></td>
                     <td>${item.descricao}</td>
-                    <td><span class="badge badge-info">${item.categoria}</span></td>
+                    <td><span class="badge badge-${item.origem === 'mensalidade' ? 'primary' : 'info'}">${item.categoria}</span></td>
                     <td>
                         <span class="badge badge-${item.tipo === 'receita' ? 'success' : 'danger'}">
                             ${item.tipo === 'receita' ? '➕ RECEITA' : '➖ DESPESA'}
                         </span>
                     </td>
                     <td style="font-weight: 700; color: ${item.tipo === 'receita' ? '#2ECC71' : '#E74C3C'};">
-                        ${item.tipo === 'receita' ? '+' : '-'} R$ ${(parseFloat(item.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        ${item.tipo === 'receita' ? '+' : '-'} R$ ${item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </td>
                     <td>
                         <div style="display:flex; gap:6px;">
-                            ${item.comprovante_nome ? `<button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:var(--accent-gold); border-color:var(--accent-gold);" onclick="abrirComprovanteLancamento('${item.id}')">📎 Recibo</button>` : ''}
-                            <button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:#E74C3C; border-color:#E74C3C;" onclick="excluirLancamentoFinanceiro('${item.id}')">🗑️ Excluir</button>
+                            ${item.origem === 'mensalidade' ? `
+                                <span class="badge badge-success" style="font-size:10px;">💳 PIX Confirmado</span>
+                            ` : `
+                                ${item.comprovante_nome ? `<button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:var(--accent-gold); border-color:var(--accent-gold);" onclick="abrirComprovanteLancamento('${item.id}')">📎 Recibo</button>` : ''}
+                                <button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:#E74C3C; border-color:#E74C3C;" onclick="excluirLancamentoFinanceiro('${item.id}')">🗑️ Excluir</button>
+                            `}
                         </div>
                     </td>
                 </tr>
@@ -2444,11 +2692,10 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
     const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
     const mKey = mesesKeys[mesIndex - 1];
 
-    // Receitas e Despesas do mês
+    // Receitas e Despesas do mês usando o parser universal de datas
     const lancamentosMes = list.filter(item => {
-        if (!item.data) return false;
-        const parts = item.data.split('/');
-        return parts.length >= 3 && parts[1] === strMes && parts[2] === anoStr;
+        const dateInfo = extrairMesEAno(item.data, item.data_iso);
+        return dateInfo.mes === strMes && (dateInfo.ano === anoStr || !dateInfo.ano);
     });
 
     const receitasGerais = lancamentosMes.filter(i => i.tipo === 'receita');
@@ -2561,6 +2808,45 @@ function renderAssociadoOverview() {
             <div><b>📍 Bairro / Cidade:</b> ${currentUser.bairro || 'São José'} - ${currentUser.cidade || 'SC'} (CEP: ${currentUser.cep || '-'})</div>
             <div><b>🆔 CPF:</b> ${currentUser.cpf}</div>
         `;
+    }
+
+    // Renderiza Comunicados da Diretoria destinados ao usuário atual (Todos, Individual ou Seleção)
+    const comunicadosContainer = document.getElementById('containerMeusComunicadosDiretoria');
+    if (comunicadosContainer && currentUser) {
+        const comunicadosAll = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+        const meusComunicados = comunicadosAll.filter(c => {
+            if (c.destinatario_tipo === 'todos' || (c.destinatarios_cpfs && c.destinatarios_cpfs.includes('TODOS'))) return true;
+            if (c.destinatarios_cpfs && c.destinatarios_cpfs.includes(currentUser.cpf)) return true;
+            return false;
+        });
+
+        if (meusComunicados.length === 0) {
+            comunicadosContainer.innerHTML = `
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0; padding: 10px 0;">Nenhum comunicado ou aviso recente da Diretoria.</p>
+            `;
+        } else {
+            comunicadosContainer.innerHTML = meusComunicados.map(c => {
+                let badgePrio = '<span class="badge badge-info" style="font-size: 10px;">🟢 Informativo</span>';
+                if (c.prioridade === 'Importante') badgePrio = '<span class="badge badge-warning" style="font-size: 10px;">🟡 Importante</span>';
+                if (c.prioridade === 'Urgente') badgePrio = '<span class="badge badge-danger" style="font-size: 10px;">🔴 Urgente</span>';
+
+                return `
+                    <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <b style="color: var(--accent-gold); font-size: 14px;">${c.assunto}</b>
+                                ${badgePrio}
+                            </div>
+                            <small style="color: var(--text-muted); font-size: 11px;">📅 ${c.data}</small>
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-color); margin: 6px 0 0 0; white-space: pre-wrap;">${c.mensagem}</p>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; text-align: right;">
+                            Enviado por: <b>${c.remetente_nome || 'Diretoria ACBCSJ'}</b>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
     }
 
     const grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || INITIAL_MENSAL_DATA || [];
