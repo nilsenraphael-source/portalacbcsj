@@ -2233,59 +2233,170 @@ async function abrirComprovanteLancamento(id) {
 
 function renderGestaoFinanceira() {
     const list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const historicoGeralMens = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+
+    const filtroAnoSelect = document.getElementById('finFiltroAno');
+    const anoSelected = filtroAnoSelect ? filtroAnoSelect.value : '2026';
+
+    const filtroMesSelect = document.getElementById('finFiltroMes');
+    const mesSelected = filtroMesSelect ? filtroMesSelect.value : 'todos';
+
     const filtroTipoSelect = document.getElementById('finFiltroTipo');
     const filtroTipo = filtroTipoSelect ? filtroTipoSelect.value : 'todos';
 
-    let totalReceitas = 0;
-    let totalDespesas = 0;
+    // Atualiza rótulos de ano no DOM
+    document.querySelectorAll('.lblAnoFinanceiro').forEach(el => el.textContent = anoSelected);
 
-    list.forEach(item => {
-        const val = parseFloat(item.valor) || 0;
-        if (item.tipo === 'receita') {
-            totalReceitas += val;
-        } else {
-            totalDespesas += val;
+    const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+    // 1. PROCESSA LEVANTAMENTO MENSAL DO EXERCÍCIO (MESES 1 A 12)
+    const containerLevantamento = document.getElementById('tableLevantamentoMensalBody');
+    let demonstrativoMensal = [];
+
+    const storageKeyGrid = `acbcsj_mensalidades_grid_${anoSelected}`;
+    const gridMensalidades = JSON.parse(localStorage.getItem(storageKeyGrid)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
+    const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+    for (let i = 1; i <= 12; i++) {
+        const strMes = String(i).padStart(2, '0');
+        const nomeMes = mesesNomes[i - 1];
+        const mKey = mesesKeys[i - 1];
+
+        // Sum Receitas Gerais from acbcsj_financeiro
+        let recsGerais = list
+            .filter(item => {
+                if (item.tipo !== 'receita') return false;
+                if (!item.data) return false;
+                const parts = item.data.split('/');
+                if (parts.length < 3) return false;
+                return parts[1] === strMes && parts[2] === anoSelected;
+            })
+            .reduce((sum, item) => sum + (parseFloat(item.valor) || 0), 0);
+
+        // Sum Mensalidades PIX for this month
+        let mensPix = gridMensalidades.reduce((sum, g) => sum + (parseFloat(g[mKey]) || 0), 0);
+
+        // Sum Despesas Gerais from acbcsj_financeiro
+        let despsGerais = list
+            .filter(item => {
+                if (item.tipo !== 'despesa') return false;
+                if (!item.data) return false;
+                const parts = item.data.split('/');
+                if (parts.length < 3) return false;
+                return parts[1] === strMes && parts[2] === anoSelected;
+            })
+            .reduce((sum, item) => sum + (parseFloat(item.valor) || 0), 0);
+
+        const saldoMes = (recsGerais + mensPix) - despsGerais;
+        const temMovimento = (recsGerais + mensPix + despsGerais) > 0;
+
+        demonstrativoMensal.push({
+            mesNum: strMes,
+            mesIndex: i,
+            nomeMes: nomeMes,
+            receitasGerais: recsGerais,
+            mensalidadesPix: mensPix,
+            despesas: despsGerais,
+            saldo: saldoMes,
+            temMovimento: temMovimento
+        });
+    }
+
+    if (containerLevantamento) {
+        containerLevantamento.innerHTML = demonstrativoMensal.map(d => {
+            const isMesSelecionado = mesSelected === d.mesNum;
+            const bgRow = isMesSelecionado ? 'background: rgba(241, 196, 15, 0.15); font-weight: bold;' : '';
+            return `
+                <tr style="${bgRow}">
+                    <td style="text-align: left;">
+                        <b>${d.nomeMes} / ${anoSelected}</b>
+                    </td>
+                    <td style="color: #2ECC71;">R$ ${d.receitasGerais.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td style="color: #3498DB;">R$ ${d.mensalidadesPix.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td style="color: #E74C3C;">R$ ${d.despesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td style="font-weight: 700; color: ${d.saldo >= 0 ? '#2ECC71' : '#E74C3C'};">
+                        ${d.saldo >= 0 ? '+' : ''} R$ ${d.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td>
+                        <span class="badge badge-${d.temMovimento ? 'info' : 'secondary'}" style="font-size: 10px;">
+                            ${d.temMovimento ? '🟢 FECHADO' : '⚪ SEM MOV.'}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 4px; justify-content: center;">
+                            <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px;" onclick="filtrarExtratoMes('${d.mesNum}')">🔍 Extrato</button>
+                            <button class="btn btn-sm btn-gold" style="padding: 2px 6px; font-size: 11px;" onclick="gerarBalanceteMensal(${d.mesIndex}, '${anoSelected}')">📄 Balancete</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // 2. CALCULA MÉTRICAS DO PERÍODO SELECIONADO (MÊS OU ANO)
+    let totalReceitasPer = 0;
+    let totalMensalidadesPer = 0;
+    let totalDespesasPer = 0;
+
+    if (mesSelected === 'todos') {
+        totalReceitasPer = demonstrativoMensal.reduce((s, d) => s + d.receitasGerais, 0);
+        totalMensalidadesPer = demonstrativoMensal.reduce((s, d) => s + d.mensalidadesPix, 0);
+        totalDespesasPer = demonstrativoMensal.reduce((s, d) => s + d.despesas, 0);
+    } else {
+        const itemM = demonstrativoMensal.find(d => d.mesNum === mesSelected);
+        if (itemM) {
+            totalReceitasPer = itemM.receitasGerais;
+            totalMensalidadesPer = itemM.mensalidadesPix;
+            totalDespesasPer = itemM.despesas;
         }
-    });
+    }
 
-    const saldo = totalReceitas - totalDespesas;
+    const saldoPer = (totalReceitasPer + totalMensalidadesPer) - totalDespesasPer;
+    const strPeriodo = mesSelected === 'todos' ? `Ano ${anoSelected}` : `${mesesNomes[parseInt(mesSelected, 10) - 1]} / ${anoSelected}`;
+
+    document.querySelectorAll('.lblPeriodoFinanceiro').forEach(el => el.textContent = strPeriodo);
 
     const elReceita = document.getElementById('finTotalReceitas');
+    const elMensalidades = document.getElementById('finTotalMensalidadesAno');
     const elDespesa = document.getElementById('finTotalDespesas');
     const elSaldo = document.getElementById('finSaldoAtual');
 
-    if (elReceita) elReceita.textContent = `R$ ${totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-    if (elDespesa) elDespesa.textContent = `R$ ${totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    if (elReceita) elReceita.textContent = `R$ ${totalReceitasPer.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    if (elMensalidades) elMensalidades.textContent = `R$ ${totalMensalidadesPer.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    if (elDespesa) elDespesa.textContent = `R$ ${totalDespesasPer.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
     if (elSaldo) {
-        elSaldo.textContent = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-        elSaldo.style.color = saldo >= 0 ? 'var(--accent-gold)' : '#E74C3C';
+        elSaldo.textContent = `R$ ${saldoPer.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        elSaldo.style.color = saldoPer >= 0 ? 'var(--accent-gold)' : '#E74C3C';
     }
 
-    // Atualiza métrica de arrecadação de mensalidades no topo da gestão financeira
-    const selAnoMens = document.getElementById('selAnoMensalidades');
-    const anoAtual = selAnoMens ? selAnoMens.value : '2026';
-    const lblsFin = document.querySelectorAll('.lblAnoFinanceiro');
-    lblsFin.forEach(el => el.textContent = anoAtual);
-
-    const historicoGeralMens = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
-    let totalMensalidadesAno = historicoGeralMens
-        .filter(h => h.ano === anoAtual)
-        .reduce((sum, h) => sum + (parseFloat(h.valor) || 0), 0);
-
-    const elTotalMens = document.getElementById('finTotalMensalidadesAno');
-    if (elTotalMens) {
-        elTotalMens.textContent = `R$ ${totalMensalidadesAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-    }
-
+    // 3. RENDERIZA EXTRATO FILTRADO
     const container = document.getElementById('tableFinanceiroBody');
     if (container) {
         let filtrados = list;
+
+        // Filtra por tipo
         if (filtroTipo !== 'todos') {
-            filtrados = list.filter(i => i.tipo === filtroTipo);
+            filtrados = filtrados.filter(i => i.tipo === filtroTipo);
+        }
+
+        // Filtra por Ano
+        filtrados = filtrados.filter(i => {
+            if (!i.data) return true;
+            const parts = i.data.split('/');
+            return parts.length >= 3 && parts[2] === anoSelected;
+        });
+
+        // Filtra por Mês
+        if (mesSelected !== 'todos') {
+            filtrados = filtrados.filter(i => {
+                if (!i.data) return false;
+                const parts = i.data.split('/');
+                return parts.length >= 2 && parts[1] === mesSelected;
+            });
         }
 
         if (filtrados.length === 0) {
-            container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum lançamento registrado.</td></tr>`;
+            container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 15px;">Nenhum lançamento financeiro registrado para este período/filtro.</td></tr>`;
         } else {
             container.innerHTML = filtrados.map(item => `
                 <tr>
@@ -2302,7 +2413,7 @@ function renderGestaoFinanceira() {
                     </td>
                     <td>
                         <div style="display:flex; gap:6px;">
-                            ${item.comprovante_nome ? `<button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:var(--accent-gold); border-color:var(--accent-gold);" onclick="abrirComprovanteLancamento('${item.id}')">📎 Ver Recibo</button>` : ''}
+                            ${item.comprovante_nome ? `<button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:var(--accent-gold); border-color:var(--accent-gold);" onclick="abrirComprovanteLancamento('${item.id}')">📎 Recibo</button>` : ''}
                             <button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:#E74C3C; border-color:#E74C3C;" onclick="excluirLancamentoFinanceiro('${item.id}')">🗑️ Excluir</button>
                         </div>
                     </td>
@@ -2310,6 +2421,126 @@ function renderGestaoFinanceira() {
             `).join('');
         }
     }
+}
+
+// FILTRAR EXTRATO PELO BOTÃO DA TABELA DE LEVANTAMENTO MENSAL
+function filtrarExtratoMes(strMes) {
+    const filtroMesSelect = document.getElementById('finFiltroMes');
+    if (filtroMesSelect) {
+        filtroMesSelect.value = strMes;
+        renderGestaoFinanceira();
+    }
+}
+
+// GERAR BALANCETE MENSAL OFICIAL DA ACBCSJ
+function gerarBalanceteMensal(mesIndex, anoStr) {
+    const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    const strMes = String(mesIndex).padStart(2, '0');
+    const nomeMes = mesesNomes[mesIndex - 1];
+
+    const list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const storageKeyGrid = `acbcsj_mensalidades_grid_${anoStr}`;
+    const gridMensalidades = JSON.parse(localStorage.getItem(storageKeyGrid)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
+    const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    const mKey = mesesKeys[mesIndex - 1];
+
+    // Receitas e Despesas do mês
+    const lancamentosMes = list.filter(item => {
+        if (!item.data) return false;
+        const parts = item.data.split('/');
+        return parts.length >= 3 && parts[1] === strMes && parts[2] === anoStr;
+    });
+
+    const receitasGerais = lancamentosMes.filter(i => i.tipo === 'receita');
+    const despesasGerais = lancamentosMes.filter(i => i.tipo === 'despesa');
+
+    const totalRecsGerais = receitasGerais.reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
+    const totalMensalidades = gridMensalidades.reduce((s, g) => s + (parseFloat(g[mKey]) || 0), 0);
+    const totalDespesas = despesasGerais.reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
+
+    const totalReceitas = totalRecsGerais + totalMensalidades;
+    const saldoFinal = totalReceitas - totalDespesas;
+
+    const container = document.getElementById('conteudoBalanceteMensal');
+    if (container) {
+        container.innerHTML = `
+            <div style="text-align: center; border-bottom: 2px solid var(--accent-gold); padding-bottom: 12px; margin-bottom: 15px;">
+                <h2 style="color: var(--accent-gold); margin: 0; font-size: 18px;">ASSOCIAÇÃO CORPO DE BOMBEIROS COMUNITÁRIOS DE SÃO JOSÉ — ACBCSJ</h2>
+                <h3 style="margin: 5px 0 0 0; font-size: 15px;">DEMONSTRATIVO DE BALANCETE MENSAL DE PRESTAÇÃO DE CONTAS</h3>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-muted);">Mês de Referência: <b>${nomeMes} / ${anoStr}</b></p>
+            </div>
+
+            <!-- ENTRADAS / RECEITAS -->
+            <h4 style="color: #2ECC71; font-size: 14px; margin-bottom: 8px;">➕ RECEITAS & ENTRADAS DO MÊS:</h4>
+            <table class="custom-table" style="font-size: 12px; margin-bottom: 15px;">
+                <thead>
+                    <tr>
+                        <th>Origem / Categoria</th>
+                        <th>Descrição</th>
+                        <th style="text-align: right;">Valor (R$)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Mensalidades de Associados (PIX)</b></td>
+                        <td>Total Arrecadado na Grade de Mensalidades (${nomeMes}/${anoStr})</td>
+                        <td style="text-align: right; color: #3498DB; font-weight: bold;">R$ ${totalMensalidades.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    ${receitasGerais.map(r => `
+                        <tr>
+                            <td><span class="badge badge-info">${r.categoria}</span></td>
+                            <td>${r.descricao} (${r.data})</td>
+                            <td style="text-align: right; color: #2ECC71; font-weight: bold;">R$ ${(parseFloat(r.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                    `).join('')}
+                    <tr style="background: rgba(46, 204, 113, 0.1); font-weight: bold;">
+                        <td colspan="2">TOTAL GERAL DAS ENTRADAS</td>
+                        <td style="text-align: right; color: #2ECC71;">R$ ${totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- SAÍDAS / DESPESAS -->
+            <h4 style="color: #E74C3C; font-size: 14px; margin-bottom: 8px;">➖ DESPESAS & SAÍDAS DO MÊS:</h4>
+            <table class="custom-table" style="font-size: 12px; margin-bottom: 15px;">
+                <thead>
+                    <tr>
+                        <th>Categoria</th>
+                        <th>Descrição / Favorecido</th>
+                        <th style="text-align: right;">Valor (R$)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${despesasGerais.length === 0 ? `
+                        <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Nenhuma despesa registrada neste mês.</td></tr>
+                    ` : despesasGerais.map(d => `
+                        <tr>
+                            <td><span class="badge badge-danger">${d.categoria}</span></td>
+                            <td>${d.descricao} (${d.data})</td>
+                            <td style="text-align: right; color: #E74C3C; font-weight: bold;">R$ ${(parseFloat(d.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                    `).join('')}
+                    <tr style="background: rgba(231, 76, 60, 0.1); font-weight: bold;">
+                        <td colspan="2">TOTAL GERAL DAS SAÍDAS</td>
+                        <td style="text-align: right; color: #E74C3C;">R$ ${totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- RESUMO E SALDO -->
+            <div style="background: rgba(241, 196, 15, 0.1); padding: 15px; border-radius: 6px; border: 1px solid var(--accent-gold); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="margin: 0; color: var(--accent-gold);">RESULTADO DO BALANCETE (${nomeMes}/${anoStr})</h4>
+                    <small style="color: var(--text-muted);">Total de Entradas (-) Total de Saídas</small>
+                </div>
+                <div style="font-size: 20px; font-weight: bold; color: ${saldoFinal >= 0 ? '#2ECC71' : '#E74C3C'};">
+                    ${saldoFinal >= 0 ? '+' : ''} R$ ${saldoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </div>
+            </div>
+        `;
+    }
+
+    openModal('modalBalanceteMensal');
 }
 
 function renderAssociadoOverview() {
@@ -2907,15 +3138,78 @@ function abrirModalDarBaixa(cpf = null) {
 }
 
 function atualizarCheckboxesBaixa() {
+    const selectAssoc = document.getElementById('baixaAssociadoCPF');
+    const cpf = selectAssoc ? selectAssoc.value : '';
+    const selectAno = document.getElementById('baixaAnoRef');
+    const anoRef = selectAno ? selectAno.value : '2026';
+
+    const baseVal = getValorMensalidadeVigente();
+
+    const listAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const socioObj = listAssociados.find(a => a.cpf === cpf);
+
+    const storageKey = `acbcsj_mensalidades_grid_${anoRef}`;
+    const grid = JSON.parse(localStorage.getItem(storageKey)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
+    
+    const cleanCpf = (cpf || '').replace(/\D/g, '');
+
+    const socioGrid = grid.find(g => {
+        const gCpf = (g.cpf || '').replace(/\D/g, '');
+        if (gCpf && cleanCpf && gCpf === cleanCpf) return true;
+        if (socioObj) {
+            const ng = (typeof g.nome_guerra === 'string' ? g.nome_guerra : '').toLowerCase();
+            const sNg = (typeof socioObj.nome_guerra === 'string' ? socioObj.nome_guerra : '').toLowerCase();
+            const sNc = (typeof socioObj.nome === 'string' ? socioObj.nome : '').toLowerCase();
+            return (ng && sNg && ng === sNg) || (sNc && ng && sNc.includes(ng));
+        }
+        return false;
+    }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+
+    const mesesNomesMap = { jan:'Jan', fev:'Fev', mar:'Mar', abr:'Abr', mai:'Mai', jun:'Jun', jul:'Jul', ago:'Ago', set:'Set', out:'Out', nov:'Nov', dez:'Dez' };
+
     const checkboxes = document.querySelectorAll('input[name="baixaMeses"]');
-    checkboxes.forEach(cb => cb.checked = false);
+    checkboxes.forEach(cb => {
+        const mKey = cb.value;
+        const valPago = parseFloat(socioGrid[mKey]) || 0;
+        const parentLabel = cb.closest('label');
+
+        if (valPago >= baseVal) {
+            // Mês já pago/quitado: pré-marcar e desabilitar
+            cb.checked = true;
+            cb.disabled = true;
+            if (parentLabel) {
+                parentLabel.style.opacity = '0.65';
+                parentLabel.style.background = 'rgba(46, 204, 113, 0.25)';
+                parentLabel.style.borderColor = '#2ECC71';
+                parentLabel.style.padding = '4px 6px';
+                parentLabel.style.borderRadius = '4px';
+                parentLabel.style.cursor = 'not-allowed';
+                parentLabel.title = `Mês de ${mesesNomesMap[mKey]} já foi quitado (R$ ${valPago.toFixed(2).replace('.', ',')})`;
+            }
+        } else {
+            // Mês em aberto: desmarcar e habilitar
+            cb.checked = false;
+            cb.disabled = false;
+            if (parentLabel) {
+                parentLabel.style.opacity = '1';
+                parentLabel.style.background = 'transparent';
+                parentLabel.style.borderColor = 'transparent';
+                parentLabel.style.padding = '0';
+                parentLabel.style.borderRadius = '0';
+                parentLabel.style.cursor = 'pointer';
+                parentLabel.title = `Mês de ${mesesNomesMap[mKey]} pendente para baixa`;
+            }
+        }
+    });
+
     atualizarValoresBaixa();
 }
 
 function atualizarValoresBaixa() {
     const baseVal = getValorMensalidadeVigente();
-    const checked = document.querySelectorAll('input[name="baixaMeses"]:checked');
-    const total = checked.length * baseVal;
+    // Calcula o valor total apenas dos meses NOVOS marcados (não desabilitados)
+    const checkedNovos = document.querySelectorAll('input[name="baixaMeses"]:checked:not(:disabled)');
+    const total = checkedNovos.length * baseVal;
     const inputTotal = document.getElementById('baixaValorTotal');
     if (inputTotal) inputTotal.value = total.toFixed(2);
 }
@@ -2930,10 +3224,11 @@ function salvarBaixaMensalidade(e) {
     const comprovantePix = document.getElementById('baixaComprovantePix').value.trim();
     const obs = document.getElementById('baixaObs').value.trim();
 
-    const checkedMeses = Array.from(document.querySelectorAll('input[name="baixaMeses"]:checked')).map(c => c.value);
+    // Pega somente os meses NOVOS selecionados (que não estavam previamente marcados/desabilitados)
+    const checkedMeses = Array.from(document.querySelectorAll('input[name="baixaMeses"]:checked:not(:disabled)')).map(c => c.value);
 
-    if (!cpf || valorTotal <= 0 || !dataInput || checkedMeses.length === 0) {
-        alert('Por favor, preencha o associado, selecione ao menos um mês e informe a data e valor.');
+    if (!cpf || checkedMeses.length === 0 || valorTotal <= 0 || !dataInput) {
+        alert('Por favor, selecione ao menos um mês pendente para dar baixa e informe a data e valor.');
         return;
     }
 
@@ -2967,7 +3262,7 @@ function salvarBaixaMensalidade(e) {
 
     recalcularGridAssociado(cpf, anoRef);
 
-    alert(`Baixa de mensalidade de R$ ${valorTotal.toFixed(2).replace('.', ',')} efetuada com sucesso para ${nomeAssociado}!`);
+    alert(`Baixa de mensalidade de R$ ${valorTotal.toFixed(2).replace('.', ',')} (${mesesTexto}/${anoRef}) efetuada com sucesso para ${nomeAssociado}!`);
     closeModal('modalDarBaixaMensalidade');
     renderGestaoMensalidades();
     renderGestaoFinanceira();

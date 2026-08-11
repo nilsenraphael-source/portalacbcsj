@@ -342,39 +342,91 @@
                 <div id="tab-gestao-financeira" class="tab-content" style="display: none;">
                     <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                         <div>
-                            <h2 class="page-title">Controle Financeiro, Entradas & Saídas</h2>
-                            <p style="font-size: 13px; color: var(--text-muted);">Lançamentos de receitas, despesas, fornecedores e balancetes da ACBCSJ.</p>
+                            <h2 class="page-title">💰 Controle Financeiro & Levantamento Mensal</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Lançamentos de receitas, despesas, balancetes mensais e demonstrativo de resultados da ACBCSJ.</p>
                         </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn btn-sm btn-gold" onclick="abrirModalNovoLancamento('receita')">➕ Inserir Receita (Entrada)</button>
-                            <button class="btn btn-sm btn-outline" style="color: #E74C3C; border-color: #E74C3C;" onclick="abrirModalNovoLancamento('despesa')">➖ Inserir Despesa (Saída)</button>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="font-size: 12px; font-weight: 600; color: var(--accent-gold);">Exercício:</label>
+                            <select id="finFiltroAno" class="form-control" style="width: 100px; padding: 5px 8px; font-size: 12px; font-weight: bold;" onchange="renderGestaoFinanceira()">
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026" selected>2026</option>
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                            </select>
+
+                            <label style="font-size: 12px; font-weight: 600; color: var(--accent-gold);">Período:</label>
+                            <select id="finFiltroMes" class="form-control" style="width: 180px; padding: 5px 8px; font-size: 12px;" onchange="renderGestaoFinanceira()">
+                                <option value="todos">Todos os Meses (Anual)</option>
+                                <option value="01">01 - Janeiro</option>
+                                <option value="02">02 - Fevereiro</option>
+                                <option value="03">03 - Março</option>
+                                <option value="04">04 - Abril</option>
+                                <option value="05">05 - Maio</option>
+                                <option value="06">06 - Junho</option>
+                                <option value="07">07 - Julho</option>
+                                <option value="08">08 - Agosto</option>
+                                <option value="09">09 - Setembro</option>
+                                <option value="10">10 - Outubro</option>
+                                <option value="11">11 - Novembro</option>
+                                <option value="12">12 - Dezembro</option>
+                            </select>
+
+                            <button class="btn btn-sm btn-gold" onclick="abrirModalNovoLancamento('receita')">➕ Nova Receita</button>
+                            <button class="btn btn-sm btn-outline" style="color: #E74C3C; border-color: #E74C3C;" onclick="abrirModalNovoLancamento('despesa')">➖ Nova Despesa</button>
                         </div>
                     </div>
 
                     <!-- CARDS DE METRICAS FINANCEIRAS -->
                     <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 20px;">
                         <div class="metric-card">
-                            <span class="metric-title">Total de Receita (Entradas)</span>
+                            <span class="metric-title">Total Receitas Gerais (<span class="lblPeriodoFinanceiro">2026</span>)</span>
                             <span class="metric-value" id="finTotalReceitas" style="color: #2ECC71;">R$ 0,00</span>
                         </div>
+                        <div class="metric-card" style="border-left: 4px solid #3498DB;">
+                            <span class="metric-title">💳 Mensalidades PIX (<span class="lblPeriodoFinanceiro">2026</span>)</span>
+                            <span class="metric-value" id="finTotalMensalidadesAno" style="color: #3498DB;">R$ 0,00</span>
+                        </div>
                         <div class="metric-card">
-                            <span class="metric-title">Total de Despesas (Saídas)</span>
+                            <span class="metric-title">Total de Despesas (<span class="lblPeriodoFinanceiro">2026</span>)</span>
                             <span class="metric-value" id="finTotalDespesas" style="color: #E74C3C;">R$ 0,00</span>
                         </div>
                         <div class="metric-card">
-                            <span class="metric-title">Saldo Financeiro Atual</span>
+                            <span class="metric-title">Resultado Líquido do Período</span>
                             <span class="metric-value" id="finSaldoAtual" style="color: var(--accent-gold);">R$ 0,00</span>
                         </div>
-                        <div class="metric-card" style="border-left: 4px solid #3498DB;">
-                            <span class="metric-title">💳 Mensalidades Arrecadadas (<span class="lblAnoFinanceiro">2026</span>)</span>
-                            <span class="metric-value" id="finTotalMensalidadesAno" style="color: #3498DB;">R$ 0,00</span>
+                    </div>
+
+                    <!-- LEVANTAMENTO MENSAL DO EXERCÍCIO (BALANCETES SINTÉTICOS) -->
+                    <div class="card" style="margin-bottom: 25px; border-top: 3px solid var(--accent-gold);">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 class="card-title" style="color: var(--accent-gold);">📊 Demonstrativo & Levantamento Mensal (<span class="lblAnoFinanceiro">2026</span>)</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Resumo financeiro consolidado mês a mês para prestação de balancetes da ACBCSJ.</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 12px; text-align: center;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left;">Mês / Referência</th>
+                                        <th>Receitas Gerais</th>
+                                        <th>Mensalidades PIX</th>
+                                        <th>Total Despesas</th>
+                                        <th>Resultado Líquido</th>
+                                        <th>Status do Mês</th>
+                                        <th style="min-width: 140px;">Ações / Balancete</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableLevantamentoMensalBody"></tbody>
+                            </table>
                         </div>
                     </div>
 
                     <!-- EXTRATO DE LANÇAMENTOS -->
                     <div class="card">
-                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3 class="card-title">Extrato Geral de Lançamentos Financeiros</h3>
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <h3 class="card-title">Extrato Detalhado de Lançamentos</h3>
                             <div style="display: flex; gap: 8px;">
                                 <select id="finFiltroTipo" class="form-control" style="width: 150px; padding: 4px 8px; font-size: 12px;" onchange="renderGestaoFinanceira()">
                                     <option value="todos">Todos os Tipos</option>
@@ -384,7 +436,7 @@
                             </div>
                         </div>
                         <div class="table-responsive">
-                            <table class="custom-table">
+                            <table class="custom-table" style="font-size: 12px;">
                                 <thead>
                                     <tr>
                                         <th>Data</th>
@@ -1024,7 +1076,7 @@
                 <div class="form-grid">
                     <div class="form-group form-group-full">
                         <label>Associado <span class="req-star">*</span></label>
-                        <select id="baixaAssociadoCPF" class="form-control" required></select>
+                        <select id="baixaAssociadoCPF" class="form-control" required onchange="atualizarCheckboxesBaixa()"></select>
                     </div>
 
                     <div class="form-group">
@@ -1173,6 +1225,26 @@
                     <button type="submit" class="btn btn-gold">Salvar Alterações</button>
                 </div>
             </form>
+        </div>
+    <!-- MODAL DE IMPRESSÃO / VISUALIZAÇÃO DE BALANCETE MENSAL -->
+    <div id="modalBalanceteMensal" class="modal-backdrop">
+        <div class="modal-content modal-content-lg" style="max-width: 850px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: var(--accent-gold);">📄 Balancete Mensal Oficial — ACBCSJ</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Demonstrativo mensal de entradas, mensalidades e despesas da Associação Corpo de Bombeiros Comunitários de São José.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalBalanceteMensal')">&times;</button>
+            </div>
+
+            <div id="conteudoBalanceteMensal" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px;">
+                <!-- Preenchido via JS -->
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalBalanceteMensal')">Fechar</button>
+                <button type="button" class="btn btn-gold" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+            </div>
         </div>
     </div>
 
