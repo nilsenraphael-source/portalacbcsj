@@ -1417,10 +1417,10 @@ function renderGestaoAssociados() {
     }
 }
 
-// FUN��O PARA ALTERAR O PERFIL DO INTEGRANTE (APENAS DIRETORIA)
+// FUNÇÃO PARA ALTERAR O PERFIL DO INTEGRANTE (APENAS DIRETORIA)
 function alterarPerfilAssociado(cpf, novoPerfil) {
     if (!currentUser || currentUser.perfil !== 'diretoria') {
-        alert('Apenas membros da Diretoria possuem permiss�o para alterar o perfil de integrantes.');
+        alert('Apenas membros da Diretoria possuem permissão para alterar o perfil de integrantes.');
         renderGestaoAssociados();
         return;
     }
@@ -1456,10 +1456,10 @@ function renderAssociadosDesligados() {
                     <td>${d.cpf}</td>
                     <td><small style="color:#FF6B6B;">${d.data_desligamento || '-'}</small></td>
                     <td>
-                        <span style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">${d.motivo_desligamento || 'N�o especificado'}</span>
+                        <span style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">${d.motivo_desligamento || 'Não especificado'}</span>
                         ${d.carta_desligamento_url ? `
                             <button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 8px; color:var(--accent-gold); border-color:var(--accent-gold)" onclick="abrirCartaDesligamento('${d.cpf}')">
-                                ?? Ver Carta de Desligamento
+                                📄 Ver Carta de Desligamento
                             </button>
                         ` : '<small style="color:#FF6B6B; font-style:italic;">Sem carta anexada</small>'}
                     </td>
@@ -1479,7 +1479,7 @@ function verFichaAssociado(cpf) {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const a = list.find(item => item.cpf === cpf);
     if (!a) {
-        alert('Associado n�o encontrado.');
+        alert('Associado não encontrado.');
         return;
     }
 
@@ -1498,16 +1498,16 @@ function verFichaAssociado(cpf) {
         <div><b>Data de Nascimento:</b> ${a.data_nascimento || '-'}</div>
         <div><b>Sexo:</b> ${a.sexo || '-'}</div>
         <div><b>Telefone / WhatsApp:</b> ${a.telefone || '-'}</div>
-        <div><b>OBM de Lota��o:</b> <b style="color: var(--accent-gold);">${a.obm || '-'}</b></div>
-        <div><b>Profiss�o:</b> ${a.profissao || '-'}</div>
+        <div><b>OBM de Lotação:</b> <b style="color: var(--accent-gold);">${a.obm || '-'}</b></div>
+        <div><b>Profissão:</b> ${a.profissao || '-'}</div>
         <div><b>Perfil no Portal:</b> <b style="color: var(--accent-gold);">${(a.perfil || 'associado').toUpperCase()}</b></div>
         
-        <div style="grid-column: 1 / -1; margin-top:8px; border-top:1px dashed var(--border-color); padding-top:8px;"><b>Filia��o:</b></div>
-        <div><b>Nome da M�e:</b> ${a.nome_mae || '-'}</div>
+        <div style="grid-column: 1 / -1; margin-top:8px; border-top:1px dashed var(--border-color); padding-top:8px;"><b>Filiação:</b></div>
+        <div><b>Nome da Mãe:</b> ${a.nome_mae || '-'}</div>
         <div><b>Nome do Pai:</b> ${a.nome_pai || '-'}</div>
 
-        <div style="grid-column: 1 / -1; margin-top:8px; border-top:1px dashed var(--border-color); padding-top:8px;"><b>Endere�o Residencial:</b></div>
-        <div><b>Logradouro / Rua:</b> ${a.logradouro || '-'}, N� ${a.numero || '-'}</div>
+        <div style="grid-column: 1 / -1; margin-top:8px; border-top:1px dashed var(--border-color); padding-top:8px;"><b>Endereço Residencial:</b></div>
+        <div><b>Logradouro / Rua:</b> ${a.logradouro || '-'}, Nº ${a.numero || '-'}</div>
         <div><b>Complemento:</b> ${a.complemento || 'Nenhum'}</div>
         <div><b>CEP:</b> ${a.cep || '-'}</div>
         <div><b>Bairro:</b> ${a.bairro || '-'}</div>
@@ -1521,7 +1521,7 @@ function verFichaAssociado(cpf) {
                     <b>Carta de Desligamento:</b> 
                     ${a.carta_desligamento_url ? `
                         <button class="btn btn-sm btn-gold" style="margin-left: 8px; font-size: 11px;" onclick="abrirCartaDesligamento('${a.cpf}')">
-                            ?? Baixar / Visualizar Carta (${a.carta_desligamento_nome || 'Arquivo'})
+                            📄 Baixar / Visualizar Carta (${a.carta_desligamento_nome || 'Arquivo'})
                         </button>
                     ` : '<i>Nenhuma carta anexada.</i>'}
                 </div>
@@ -1596,16 +1596,16 @@ function confirmarDesligamento(e) {
     }
 }
 
-// FUN��O PARA ABRIR OU BAIXAR A CARTA DE DESLIGAMENTO
+// FUNÇÃO PARA ABRIR OU BAIXAR A CARTA DE DESLIGAMENTO
 function abrirCartaDesligamento(cpf) {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const a = list.find(item => item.cpf === cpf);
     if (!a || !a.carta_desligamento_url) {
-        alert('Carta de desligamento n�o encontrada.');
+        alert('Carta de desligamento não encontrada.');
         return;
     }
 
-    // Criar um link tempor�rio para download ou visualiza��o em nova aba
+    // Criar um link temporário para download ou visualização em nova aba
     const win = window.open();
     if (win) {
         win.document.write(`
@@ -1625,7 +1625,7 @@ function abrirCartaDesligamento(cpf) {
 }
 
 function reativarAssociado(cpf) {
-    if (confirm('Deseja reativar este associado no sistema? Ele voltar� para a lista de Associados Ativos.')) {
+    if (confirm('Deseja reativar este associado no sistema? Ele voltará para a lista de Associados Ativos.')) {
         let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
         const item = list.find(a => a.cpf === cpf);
         if (item) {
@@ -1653,7 +1653,7 @@ function aprovarAssociado(cpf) {
 }
 
 function excluirAssociado(cpf) {
-    if (confirm('Tem certeza que deseja excluir este associado do sistema? Esta a��o � permanente.')) {
+    if (confirm('Tem certeza que deseja excluir este associado do sistema? Esta ação é permanente.')) {
         let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
         list = list.filter(a => a.cpf !== cpf);
         localStorage.setItem('acbcsj_associados', JSON.stringify(list));
@@ -1665,7 +1665,7 @@ function excluirAssociado(cpf) {
     }
 }
 
-// L�GICA DO ASSOCIADO & GR�FICOS
+// LÓGICA DO ASSOCIADO & GRÁFICOS
 
 function renderBalancetesAssociado() {
     const financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
@@ -1678,7 +1678,7 @@ function renderBalancetesAssociado() {
         currentChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Entradas / Receitas', 'Sa�das / Despesas'],
+                labels: ['Entradas / Receitas', 'Saídas / Despesas'],
                 datasets: [{
                     data: [totalReceitas, totalDespesas],
                     backgroundColor: ['#2ECC71', '#E74C3C'],
@@ -2061,10 +2061,17 @@ function abrirModalEnviarComunicado() {
         `).join('');
     }
 
-    document.getElementById('comunicadoAssunto').value = '';
-    document.getElementById('comunicadoMensagem').value = '';
-    document.getElementById('comunicadoTipoDestinatario').value = 'todos';
-    document.getElementById('comunicadoPrioridade').value = 'Informativo';
+    const elAssunto = document.getElementById('comunicadoAssunto');
+    if (elAssunto) elAssunto.value = '';
+
+    const elMensagem = document.getElementById('comunicadoMensagem');
+    if (elMensagem) elMensagem.value = '';
+
+    const elTipo = document.getElementById('comunicadoTipoDestinatario');
+    if (elTipo) elTipo.value = 'todos';
+
+    const elPrioridade = document.getElementById('comunicadoPrioridade');
+    if (elPrioridade) elPrioridade.value = 'Informativo';
 
     toggleTipoDestinatario('todos');
     openModal('modalEnviarComunicado');
@@ -2270,7 +2277,7 @@ function closeModal(id) { document.getElementById(id).classList.remove('active')
 
 
 // ==========================================
-// GESTÃƒO FINANCEIRA, RECEITAS, DESPESAS E MENSALIDADES (PLANILHA MENSAL.XLSX)
+// GESTÃO FINANCEIRA, RECEITAS, DESPESAS E MENSALIDADES (PLANILHA MENSAL.XLSX)
 // ==========================================
 
 function abrirModalNovoLancamento(tipo) {
@@ -2284,7 +2291,7 @@ function abrirModalNovoLancamento(tipo) {
     }
     
     if (modalTitle) {
-        modalTitle.textContent = tipo === 'despesa' ? 'âž– Inserir Despesa (SaÃ­da)' : 'âž• Inserir Receita (Entrada)';
+        modalTitle.textContent = tipo === 'despesa' ? '➖ Inserir Despesa (Saída)' : '➕ Inserir Receita (Entrada)';
     }
 
     if (dataInput && !dataInput.value) {
@@ -2302,15 +2309,15 @@ function atualizarCategoriasLancamento(tipo) {
     catSelect.innerHTML = '';
     if (tipo === 'receita') {
         catSelect.innerHTML = `
-            <option value="Mensalidade / ContribuiÃ§Ã£o">Mensalidade / ContribuiÃ§Ã£o</option>
-            <option value="DoaÃ§Ã£o / ConvÃªnio">DoaÃ§Ã£o / ConvÃªnio</option>
+            <option value="Mensalidade / Contribuição">Mensalidade / Contribuição</option>
+            <option value="Doação / Convênio">Doação / Convênio</option>
             <option value="Evento / Rifa">Evento / Rifa</option>
             <option value="Outras Receitas">Outras Receitas</option>
         `;
     } else {
         catSelect.innerHTML = `
             <option value="Despesa Operacional">Despesa Operacional</option>
-            <option value="ManutenÃ§Ã£o de Viatura">ManutenÃ§Ã£o de Viatura</option>
+            <option value="Manutenção de Viatura">Manutenção de Viatura</option>
             <option value="Administrativo / Consumo">Administrativo / Consumo</option>
             <option value="Encargos / Tarifas">Encargos / Tarifas</option>
             <option value="Outras Despesas">Outras Despesas</option>
@@ -2329,13 +2336,13 @@ function salvarNovoLancamento(e) {
     const file = fileInput && fileInput.files ? fileInput.files[0] : null;
 
     if (!valor || valor <= 0 || !descricao || !dataInput) {
-        alert('Por favor, preencha a descriÃ§Ã£o, valor vÃ¡lido e a data do lanÃ§amento.');
+        alert('Por favor, preencha a descrição, valor válido e a data do lançamento.');
         return;
     }
 
     const [ano, mes, dia] = dataInput.split('-');
     const dataBR = `${dia}/${mes}/${ano}`;
-    const mesesNomes = ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const mesesNomes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     const mesNome = mesesNomes[parseInt(mes, 10) - 1] || 'Janeiro';
 
     const lancId = 'lanc_' + Date.now();
@@ -2370,7 +2377,7 @@ function salvarNovoLancamento(e) {
             dbService.addFinanceiro(novoLancamento);
         } catch (err) {}
 
-        alert(`LanÃ§amento de ${tipo.toUpperCase()} (R$ ${valor.toFixed(2).replace('.', ',')}) cadastrado com sucesso!`);
+        alert(`Lançamento de ${tipo.toUpperCase()} (R$ ${valor.toFixed(2).replace('.', ',')}) cadastrado com sucesso!`);
         e.target.reset();
         closeModal('modalNovoLancamento');
         renderGestaoFinanceira();
@@ -2388,12 +2395,12 @@ function salvarNovoLancamento(e) {
 }
 
 function excluirLancamentoFinanceiro(id) {
-    if (confirm('Deseja realmente remover este lanÃ§amento financeiro?')) {
+    if (confirm('Deseja realmente remover este lançamento financeiro?')) {
         let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
         list = list.filter(item => item.id !== id);
         localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
         idbStorage.deleteFile(id);
-        alert('LanÃ§amento removido com sucesso.');
+        alert('Lançamento removido com sucesso.');
         renderGestaoFinanceira();
     }
 }
@@ -2401,7 +2408,7 @@ function excluirLancamentoFinanceiro(id) {
 async function abrirComprovanteLancamento(id) {
     const fileContent = await idbStorage.getFile(id);
     if (!fileContent) {
-        alert('Comprovante nÃ£o disponÃ­vel para este lanÃ§amento.');
+        alert('Comprovante não disponível para este lançamento.');
         return;
     }
     const win = window.open();
@@ -2415,7 +2422,7 @@ async function abrirComprovanteLancamento(id) {
             </html>
         `);
     } else {
-        alert('VisualizaÃ§Ã£o bloqueada pelo navegador.');
+        alert('Visualização bloqueada pelo navegador.');
     }
 }
 
@@ -2950,30 +2957,146 @@ function salvarMeusDados(e) {
     renderAssociadoOverview();
 }
 
-// GESTÃO DO VALOR BASE DA MENSALIDADE
-function getValorMensalidadeVigente() {
-    const val = parseFloat(localStorage.getItem('acbcsj_valor_mensalidade'));
-    return isNaN(val) || val <= 0 ? 20.00 : val;
+// GESTÃO HISTÓRICA DO VALOR BASE DA MENSALIDADE COM DATA DE VIGÊNCIA
+function getHistoricoReajustesMensalidade() {
+    let historico = JSON.parse(localStorage.getItem('acbcsj_historico_reajustes_mensalidade'));
+    if (!historico || !Array.isArray(historico) || historico.length === 0) {
+        const oldVal = parseFloat(localStorage.getItem('acbcsj_valor_mensalidade')) || 20.00;
+        historico = [{
+            id: 'reaj_inicial',
+            valor: oldVal,
+            mes_inicio: '01',
+            ano_inicio: '2024',
+            data_registro: '01/01/2024',
+            justificativa: 'Valor base inicial (R$ 20,00)'
+        }];
+        localStorage.setItem('acbcsj_historico_reajustes_mensalidade', JSON.stringify(historico));
+    }
+    return historico;
+}
+
+function getValorMensalidadeVigente(mesIndex, anoStr) {
+    const historico = getHistoricoReajustesMensalidade();
+
+    if (!mesIndex || !anoStr) {
+        const hoje = new Date();
+        mesIndex = hoje.getMonth() + 1;
+        anoStr = String(hoje.getFullYear());
+    }
+
+    const targetScore = parseInt(anoStr, 10) * 100 + parseInt(mesIndex, 10);
+
+    const validos = historico.filter(h => {
+        const itemScore = parseInt(h.ano_inicio, 10) * 100 + parseInt(h.mes_inicio, 10);
+        return itemScore <= targetScore;
+    });
+
+    if (validos.length === 0) {
+        return historico[0].valor || 20.00;
+    }
+
+    validos.sort((a, b) => {
+        const scoreA = parseInt(a.ano_inicio, 10) * 100 + parseInt(a.mes_inicio, 10);
+        const scoreB = parseInt(b.ano_inicio, 10) * 100 + parseInt(b.mes_inicio, 10);
+        return scoreB - scoreA;
+    });
+
+    return validos[0].valor;
+}
+
+function getInfoVigenciaMensalidadeAtual() {
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth() + 1;
+    const anoAtual = String(hoje.getFullYear());
+    const historico = getHistoricoReajustesMensalidade();
+
+    const targetScore = parseInt(anoAtual, 10) * 100 + parseInt(mesAtual, 10);
+    const validos = historico.filter(h => (parseInt(h.ano_inicio, 10) * 100 + parseInt(h.mes_inicio, 10)) <= targetScore);
+    validos.sort((a, b) => (parseInt(b.ano_inicio, 10) * 100 + parseInt(b.mes_inicio, 10)) - (parseInt(a.ano_inicio, 10) * 100 + parseInt(a.mes_inicio, 10)));
+
+    const reg = validos[0] || { valor: 20.00, mes_inicio: '01', ano_inicio: '2024' };
+    return {
+        valor: reg.valor,
+        vigenciaStr: `R$ ${reg.valor.toFixed(2).replace('.', ',')}/mês (vigente a partir de ${reg.mes_inicio}/${reg.ano_inicio})`
+    };
 }
 
 function abrirModalReajustarMensalidade() {
-    const valorAtual = getValorMensalidadeVigente();
+    const hoje = new Date();
+    const strMes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const strAno = String(hoje.getFullYear());
+
+    const valorAtual = getValorMensalidadeVigente(parseInt(strMes, 10), strAno);
     const inputVal = document.getElementById('inputNovoValorMensalidade');
     if (inputVal) inputVal.value = valorAtual.toFixed(2);
+
+    const selMes = document.getElementById('inputMesVigenciaReajuste');
+    if (selMes) selMes.value = strMes;
+
+    const selAno = document.getElementById('inputAnoVigenciaReajuste');
+    if (selAno) selAno.value = strAno;
+
+    const inputJust = document.getElementById('inputJustificativaReajuste');
+    if (inputJust) inputJust.value = '';
+
+    const historico = getHistoricoReajustesMensalidade();
+    const containerHist = document.getElementById('listaHistoricoReajustesDisplay');
+    if (containerHist) {
+        if (historico.length === 0) {
+            containerHist.innerHTML = '<i>Nenhum reajuste registrado.</i>';
+        } else {
+            containerHist.innerHTML = historico.map(h => `
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding: 4px 0;">
+                    <span><b>R$ ${parseFloat(h.valor).toFixed(2).replace('.', ',')}</b>/mês (A partir de ${h.mes_inicio}/${h.ano_inicio})</span>
+                    <span style="font-size: 10px; color: var(--accent-gold);">${h.justificativa || 'Aprovado'}</span>
+                </div>
+            `).join('');
+        }
+    }
+
     openModal('modalReajustarMensalidade');
 }
 
 function salvarNovoValorMensalidade(e) {
     e.preventDefault();
     const novoValor = parseFloat(document.getElementById('inputNovoValorMensalidade').value) || 20.00;
+    const mesInicio = document.getElementById('inputMesVigenciaReajuste').value;
+    const anoInicio = document.getElementById('inputAnoVigenciaReajuste').value;
+    const justificativa = document.getElementById('inputJustificativaReajuste').value.trim() || `Reajuste aprovado pela Diretoria para vigorar a partir de ${mesInicio}/${anoInicio}`;
 
     if (novoValor <= 0) {
         alert('Por favor, informe um valor de mensalidade válido.');
         return;
     }
 
+    let historico = getHistoricoReajustesMensalidade();
+
+    const indexExistente = historico.findIndex(h => h.mes_inicio === mesInicio && h.ano_inicio === anoInicio);
+    const novoRegistro = {
+        id: 'reaj_' + Date.now(),
+        valor: novoValor,
+        mes_inicio: mesInicio,
+        ano_inicio: anoInicio,
+        data_registro: new Date().toLocaleDateString('pt-BR'),
+        justificativa: justificativa
+    };
+
+    if (indexExistente >= 0) {
+        historico[indexExistente] = novoRegistro;
+    } else {
+        historico.push(novoRegistro);
+    }
+
+    historico.sort((a, b) => {
+        const scoreA = parseInt(a.ano_inicio, 10) * 100 + parseInt(a.mes_inicio, 10);
+        const scoreB = parseInt(b.ano_inicio, 10) * 100 + parseInt(b.mes_inicio, 10);
+        return scoreA - scoreB;
+    });
+
+    localStorage.setItem('acbcsj_historico_reajustes_mensalidade', JSON.stringify(historico));
     localStorage.setItem('acbcsj_valor_mensalidade', novoValor.toFixed(2));
-    alert(`Novo valor base da mensalidade aplicado: R$ ${novoValor.toFixed(2).replace('.', ',')}/mês.`);
+
+    alert(`Novo valor de mensalidade (R$ ${novoValor.toFixed(2).replace('.', ',')}) registrado com sucesso para vigorar a partir de ${mesInicio}/${anoInicio}!\n\n⚠️ Os valores e cobranças dos meses anteriores a ${mesInicio}/${anoInicio} permanecerão intactos com suas tarifas históricas.`);
     closeModal('modalReajustarMensalidade');
     renderGestaoMensalidades();
     renderAssociadoOverview();
@@ -2982,7 +3105,7 @@ function salvarNovoValorMensalidade(e) {
 // CÁLCULO DE VENCIMENTO DIA 15 E STATUS DE MENSALIDADE
 function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
     const valor = parseFloat(valorPago) || 0;
-    const baseVal = getValorMensalidadeVigente();
+    const baseVal = getValorMensalidadeVigente(mesIndex, anoStr);
     const hoje = new Date();
     const anoAtual = hoje.getFullYear();
     const mesAtualNum = hoje.getMonth() + 1; // 1 a 12
@@ -3206,9 +3329,9 @@ function renderGestaoMensalidades() {
     const selAno = document.getElementById('selAnoMensalidades');
     const ano = selAno ? selAno.value : '2026';
 
-    const baseVal = getValorMensalidadeVigente();
+    const infoVigencia = getInfoVigenciaMensalidadeAtual();
     const elBaseVal = document.getElementById('metricValorMensalidadeVigente');
-    if (elBaseVal) elBaseVal.textContent = `R$ ${baseVal.toFixed(2).replace('.', ',')}`;
+    if (elBaseVal) elBaseVal.textContent = `R$ ${infoVigencia.valor.toFixed(2).replace('.', ',')}`;
 
     const lbls = document.querySelectorAll('.lblAnoMensalidadeMetrica');
     lbls.forEach(el => el.textContent = ano);
@@ -3492,10 +3615,17 @@ function atualizarCheckboxesBaixa() {
 }
 
 function atualizarValoresBaixa() {
-    const baseVal = getValorMensalidadeVigente();
-    // Calcula o valor total apenas dos meses NOVOS marcados (não desabilitados)
+    const anoRef = document.getElementById('baixaAnoRef')?.value || '2026';
     const checkedNovos = document.querySelectorAll('input[name="baixaMeses"]:checked:not(:disabled)');
-    const total = checkedNovos.length * baseVal;
+    
+    const mesesKeysMap = { jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6, jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12 };
+    
+    let total = 0;
+    checkedNovos.forEach(cb => {
+        const mIndex = mesesKeysMap[cb.value] || 1;
+        total += getValorMensalidadeVigente(mIndex, anoRef);
+    });
+
     const inputTotal = document.getElementById('baixaValorTotal');
     if (inputTotal) inputTotal.value = total.toFixed(2);
 }
