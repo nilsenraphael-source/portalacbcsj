@@ -172,7 +172,7 @@ function resetBancoDadosComandante() {
     localStorage.setItem("acbcsj_mensalidades_grid_2026", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensalidades_grid_2027", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensalidades_grid_2028", JSON.stringify([]));
-    localStorage.setItem("acbcsj_mensalidades_historico", JSON.stringify([]));
+    localStorage.setItem("acbcsj_mensalidades_historico", JSON.stringify([])); localStorage.setItem("acbcsj_valor_mensalidade", "20.00"); localStorage.setItem("acbcsj_historico_reajustes_mensalidade", JSON.stringify([{ id: "reaj_inicial", valor: 20.00, mes_inicio: "01", ano_inicio: "2024", data_registro: "01/01/2024", justificativa: "Valor base padrÃ£o (R$ 20,00)" }]));
     localStorage.setItem("acbcsj_comunicados_enviados", JSON.stringify([]));
     localStorage.setItem("acbcsj_documentos", JSON.stringify([]));
     localStorage.setItem("acbcsj_programacao", JSON.stringify([]));
@@ -2217,17 +2217,17 @@ function salvarMeusDados(e) {
 // GESTÃO HISTÓRICA DO VALOR BASE DA MENSALIDADE COM DATA DE VIGÊNCIA
 function getHistoricoReajustesMensalidade() {
     let historico = JSON.parse(localStorage.getItem('acbcsj_historico_reajustes_mensalidade'));
-    if (!historico || !Array.isArray(historico) || historico.length === 0) {
-        const oldVal = parseFloat(localStorage.getItem('acbcsj_valor_mensalidade')) || 20.00;
+    if (!historico || !Array.isArray(historico) || historico.length === 0 || historico.some(h => h.valor !== 20.00)) {
         historico = [{
             id: 'reaj_inicial',
-            valor: oldVal,
+            valor: 20.00,
             mes_inicio: '01',
             ano_inicio: '2024',
             data_registro: '01/01/2024',
-            justificativa: 'Valor base inicial (R$ 20,00)'
+            justificativa: 'Valor base padrÃ£o (R$ 20,00)'
         }];
         localStorage.setItem('acbcsj_historico_reajustes_mensalidade', JSON.stringify(historico));
+        localStorage.setItem('acbcsj_valor_mensalidade', '20.00');
     }
     return historico;
 }
