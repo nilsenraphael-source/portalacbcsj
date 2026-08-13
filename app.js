@@ -1261,6 +1261,7 @@ function renderSidebarMenu() {
     } else {
         menuNav.innerHTML = `
             <div class="nav-item active" onclick="navigateTab('overview-associado')">🏠 Meu Painel</div>
+            <div class="nav-item" onclick="navigateTab('comunicados-associado')">📢 Comunicados & Avisos</div>
             <div class="nav-item" onclick="navigateTab('balancetes-associado')">📈 Balancetes & Contas</div>
             <div class="nav-item" onclick="navigateTab('documentos-associado')">📁 Documentos & Convites</div>
             <div class="nav-item" onclick="navigateTab('enviar-mensagem')">💬 Fale com a Diretoria</div>
@@ -1297,6 +1298,7 @@ function navigateTab(tabId) {
     if (tabId === 'gestao-mensalidades') renderGestaoMensalidades();
     if (tabId === 'gestao-financeira') renderGestaoFinanceira();
     if (tabId === 'overview-associado') renderAssociadoOverview();
+    if (tabId === 'comunicados-associado') renderComunicadosHistoricoAssociado();
     if (tabId === 'balancetes-associado') renderBalancetesAssociado();
     if (tabId === 'documentos-associado' || tabId === 'documentos-diretoria') renderDocumentos();
     if (tabId === 'mensagens-diretoria') renderMensagensDiretoria();
@@ -3399,6 +3401,7 @@ function renderAssociadoOverview() {
     if (comunicadosContainer) {
         const comunicadosAll = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
         const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
+        const lidos = getComunicadosLidosUsuario();
 
         const meusComunicados = comunicadosAll.filter(c => {
             if (c.destinatario_tipo === 'todos') return true;
@@ -3409,14 +3412,18 @@ function renderAssociadoOverview() {
             return false;
         });
 
-        if (meusComunicados.length === 0) {
+        // Somente comunicados PENDENTES DE LEITURA (!lidos.includes(c.id))
+        const pendentesLeitura = meusComunicados.filter(c => !lidos.includes(c.id));
+
+        if (pendentesLeitura.length === 0) {
             comunicadosContainer.innerHTML = `
-                <div style="background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); border-radius: 6px; padding: 14px; text-align: center; color: var(--text-muted); font-size: 13px;">
-                    ✉️ Nenhum comunicado ou aviso recente da Diretoria.
+                <div style="background: rgba(46,204,113,0.05); border: 1px dashed rgba(46,204,113,0.3); border-radius: 6px; padding: 14px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                    ✅ <b>Nenhum comunicado pendente de leitura.</b><br>
+                    <span style="font-size: 12px; color: var(--text-muted);">Todas as suas mensagens lidas continuam salvas no <a href="#" onclick="navigateTab('comunicados-associado'); return false;" style="color: var(--accent-gold); text-decoration: underline; font-weight: bold;">Histórico de Comunicados & Avisos</a>.</span>
                 </div>
             `;
         } else {
-            comunicadosContainer.innerHTML = meusComunicados.map(c => {
+            comunicadosContainer.innerHTML = pendentesLeitura.map(c => {
                 let badgePrio = '<span class="badge badge-info" style="font-size: 10px;">🟢 Informativo</span>';
                 if (c.prioridade === 'Importante') badgePrio = '<span class="badge badge-warning" style="font-size: 10px;">🟡 Importante</span>';
                 if (c.prioridade === 'Urgente') badgePrio = '<span class="badge badge-danger" style="font-size: 10px;">🔴 Urgente</span>';
@@ -3430,9 +3437,14 @@ function renderAssociadoOverview() {
                             </div>
                             <small style="color: var(--text-muted); font-size: 11px;">📅 ${c.data}</small>
                         </div>
-                        <p style="font-size: 13px; color: var(--text-color); margin: 6px 0 8px 0; white-space: pre-wrap; line-height: 1.5;">${c.mensagem}</p>
-                        <div style="font-size: 11px; color: var(--text-muted); text-align: right; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">
-                            Enviado por: <b style="color: var(--text-color);">${c.remetente_nome || 'Diretoria ACBCSJ'}</b> (${c.destinatarios_resumo || 'Associados'})
+                        <p style="font-size: 13px; color: var(--text-color); margin: 6px 0 10px 0; white-space: pre-wrap; line-height: 1.5;">${c.mensagem}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px; margin-top: 8px; flex-wrap: wrap; gap: 8px;">
+                            <div style="font-size: 11px; color: var(--text-muted);">
+                                Enviado por: <b style="color: var(--text-color);">${c.remetente_nome || 'Diretoria ACBCSJ'}</b>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-gold" style="font-size: 11px; padding: 4px 10px; font-weight: bold;" onclick="marcarComunicadoLido('${c.id}')">
+                                ✅ Marcar como Lida
+                            </button>
                         </div>
                     </div>
                 `;
@@ -3559,6 +3571,105 @@ function renderAssociadoOverview() {
             `;
         }
     }
+}
+
+// GERENCIAMENTO DE LEITURA E HISTÓRICO DE COMUNICADOS DO ASSOCIADO
+function getComunicadosLidosUsuario() {
+    if (!currentUser) return [];
+    const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
+    const storageKey = `acbcsj_comunicados_lidos_${cleanUserCpf}`;
+    return JSON.parse(localStorage.getItem(storageKey)) || [];
+}
+
+function marcarComunicadoLido(comunicadoId) {
+    if (!currentUser || !comunicadoId) return;
+    const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
+    const storageKey = `acbcsj_comunicados_lidos_${cleanUserCpf}`;
+    let lidos = JSON.parse(localStorage.getItem(storageKey)) || [];
+    
+    if (!lidos.includes(comunicadoId)) {
+        lidos.push(comunicadoId);
+        localStorage.setItem(storageKey, JSON.stringify(lidos));
+    }
+
+    renderAssociadoOverview();
+    renderComunicadosHistoricoAssociado();
+}
+
+function renderComunicadosHistoricoAssociado() {
+    if (!currentUser) return;
+    const container = document.getElementById('containerHistoricoComunicadosAssociado');
+    if (!container) return;
+
+    const comunicadosAll = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+    const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
+    const lidos = getComunicadosLidosUsuario();
+
+    const termoBusca = (document.getElementById('filtroTextoComunicadosAssociado')?.value || '').toLowerCase().trim();
+
+    let meusComunicados = comunicadosAll.filter(c => {
+        if (c.destinatario_tipo === 'todos') return true;
+        if (c.destinatarios_cpfs && Array.isArray(c.destinatarios_cpfs)) {
+            if (c.destinatarios_cpfs.includes('TODOS')) return true;
+            return c.destinatarios_cpfs.some(cpfItem => (cpfItem || '').replace(/\D/g, '') === cleanUserCpf);
+        }
+        return false;
+    });
+
+    if (termoBusca) {
+        meusComunicados = meusComunicados.filter(c => 
+            (c.assunto || '').toLowerCase().includes(termoBusca) ||
+            (c.mensagem || '').toLowerCase().includes(termoBusca) ||
+            (c.remetente_nome || '').toLowerCase().includes(termoBusca)
+        );
+    }
+
+    if (meusComunicados.length === 0) {
+        container.innerHTML = `
+            <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                Nenhum comunicado encontrado no seu histórico.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = meusComunicados.map(c => {
+        const isLido = lidos.includes(c.id);
+
+        let badgePrio = '<span class="badge badge-info" style="font-size: 10px;">🟢 Informativo</span>';
+        if (c.prioridade === 'Importante') badgePrio = '<span class="badge badge-warning" style="font-size: 10px;">🟡 Importante</span>';
+        if (c.prioridade === 'Urgente') badgePrio = '<span class="badge badge-danger" style="font-size: 10px;">🔴 Urgente</span>';
+
+        let badgeStatus = isLido 
+            ? '<span class="badge badge-success" style="font-size: 10px;">✅ Mensagem Lida</span>'
+            : '<span class="badge badge-warning" style="font-size: 10px;">🟡 Pendente de Leitura</span>';
+
+        let botaoAcao = isLido ? '' : `
+            <button type="button" class="btn btn-sm btn-gold" style="font-size: 11px; padding: 4px 10px; font-weight: bold;" onclick="marcarComunicadoLido('${c.id}')">
+                ✅ Marcar como Lida
+            </button>
+        `;
+
+        return `
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid ${isLido ? 'var(--border-color)' : 'rgba(241,196,15,0.4)'}; border-left: 4px solid ${isLido ? '#2ECC71' : 'var(--accent-gold)'}; border-radius: 6px; padding: 14px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <b style="color: var(--accent-gold); font-size: 15px;">${c.assunto}</b>
+                        ${badgePrio}
+                        ${badgeStatus}
+                    </div>
+                    <small style="color: var(--text-muted); font-size: 11px;">📅 ${c.data}</small>
+                </div>
+                <p style="font-size: 13px; color: var(--text-color); margin: 6px 0 10px 0; white-space: pre-wrap; line-height: 1.5;">${c.mensagem}</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px; margin-top: 8px; flex-wrap: wrap; gap: 8px;">
+                    <div style="font-size: 11px; color: var(--text-muted);">
+                        Enviado por: <b style="color: var(--text-color);">${c.remetente_nome || 'Diretoria ACBCSJ'}</b> (${c.destinatarios_resumo || 'Associados'})
+                    </div>
+                    ${botaoAcao}
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // EDIÇÃO DOS DADOS CADASTRAIS PELO PRÓPRIO INTEGRANTE

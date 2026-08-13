@@ -476,11 +476,14 @@
 
                     <!-- CARD DE COMUNICADOS & MENSAGENS DA DIRETORIA PARA O ASSOCIADO -->
                     <div class="card" style="margin-bottom: 20px; border-left: 4px solid #3498DB;">
-                        <div class="card-header">
-                            <h3 class="card-title">📢 Comunicados & Avisos da Diretoria</h3>
-                            <p style="font-size: 12px; color: var(--text-muted);">Mensagens e avisos oficiais direcionados a você.</p>
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 class="card-title">📢 Comunicados & Avisos Pendentes</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Mensagens oficiais pendentes de leitura direcionadas a você.</p>
+                            </div>
+                            <button type="button" class="btn btn-outline btn-sm" style="font-size: 11px;" onclick="navigateTab('comunicados-associado')">📋 Ver Histórico Completo</button>
                         </div>
-                        <div id="containerMeusComunicadosDiretoria">
+                        <div id="containerMeusComunicadosDiretoria" style="padding: 15px;">
                             <!-- Preenchido via JS em renderAssociadoOverview() -->
                         </div>
                     </div>
@@ -531,6 +534,26 @@
                                 </thead>
                                 <tbody id="tableMinhasMensalidadesBody"></tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA DE COMUNICADOS & AVISOS (HISTÓRICO COMPLETO DO ASSOCIADO) -->
+                <div id="tab-comunicados-associado" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">📢 Histórico de Comunicados & Avisos</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Todas as mensagens, comunicados e avisos oficiais encaminhados pela Diretoria da ACBCSJ para você.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <h3 class="card-title">📨 Todas as Mensagens Recebidas</h3>
+                            <input type="text" id="filtroTextoComunicadosAssociado" class="form-control" style="max-width: 250px; font-size: 12px;" placeholder="🔍 Buscar comunicado..." onkeyup="renderComunicadosHistoricoAssociado()">
+                        </div>
+                        <div id="containerHistoricoComunicadosAssociado" style="padding: 15px;">
+                            <!-- Preenchido via JS em renderComunicadosHistoricoAssociado() -->
                         </div>
                     </div>
                 </div>
