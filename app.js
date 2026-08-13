@@ -1,37 +1,5 @@
-﻿// HELPER DE BUSCA STRICT DE ASSOCIADO NA GRADE (POR CPF EXATO)
-function encontrarSocioNaGrade(grid, socioObj, cpfParam) {
-    if (!grid || !Array.isArray(grid)) return null;
-    const cleanCpf = (cpfParam || (socioObj ? socioObj.cpf : '') || '').replace(/\D/g, '');
-    
-    // 1Âº Tenta busca EXATA por CPF (Extremamente Strict para evitar duplicar ou mesclar associados)
-    if (cleanCpf) {
-        const porCpf = grid.find(g => (g.cpf || '').replace(/\D/g, '') === cleanCpf);
-        if (porCpf) return porCpf;
-    }
-    
-    // 2Âº Tenta busca EXATA por Nome de Guerra (Apenas igualdade completa)
-    if (socioObj && socioObj.nome_guerra) {
-        const sNg = (socioObj.nome_guerra || '').toString().trim().toLowerCase();
-        if (sNg) {
-            const porNg = grid.find(g => (g.nome_guerra || '').toString().trim().toLowerCase() === sNg);
-            if (porNg) return porNg;
-        }
-    }
-
-    // 3Âº Tenta busca EXATA por Nome Completo (Apenas igualdade completa)
-    if (socioObj && socioObj.nome) {
-        const sNc = (socioObj.nome || '').toString().trim().toLowerCase();
-        if (sNc) {
-            const porNc = grid.find(g => (g.nome_completo || g.nome || '').toString().trim().toLowerCase() === sNc);
-            if (porNc) return porNc;
-        }
-    }
-
-    return null;
-}
-
-// DADOS DE INICIALIZAÇÃO DA ACBCSJ (COMANDANTE + 66 SÓCIOS IMPORTADOS DA PLANILHA SOCIOS.XLSX)
-const INITIAL_MENSAL_DATA = [{"nome_guerra":"Comandante","nome_completo":"Comandante / Diretoria ACBCSJ","cpf":"000.000.000-00","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Angélica","nome_completo":"Angélica Mateus","cpf":"000.923.500-03","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Antunes","nome_completo":"Douglas Antunes","cpf":"074.136.669-01","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Augusto","nome_completo":"Murilo Augusto Galdino De Souza","cpf":"073.716.899-41","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Andreia","nome_completo":"Andreia de Fátima Machado","cpf":"961.193.810-15","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Bento","nome_completo":"Daniel Bento","cpf":"069.776.559-84","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Binhoti","nome_completo":"Tiago Binhoti","cpf":"083.801.589-11","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Boiko","nome_completo":"Emerson Roberto Boiko","cpf":"021.603.099-40","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Camila","nome_completo":"Camila Coelho Soares","cpf":"127.393.649-38","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Coelho","nome_completo":"Ricardo Augusto Coelho","cpf":"079.962.129-37","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Da Silva","nome_completo":"Alex Sandro Batista da Silva","cpf":"318.036.738-50","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Barros","nome_completo":"Michel da Silveira Barros","cpf":"001.637.940-30","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Deny","nome_completo":"Deny Anderson Azevedo","cpf":"910.414.909-25","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Eder","nome_completo":"Eder Alison Da Silva","cpf":"932.603.189-68","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Elaine","nome_completo":"Elaine Conrado Bittencourt","cpf":"047.913.959-80","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Fabiana","nome_completo":"Fabiana Oro Cericato Costa","cpf":"024.284.799-46","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Gabriel","nome_completo":"Gabriel Francisco Farias da Silva","cpf":"008.489.029-04","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Henkes","nome_completo":"Marcia Aparecida Henkes","cpf":"046.128.369-79","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Humberto","nome_completo":"Carlos Humberto luiz","cpf":"025.435.769-59","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Ilton","nome_completo":"Ilton Saturnino Braz","cpf":"774.179.849-91","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Kassandra","nome_completo":"Gabriela Kassandra Luiz Colossi","cpf":"008.036.019-05","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Linder","nome_completo":"Gustavo Augusto Linder","cpf":"092.909.549-90","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Lourenço","nome_completo":"Carlos Henrique Lourenço Gonçalves","cpf":"015.513.347-04","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Lucas","nome_completo":"Lucas Rodrigues Antônio","cpf":"085.543.859-26","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Mayara","nome_completo":"Mayara Vieira Soares","cpf":"109.532.709-71","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Mina","nome_completo":"Kleber Pacheco Mina","cpf":"005.592.699-19","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Mithel","nome_completo":"Mithel Evergisto de Lima","cpf":"097.100.159-66","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Natayan","nome_completo":"Raphael Natayan Nilsen","cpf":"052.026.659-54","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Nery","nome_completo":"Gabriel Nery Cristiano","cpf":"060.594.529-22","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Oliveira","nome_completo":"Marcelo luiz de Oliveira","cpf":"770.614.709-68","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Ozol","nome_completo":"Guilherme Ozol de Assunção","cpf":"091.275.619-50","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Pereira","nome_completo":"Emerson Pereira","cpf":"757.951.599-72","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Ravache","nome_completo":"Caio Passold Ravache","cpf":"010.110.059-05","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Santana","nome_completo":"Michele Santana Quint","cpf":"003.357.419-76","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Sardá","nome_completo":"Julia da Silva Sardá","cpf":"120.391.089-47","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Schmitt","nome_completo":"André Luiz Schmitt","cpf":"155.303.359-00","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Spotti","nome_completo":"Kleber Spotti Rodrigues","cpf":"002.200.260-09","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Alves","nome_completo":"Uelder Alves Da Costa","cpf":"008.818.209-62","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Ulysséia","nome_completo":"Ismael Vieira da Rosa Ulysséia","cpf":"416.967.609-25","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Yanka","nome_completo":"Yanka Caroliny Luciano","cpf":"104.320.579-94","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Yuri","nome_completo":"Yuri Esmerio dos Santos","cpf":"028.667.330-45","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Fortkamp","nome_completo":"Markian da Silveira Fortkamp","cpf":"068.052.249-26","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Jesus","nome_completo":"Karina  Maria de Jesus Sobrinho","cpf":"007.303.029-54","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Nakata","nome_completo":"Nakata Garra Gomes","cpf":"039.070.760-01","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Weverton","nome_completo":"Weverton José Machado","cpf":"125.366.669-56","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Martins","nome_completo":"Alexandre Vinicius Martins","cpf":"919.835.099-49","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Ana Carolina","nome_completo":"Ana Carolina Nascimento","cpf":"100.975.089-50","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Andréia M","nome_completo":"Andréia Martins dos Santos","cpf":"083.469.799-83","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Siqueira","nome_completo":"Fernando Pereira Siqueira Junior","cpf":"007.064.299-07","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Gonçalves","nome_completo":"Alessandro da Costa Gonçalves","cpf":"028.574.290-61","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Neumann","nome_completo":"Misael Dias Neumann","cpf":"147.564.459-00","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Luiz","nome_completo":"Luiz Fernando da Silva","cpf":"007.178.839-57","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Figueiredo","nome_completo":"João Victor Figueiredo Chrostowski","cpf":"097.355.079-19","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Luciano","nome_completo":"LUCIANO PEREIRA","cpf":"003.747.659-95","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Cardoso","nome_completo":"Claudio cardoso","cpf":"951.971.339-53","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Carvalho","nome_completo":"Diego Carvalho Cordova","cpf":"079.744.619-26","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Bunn","nome_completo":"João Pedro Pereira Bunn","cpf":"118.669.539-07","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Costa","nome_completo":"Vanessa David Costa","cpf":"065.194.139-33","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Sofie","nome_completo":"Izabelle Sofie Luiz","cpf":"096.581.989-29","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Fabian","nome_completo":"Fabian Henrique da Silva","cpf":"123.859.799-85","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Levi","nome_completo":"Washington Levi Nascimento Dias","cpf":"063.023.992-46","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Joaber","nome_completo":"Reinaldo Joaber de Araújo Spengler","cpf":"069.723.111-95","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Anderson","nome_completo":"Anderson Rafael Souza da Silva","cpf":"008.145.020-67","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Sadi","nome_completo":"Washington sadi de jesus","cpf":"092.158.639-66","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Perdoná","nome_completo":"Pâmela Aparecida da Luz Perdoná","cpf":"235.983.728-17","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Viapiana","nome_completo":"Otávio Augusto Viapiana","cpf":"108.677.459-08","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0},{"nome_guerra":"Steimbach","nome_completo":"Graziela steimbach","cpf":"063.871.729-93","jan":0,"fev":0,"mar":0,"abr":0,"mai":0,"jun":0,"jul":0,"ago":0,"set":0,"out":0,"nov":0,"dez":0}];
+﻿// DADOS DE INICIALIZAÇÃO DA ACBCSJ (COMANDANTE + 66 SÓCIOS IMPORTADOS DA PLANILHA SOCIOS.XLSX)
+const INITIAL_MENSAL_DATA = [];
 const INITIAL_LANCAMENTOS_DATA = [
     // DESPESAS DA PLANILHA (29 ITENS)
     { id: "desp_2026_01", descricao: "Taxa \"Cesta de Relacionamento\" Sicred", categoria: "Tarifas Banco", valor: 35.00, tipo: "despesa", data: "20/01/2026", data_iso: "2026-01-20", mes: "Janeiro", comprovante_nome: null },
@@ -198,10 +166,10 @@ function resetBancoDadosComandante() {
 
     localStorage.setItem("acbcsj_associados", JSON.stringify(listAssociados));
     localStorage.setItem("acbcsj_financeiro", JSON.stringify(INITIAL_LANCAMENTOS_DATA));
-    localStorage.setItem("acbcsj_mensalidades_grid", JSON.stringify(INITIAL_MENSAL_DATA));
+    localStorage.setItem("acbcsj_mensalidades_grid", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensalidades_grid_2024", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensalidades_grid_2025", JSON.stringify([]));
-    localStorage.setItem("acbcsj_mensalidades_grid_2026", JSON.stringify(INITIAL_MENSAL_DATA));
+    localStorage.setItem("acbcsj_mensalidades_grid_2026", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensalidades_grid_2027", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensalidades_grid_2028", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensalidades_historico", JSON.stringify([])); localStorage.setItem("acbcsj_valor_mensalidade", "20.00"); localStorage.setItem("acbcsj_historico_reajustes_mensalidade", JSON.stringify([{ id: "reaj_inicial", valor: 20.00, mes_inicio: "01", ano_inicio: "2024", data_registro: "01/01/2024", justificativa: "Valor base padrÃ£o (R$ 20,00)" }]));
@@ -219,7 +187,7 @@ function initMockData() {
         list = [];
     }
     
-    if (!list || !Array.isArray(list) || list.length < 60) {
+    if (!list || list.length < 60) {
         localStorage.setItem("acbcsj_associados", JSON.stringify(MOCK_DATA_INITIAL.associados));
     }
 
@@ -230,20 +198,8 @@ function initMockData() {
         finList = [];
     }
 
-    if (!finList || !Array.isArray(finList) || finList.length < 35) {
+    if (!finList || finList.length < 35) {
         localStorage.setItem("acbcsj_financeiro", JSON.stringify(INITIAL_LANCAMENTOS_DATA));
-    }
-
-    let grid2026 = [];
-    try {
-        grid2026 = JSON.parse(localStorage.getItem("acbcsj_mensalidades_grid_2026")) || [];
-    } catch (e) {
-        grid2026 = [];
-    }
-
-    if (!grid2026 || !Array.isArray(grid2026) || grid2026.length < 60) {
-        localStorage.setItem("acbcsj_mensalidades_grid", JSON.stringify(INITIAL_MENSAL_DATA));
-        localStorage.setItem("acbcsj_mensalidades_grid_2026", JSON.stringify(INITIAL_MENSAL_DATA));
     }
 }
 
@@ -472,31 +428,8 @@ function renderDiretoriaOverview() {
 
 // EXIBIR APENAS ASSOCIADOS ATIVOS COM CONTROLE DE PERFIL PELA DIRETORIA
 function renderGestaoAssociados() {
-    let list = [];
-    try {
-        list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    } catch (e) { list = []; }
-
-    if (!list || !Array.isArray(list) || list.length < 60) {
-        list = (typeof MOCK_DATA_INITIAL !== 'undefined' && MOCK_DATA_INITIAL.associados) ? MOCK_DATA_INITIAL.associados : [];
-        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
-    }
-
-    let ativos = list.filter(a => a.status === 'ativo' || !a.status);
-
-    const searchInput = document.getElementById('searchAssociadosAtivos');
-    const term = searchInput ? searchInput.value.trim().toLowerCase() : '';
-    const termDigits = term.replace(/\D/g, '');
-
-    if (term) {
-        ativos = ativos.filter(a => {
-            const ng = (a.nome_guerra || '').toLowerCase();
-            const nc = (a.nome || '').toLowerCase();
-            const cpfDigits = (a.cpf || '').replace(/\D/g, '');
-            return ng.includes(term) || nc.includes(term) || (termDigits && cpfDigits.includes(termDigits));
-        });
-    }
-
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const ativos = list.filter(a => a.status === 'ativo');
     const container = document.getElementById('tableTodosAssociadosBody');
     const isDiretoria = currentUser && currentUser.perfil === 'diretoria';
 
@@ -2184,7 +2117,416 @@ function _old_unused_renderAssociadoOverview() {
     const container = document.getElementById('tableMinhasMensalidadesBody');
     if (!container || !currentUser) return;
 
-    const socio = encontrarSocioNaGrade(grid, currentUser, currentUser.cpf) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+    const socio = grid.find(s => {
+        const ng = (typeof s.nome_guerra === 'string' ? s.nome_guerra : (Array.isArray(s.nome_guerra) ? '' : String(s.nome_guerra || ''))).toLowerCase();
+        const nc = (typeof s.nome_completo === 'string' ? s.nome_completo : (Array.isArray(s.nome_completo) ? '' : String(s.nome_completo || ''))).toLowerCase();
+        const userNg = (typeof currentUser.nome_guerra === 'string' ? currentUser.nome_guerra : (Array.isArray(currentUser.nome_guerra) ? '' : String(currentUser.nome_guerra || ''))).toLowerCase();
+        const userNc = (typeof currentUser.nome === 'string' ? currentUser.nome : (Array.isArray(currentUser.nome) ? '' : String(currentUser.nome || ''))).toLowerCase();
+        return (ng && userNg && ng === userNg) || (nc && userNc && nc === userNc) || (userNc && nc && nc.includes(userNc));
+    }) || grid[0];
+
+    const mesesNomes = [
+        { key: 'jan', nome: 'Janeiro 2026' },
+        { key: 'fev', nome: 'Fevereiro 2026' },
+        { key: 'mar', nome: 'Março 2026' },
+        { key: 'abr', nome: 'Abril 2026' },
+        { key: 'mai', nome: 'Maio 2026' },
+        { key: 'jun', nome: 'Junho 2026' },
+        { key: 'jul', nome: 'Julho 2026' },
+        { key: 'ago', nome: 'Agosto 2026' },
+        { key: 'set', nome: 'Setembro 2026' },
+        { key: 'out', nome: 'Outubro 2026' },
+        { key: 'nov', nome: 'Novembro 2026' },
+        { key: 'dez', nome: 'Dezembro 2026' }
+    ];
+
+    container.innerHTML = mesesNomes.map(m => {
+        const val = socio ? (parseFloat(socio[m.key]) || 0) : 0;
+        const pago = val > 0;
+        return `
+            <tr>
+                <td><b>${m.nome}</b></td>
+                <td style="font-weight: 700; color: ${pago ? '#2ECC71' : 'var(--text-muted)'};">
+                    R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </td>
+                <td>
+                    <span class="badge badge-${pago ? 'success' : 'warning'}">
+                        ${pago ? '✅ PAGO / BAIXADO' : '⏳ EM ABERTO / PENDENTE'}
+                    </span>
+            </tr>
+        `;
+    }).join('');
+}
+
+// EDIÇÃO DOS DADOS CADASTRAIS PELO PRÓPRIO INTEGRANTE
+function abrirModalEditarMeusDados() {
+    if (!currentUser) return;
+    document.getElementById('editMeusTelefone').value = currentUser.telefone || '';
+    document.getElementById('editMeusOBM').value = currentUser.obm || 'São José';
+    document.getElementById('editMeusProfissao').value = currentUser.profissao || '';
+    document.getElementById('editMeusLogradouro').value = currentUser.logradouro || '';
+    document.getElementById('editMeusNumero').value = currentUser.numero || '';
+    document.getElementById('editMeusComplemento').value = currentUser.complemento || '';
+    document.getElementById('editMeusCEP').value = currentUser.cep || '';
+    document.getElementById('editMeusBairro').value = currentUser.bairro || '';
+    document.getElementById('editMeusCidade').value = currentUser.cidade || 'São José / SC';
+
+    openModal('modalEditarMeusDados');
+}
+
+function salvarMeusDados(e) {
+    e.preventDefault();
+    if (!currentUser) return;
+
+    const telefone = document.getElementById('editMeusTelefone').value.trim();
+    const obm = document.getElementById('editMeusOBM').value.trim();
+    const profissao = document.getElementById('editMeusProfissao').value.trim();
+    const logradouro = document.getElementById('editMeusLogradouro').value.trim();
+    const numero = document.getElementById('editMeusNumero').value.trim();
+    const complemento = document.getElementById('editMeusComplemento').value.trim();
+    const cep = document.getElementById('editMeusCEP').value.trim();
+    const bairro = document.getElementById('editMeusBairro').value.trim();
+    const cidade = document.getElementById('editMeusCidade').value.trim();
+
+    currentUser.telefone = telefone;
+    currentUser.obm = obm;
+    currentUser.profissao = profissao;
+    currentUser.logradouro = logradouro;
+    currentUser.numero = numero;
+    currentUser.complemento = complemento;
+    currentUser.cep = cep;
+    currentUser.bairro = bairro;
+    currentUser.cidade = cidade;
+
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const index = list.findIndex(a => a.cpf === currentUser.cpf);
+    if (index >= 0) {
+        list[index] = { ...list[index], ...currentUser };
+    }
+    localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+
+    try {
+        dbService.saveAssociado(currentUser);
+    } catch (err) {}
+
+    alert('Seus dados cadastrais foram atualizados com sucesso!');
+    closeModal('modalEditarMeusDados');
+    renderAssociadoOverview();
+}
+
+// GESTÃO HISTÓRICA DO VALOR BASE DA MENSALIDADE COM DATA DE VIGÊNCIA
+function getHistoricoReajustesMensalidade() {
+    let historico = JSON.parse(localStorage.getItem('acbcsj_historico_reajustes_mensalidade'));
+    if (!historico || !Array.isArray(historico) || historico.length === 0 || historico.some(h => h.valor !== 20.00)) {
+        historico = [{
+            id: 'reaj_inicial',
+            valor: 20.00,
+            mes_inicio: '01',
+            ano_inicio: '2024',
+            data_registro: '01/01/2024',
+            justificativa: 'Valor base padrÃ£o (R$ 20,00)'
+        }];
+        localStorage.setItem('acbcsj_historico_reajustes_mensalidade', JSON.stringify(historico));
+        localStorage.setItem('acbcsj_valor_mensalidade', '20.00');
+    }
+    return historico;
+}
+
+function getValorMensalidadeVigente(mesIndex, anoStr) {
+    const historico = getHistoricoReajustesMensalidade();
+
+    if (!mesIndex || !anoStr) {
+        const hoje = new Date();
+        mesIndex = hoje.getMonth() + 1;
+        anoStr = String(hoje.getFullYear());
+    }
+
+    const targetScore = parseInt(anoStr, 10) * 100 + parseInt(mesIndex, 10);
+
+    const validos = historico.filter(h => {
+        const itemScore = parseInt(h.ano_inicio, 10) * 100 + parseInt(h.mes_inicio, 10);
+        return itemScore <= targetScore;
+    });
+
+    if (validos.length === 0) {
+        return historico[0].valor || 20.00;
+    }
+
+    validos.sort((a, b) => {
+        const scoreA = parseInt(a.ano_inicio, 10) * 100 + parseInt(a.mes_inicio, 10);
+        const scoreB = parseInt(b.ano_inicio, 10) * 100 + parseInt(b.mes_inicio, 10);
+        return scoreB - scoreA;
+    });
+
+    return validos[0].valor;
+}
+
+function getInfoVigenciaMensalidadeAtual() {
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth() + 1;
+    const anoAtual = String(hoje.getFullYear());
+    const historico = getHistoricoReajustesMensalidade();
+
+    const targetScore = parseInt(anoAtual, 10) * 100 + parseInt(mesAtual, 10);
+    const validos = historico.filter(h => (parseInt(h.ano_inicio, 10) * 100 + parseInt(h.mes_inicio, 10)) <= targetScore);
+    validos.sort((a, b) => (parseInt(b.ano_inicio, 10) * 100 + parseInt(b.mes_inicio, 10)) - (parseInt(a.ano_inicio, 10) * 100 + parseInt(a.mes_inicio, 10)));
+
+    const reg = validos[0] || { valor: 20.00, mes_inicio: '01', ano_inicio: '2024' };
+    return {
+        valor: reg.valor,
+        vigenciaStr: `R$ ${reg.valor.toFixed(2).replace('.', ',')}/mês (vigente a partir de ${reg.mes_inicio}/${reg.ano_inicio})`
+    };
+}
+
+function abrirModalReajustarMensalidade() {
+    const hoje = new Date();
+    const strMes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const strAno = String(hoje.getFullYear());
+
+    const valorAtual = getValorMensalidadeVigente(parseInt(strMes, 10), strAno);
+    const inputVal = document.getElementById('inputNovoValorMensalidade');
+    if (inputVal) inputVal.value = valorAtual.toFixed(2);
+
+    const selMes = document.getElementById('inputMesVigenciaReajuste');
+    if (selMes) selMes.value = strMes;
+
+    const selAno = document.getElementById('inputAnoVigenciaReajuste');
+    if (selAno) selAno.value = strAno;
+
+    const inputJust = document.getElementById('inputJustificativaReajuste');
+    if (inputJust) inputJust.value = '';
+
+    const historico = getHistoricoReajustesMensalidade();
+    const containerHist = document.getElementById('listaHistoricoReajustesDisplay');
+    if (containerHist) {
+        if (historico.length === 0) {
+            containerHist.innerHTML = '<i>Nenhum reajuste registrado.</i>';
+        } else {
+            containerHist.innerHTML = historico.map(h => `
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding: 4px 0;">
+                    <span><b>R$ ${parseFloat(h.valor).toFixed(2).replace('.', ',')}</b>/mês (A partir de ${h.mes_inicio}/${h.ano_inicio})</span>
+                    <span style="font-size: 10px; color: var(--accent-gold);">${h.justificativa || 'Aprovado'}</span>
+                </div>
+            `).join('');
+        }
+    }
+
+    openModal('modalReajustarMensalidade');
+}
+
+function salvarNovoValorMensalidade(e) {
+    e.preventDefault();
+    const novoValor = parseFloat(document.getElementById('inputNovoValorMensalidade').value) || 20.00;
+    const mesInicio = document.getElementById('inputMesVigenciaReajuste').value;
+    const anoInicio = document.getElementById('inputAnoVigenciaReajuste').value;
+    const justificativa = document.getElementById('inputJustificativaReajuste').value.trim() || `Reajuste aprovado pela Diretoria para vigorar a partir de ${mesInicio}/${anoInicio}`;
+
+    if (novoValor <= 0) {
+        alert('Por favor, informe um valor de mensalidade válido.');
+        return;
+    }
+
+    let historico = getHistoricoReajustesMensalidade();
+
+    const indexExistente = historico.findIndex(h => h.mes_inicio === mesInicio && h.ano_inicio === anoInicio);
+    const novoRegistro = {
+        id: 'reaj_' + Date.now(),
+        valor: novoValor,
+        mes_inicio: mesInicio,
+        ano_inicio: anoInicio,
+        data_registro: new Date().toLocaleDateString('pt-BR'),
+        justificativa: justificativa
+    };
+
+    if (indexExistente >= 0) {
+        historico[indexExistente] = novoRegistro;
+    } else {
+        historico.push(novoRegistro);
+    }
+
+    historico.sort((a, b) => {
+        const scoreA = parseInt(a.ano_inicio, 10) * 100 + parseInt(a.mes_inicio, 10);
+        const scoreB = parseInt(b.ano_inicio, 10) * 100 + parseInt(b.mes_inicio, 10);
+        return scoreA - scoreB;
+    });
+
+    localStorage.setItem('acbcsj_historico_reajustes_mensalidade', JSON.stringify(historico));
+    localStorage.setItem('acbcsj_valor_mensalidade', novoValor.toFixed(2));
+
+    alert(`Novo valor de mensalidade (R$ ${novoValor.toFixed(2).replace('.', ',')}) registrado com sucesso para vigorar a partir de ${mesInicio}/${anoInicio}!\n\n⚠️ Os valores e cobranças dos meses anteriores a ${mesInicio}/${anoInicio} permanecerão intactos com suas tarifas históricas.`);
+    closeModal('modalReajustarMensalidade');
+    renderGestaoMensalidades();
+    renderAssociadoOverview();
+}
+
+// CÁLCULO DE VENCIMENTO DIA 15 E STATUS DE MENSALIDADE
+function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
+    const valor = parseFloat(valorPago) || 0;
+    const baseVal = getValorMensalidadeVigente(mesIndex, anoStr);
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtualNum = hoje.getMonth() + 1; // 1 a 12
+    const diaAtual = hoje.getDate(); // 1 a 31
+
+    const anoNum = parseInt(anoStr, 10);
+    const dataVencimentoStr = `15/${String(mesIndex).padStart(2, '0')}/${anoNum}`;
+
+    if (valor >= baseVal) {
+        return {
+            status: 'pago',
+            badge: `<span class="badge badge-success" style="font-size:10px; padding:2px 4px;">✅ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
+            vencimento: dataVencimentoStr,
+            isVencido: false,
+            debitAmount: 0
+        };
+    } else if (valor > 0) {
+        const falta = baseVal - valor;
+        const isV = (anoNum < anoAtual || (anoNum === anoAtual && (mesIndex < mesAtualNum || (mesIndex === mesAtualNum && diaAtual > 15))));
+        return {
+            status: 'parcial',
+            badge: `<span class="badge badge-warning" style="font-size:10px; padding:2px 4px;">⚠️ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
+            vencimento: dataVencimentoStr,
+            isVencido: isV,
+            debitAmount: falta
+        };
+    } else {
+        let isVencido = false;
+        if (anoNum < anoAtual) {
+            isVencido = true;
+        } else if (anoNum === anoAtual) {
+            if (mesIndex < mesAtualNum) {
+                isVencido = true;
+            } else if (mesIndex === mesAtualNum) {
+                if (diaAtual > 15) {
+                    isVencido = true;
+                }
+            }
+        }
+
+        if (isVencido) {
+            return {
+                status: 'vencido',
+                badge: `<span class="badge badge-danger" style="font-size:10px; padding:2px 4px;">🔴 R$ 0,00</span>`,
+                vencimento: dataVencimentoStr,
+                isVencido: true,
+                debitAmount: baseVal
+            };
+        } else {
+            return {
+                status: 'a_vencer',
+                badge: `<span style="color:var(--text-muted); font-size:11px;">-</span>`,
+                vencimento: dataVencimentoStr,
+                isVencido: false,
+                debitAmount: 0
+            };
+        }
+    }
+}
+
+// RENDERIZAR PAINEL DO ASSOCIADO (VISÃO GERAL, MENSAGENS E MENSALIDADES)
+function renderAssociadoOverview() {
+    if (!currentUser) return;
+
+    // 1. Nome de boas-vindas
+    const welcome = document.getElementById('associadoWelcomeName');
+    if (welcome) {
+        welcome.textContent = currentUser.nome_guerra || currentUser.nome;
+    }
+
+    // 2. Resumo dos Dados Cadastrais Pessoais
+    const profileContainer = document.getElementById('myProfileDetailsDisplay');
+    if (profileContainer) {
+        const end = [currentUser.logradouro, currentUser.numero ? `Nº ${currentUser.numero}` : '', currentUser.complemento].filter(Boolean).join(', ');
+        profileContainer.innerHTML = `
+            <div><b>📞 Telefone / WhatsApp:</b> ${currentUser.telefone || 'Não informado'}</div>
+            <div><b>🚒 OBM:</b> ${currentUser.obm || 'São José'}</div>
+            <div><b>💼 Profissão:</b> ${currentUser.profissao || 'Não informada'}</div>
+            <div><b>🏠 Endereço:</b> ${end || 'Não informado'}</div>
+            <div><b>📍 Bairro / Cidade:</b> ${currentUser.bairro || 'São José'} - ${currentUser.cidade || 'SC'} (CEP: ${currentUser.cep || '-'})</div>
+            <div><b>🆔 CPF:</b> ${currentUser.cpf}</div>
+        `;
+    }
+
+    // 3. Comunicados & Avisos da Diretoria destinados ao usuário atual
+    const comunicadosContainer = document.getElementById('containerMeusComunicadosDiretoria');
+    if (comunicadosContainer) {
+        const comunicadosAll = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+        const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
+        const lidos = getComunicadosLidosUsuario();
+
+        const meusComunicados = comunicadosAll.filter(c => {
+            if (c.destinatario_tipo === 'todos') return true;
+            if (c.destinatarios_cpfs && Array.isArray(c.destinatarios_cpfs)) {
+                if (c.destinatarios_cpfs.includes('TODOS')) return true;
+                return c.destinatarios_cpfs.some(cpfItem => (cpfItem || '').replace(/\D/g, '') === cleanUserCpf);
+            }
+            return false;
+        });
+
+        // Somente comunicados PENDENTES DE LEITURA (!lidos.includes(c.id))
+        const pendentesLeitura = meusComunicados.filter(c => !lidos.includes(c.id));
+
+        if (pendentesLeitura.length === 0) {
+            comunicadosContainer.innerHTML = `
+                <div style="background: rgba(46,204,113,0.05); border: 1px dashed rgba(46,204,113,0.3); border-radius: 6px; padding: 14px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                    ✅ <b>Nenhum comunicado pendente de leitura.</b><br>
+                    <span style="font-size: 12px; color: var(--text-muted);">Todas as suas mensagens lidas continuam salvas no <a href="#" onclick="navigateTab('comunicados-associado'); return false;" style="color: var(--accent-gold); text-decoration: underline; font-weight: bold;">Histórico de Comunicados & Avisos</a>.</span>
+                </div>
+            `;
+        } else {
+            comunicadosContainer.innerHTML = pendentesLeitura.map(c => {
+                let badgePrio = '<span class="badge badge-info" style="font-size: 10px;">🟢 Informativo</span>';
+                if (c.prioridade === 'Importante') badgePrio = '<span class="badge badge-warning" style="font-size: 10px;">🟡 Importante</span>';
+                if (c.prioridade === 'Urgente') badgePrio = '<span class="badge badge-danger" style="font-size: 10px;">🔴 Urgente</span>';
+
+                return `
+                    <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-left: 4px solid var(--accent-gold); border-radius: 6px; padding: 14px; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <b style="color: var(--accent-gold); font-size: 15px;">${c.assunto}</b>
+                                ${badgePrio}
+                            </div>
+                            <small style="color: var(--text-muted); font-size: 11px;">📅 ${c.data}</small>
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-color); margin: 6px 0 10px 0; white-space: pre-wrap; line-height: 1.5;">${c.mensagem}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px; margin-top: 8px; flex-wrap: wrap; gap: 8px;">
+                            <div style="font-size: 11px; color: var(--text-muted);">
+                                Enviado por: <b style="color: var(--text-color);">${c.remetente_nome || 'Diretoria ACBCSJ'}</b>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-gold" style="font-size: 11px; padding: 4px 10px; font-weight: bold;" onclick="marcarComunicadoLido('${c.id}')">
+                                ✅ Marcar como Lida
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    // 4. Minhas Mensalidades & Contribuições por Ano
+    const selAno = document.getElementById('selAnoMeuPainel');
+    const ano = selAno ? selAno.value : '2026';
+
+    const lbls = document.querySelectorAll('.lblAnoMeuPainel');
+    lbls.forEach(el => el.textContent = ano);
+
+    const storageKey = `acbcsj_mensalidades_grid_${ano}`;
+    let grid = JSON.parse(localStorage.getItem(storageKey));
+    if (!grid) {
+        grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || INITIAL_MENSAL_DATA || [];
+    }
+
+    const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
+
+    const socio = grid.find(s => {
+        const sCpf = (s.cpf || '').replace(/\D/g, '');
+        if (sCpf && cleanUserCpf && sCpf === cleanUserCpf) return true;
+        const ng = (typeof s.nome_guerra === 'string' ? s.nome_guerra : '').toLowerCase();
+        const nc = (typeof s.nome_completo === 'string' ? s.nome_completo : '').toLowerCase();
+        const userNg = (typeof currentUser.nome_guerra === 'string' ? currentUser.nome_guerra : '').toLowerCase();
+        const userNc = (typeof currentUser.nome === 'string' ? currentUser.nome : '').toLowerCase();
+        return (ng && userNg && ng === userNg) || (nc && userNc && nc === userNc) || (userNc && nc && nc.includes(userNc));
+    }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
 
     const containerTable = document.getElementById('tableMinhasMensalidadesBody');
     if (!containerTable) return;
@@ -2444,38 +2786,29 @@ function renderGestaoMensalidades() {
 
     const infoVigencia = getInfoVigenciaMensalidadeAtual();
     const elBaseVal = document.getElementById('metricValorMensalidadeVigente');
-    if (elBaseVal) elBaseVal.textContent = R$ ;
+    if (elBaseVal) elBaseVal.textContent = `R$ ${infoVigencia.valor.toFixed(2).replace('.', ',')}`;
 
     const lbls = document.querySelectorAll('.lblAnoMensalidadeMetrica');
     lbls.forEach(el => el.textContent = ano);
 
-    let list = [];
-    try {
-        list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    } catch (e) { list = []; }
-
-    if (!list || !Array.isArray(list) || list.length < 60) {
-        list = (typeof MOCK_DATA_INITIAL !== 'undefined' && MOCK_DATA_INITIAL.associados) ? MOCK_DATA_INITIAL.associados : [];
-        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
-    }
-
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const ativos = list.filter(a => a.status === 'ativo' || !a.status);
 
-    const storageKey = cbcsj_mensalidades_grid_;
-    let grid = [];
-    try {
-        grid = JSON.parse(localStorage.getItem(storageKey));
-    } catch (e) { grid = []; }
+    const storageKey = `acbcsj_mensalidades_grid_${ano}`;
+    let grid = JSON.parse(localStorage.getItem(storageKey));
 
-    if (!grid || !Array.isArray(grid) || grid.length < 60) {
-        grid = (typeof INITIAL_MENSAL_DATA !== 'undefined' && INITIAL_MENSAL_DATA.length >= 60) ? INITIAL_MENSAL_DATA : ativos.map(a => ({
-            nome_guerra: a.nome_guerra || a.nome,
-            nome_completo: a.nome,
-            cpf: a.cpf,
-            jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0
-        }));
+    if (!grid) {
+        if (ano === '2026') {
+            grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || INITIAL_MENSAL_DATA || [];
+        } else {
+            grid = ativos.map(a => ({
+                nome_guerra: a.nome_guerra || a.nome,
+                nome_completo: a.nome,
+                cpf: a.cpf,
+                jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0
+            }));
+        }
         localStorage.setItem(storageKey, JSON.stringify(grid));
-        localStorage.setItem('acbcsj_mensalidades_grid', JSON.stringify(grid));
     }
 
     const searchInput = document.getElementById('searchAssociadoMensalidade');
@@ -2489,7 +2822,15 @@ function renderGestaoMensalidades() {
     let pendentesCount = 0;
 
     let associadosProcessados = ativos.map(socio => {
-        const itemGrid = encontrarSocioNaGrade(grid, socio, socio.cpf) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+        const itemGrid = grid.find(g => {
+            const gCpf = (g.cpf || '').replace(/\D/g, '');
+            const sCpf = (socio.cpf || '').replace(/\D/g, '');
+            if (gCpf && sCpf && gCpf === sCpf) return true;
+            const ng = (typeof g.nome_guerra === 'string' ? g.nome_guerra : '').toLowerCase();
+            const sNg = (typeof socio.nome_guerra === 'string' ? socio.nome_guerra : '').toLowerCase();
+            const sNc = (typeof socio.nome === 'string' ? socio.nome : '').toLowerCase();
+            return (ng && sNg && ng === sNg) || (sNc && ng && sNc.includes(ng));
+        }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
 
         let totalPagoSocio = 0;
         let mesesDevidos = 0;
@@ -2588,7 +2929,15 @@ function renderGestaoMensalidades() {
             containerDesligados.innerHTML = `<tr><td colspan="16" style="text-align: center; color: var(--text-muted); padding: 15px;">Nenhum associado desligado registrado no sistema.</td></tr>`;
         } else {
             containerDesligados.innerHTML = desligados.map(socio => {
-                const itemGrid = encontrarSocioNaGrade(grid, socio, socio.cpf) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+                const itemGrid = grid.find(g => {
+                    const gCpf = (g.cpf || '').replace(/\D/g, '');
+                    const sCpf = (socio.cpf || '').replace(/\D/g, '');
+                    if (gCpf && sCpf && gCpf === sCpf) return true;
+                    const ng = (typeof g.nome_guerra === 'string' ? g.nome_guerra : '').toLowerCase();
+                    const sNg = (typeof socio.nome_guerra === 'string' ? socio.nome_guerra : '').toLowerCase();
+                    const sNc = (typeof socio.nome === 'string' ? socio.nome : '').toLowerCase();
+                    return (ng && sNg && ng === sNg) || (sNc && ng && sNc.includes(ng));
+                }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
 
                 let totalPagoSocio = 0;
                 const cellsMeses = mesesKeys.map((k, idx) => {
@@ -2668,7 +3017,17 @@ function atualizarCheckboxesBaixa() {
     
     const cleanCpf = (cpf || '').replace(/\D/g, '');
 
-    const socioGrid = encontrarSocioNaGrade(grid, socioObj, cpf) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+    const socioGrid = grid.find(g => {
+        const gCpf = (g.cpf || '').replace(/\D/g, '');
+        if (gCpf && cleanCpf && gCpf === cleanCpf) return true;
+        if (socioObj) {
+            const ng = (typeof g.nome_guerra === 'string' ? g.nome_guerra : '').toLowerCase();
+            const sNg = (typeof socioObj.nome_guerra === 'string' ? socioObj.nome_guerra : '').toLowerCase();
+            const sNc = (typeof socioObj.nome === 'string' ? socioObj.nome : '').toLowerCase();
+            return (ng && sNg && ng === sNg) || (sNc && ng && sNc.includes(ng));
+        }
+        return false;
+    }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
 
     const mesesNomesMap = { jan:'Jan', fev:'Fev', mar:'Mar', abr:'Abr', mai:'Mai', jun:'Jun', jul:'Jul', ago:'Ago', set:'Set', out:'Out', nov:'Nov', dez:'Dez' };
 
@@ -2867,7 +3226,17 @@ function recalcularGridAssociado(cpf, ano) {
     const listAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const assocObj = listAssociados.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
 
-    let socioGrid = encontrarSocioNaGrade(grid, assocObj, cpf);
+    let socioGrid = grid.find(g => {
+        const gCpf = (g.cpf || '').replace(/\D/g, '');
+        if (gCpf && cleanCpf && gCpf === cleanCpf) return true;
+        if (assocObj) {
+            const ng = (typeof g.nome_guerra === 'string' ? g.nome_guerra : '').toLowerCase();
+            const sNg = (typeof assocObj.nome_guerra === 'string' ? socioGrid ? socioGrid.nome_guerra : assocObj.nome_guerra : '').toLowerCase();
+            const sNc = (typeof assocObj.nome === 'string' ? assocObj.nome : '').toLowerCase();
+            return (ng && sNg && ng === sNg) || (sNc && ng && sNc.includes(ng));
+        }
+        return false;
+    });
 
     if (!socioGrid && assocObj) {
         socioGrid = {
@@ -2883,7 +3252,11 @@ function recalcularGridAssociado(cpf, ano) {
     socioGrid.cpf = cpf;
 
     if (ano === '2026') {
-        const basePlanilha = encontrarSocioNaGrade(INITIAL_MENSAL_DATA, assocObj, cpf);
+        const basePlanilha = (INITIAL_MENSAL_DATA || []).find(b => {
+            const ng = (typeof b.nome_guerra === 'string' ? b.nome_guerra : '').toLowerCase();
+            const sNg = (typeof socioGrid.nome_guerra === 'string' ? socioGrid.nome_guerra : '').toLowerCase();
+            return ng && sNg && ng === sNg;
+        });
         const mesesKeys = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
         mesesKeys.forEach(k => {
             socioGrid[k] = basePlanilha ? (parseFloat(basePlanilha[k]) || 0) : 0;
