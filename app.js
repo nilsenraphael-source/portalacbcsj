@@ -219,7 +219,7 @@ function initMockData() {
         list = [];
     }
     
-    if (!list || list.length < 60) {
+    if (!list || !Array.isArray(list) || list.length < 60) {
         localStorage.setItem("acbcsj_associados", JSON.stringify(MOCK_DATA_INITIAL.associados));
     }
 
@@ -230,8 +230,20 @@ function initMockData() {
         finList = [];
     }
 
-    if (!finList || finList.length < 35) {
+    if (!finList || !Array.isArray(finList) || finList.length < 35) {
         localStorage.setItem("acbcsj_financeiro", JSON.stringify(INITIAL_LANCAMENTOS_DATA));
+    }
+
+    let grid2026 = [];
+    try {
+        grid2026 = JSON.parse(localStorage.getItem("acbcsj_mensalidades_grid_2026")) || [];
+    } catch (e) {
+        grid2026 = [];
+    }
+
+    if (!grid2026 || !Array.isArray(grid2026) || grid2026.length < 60) {
+        localStorage.setItem("acbcsj_mensalidades_grid", JSON.stringify(INITIAL_MENSAL_DATA));
+        localStorage.setItem("acbcsj_mensalidades_grid_2026", JSON.stringify(INITIAL_MENSAL_DATA));
     }
 }
 
@@ -460,8 +472,17 @@ function renderDiretoriaOverview() {
 
 // EXIBIR APENAS ASSOCIADOS ATIVOS COM CONTROLE DE PERFIL PELA DIRETORIA
 function renderGestaoAssociados() {
-    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    let ativos = list.filter(a => a.status === 'ativo');
+    let list = [];
+    try {
+        list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    } catch (e) { list = []; }
+
+    if (!list || !Array.isArray(list) || list.length < 60) {
+        list = (typeof MOCK_DATA_INITIAL !== 'undefined' && MOCK_DATA_INITIAL.associados) ? MOCK_DATA_INITIAL.associados : [];
+        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+    }
+
+    let ativos = list.filter(a => a.status === 'ativo' || !a.status);
 
     const searchInput = document.getElementById('searchAssociadosAtivos');
     const term = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -2423,27 +2444,39 @@ function renderGestaoMensalidades() {
 
     const infoVigencia = getInfoVigenciaMensalidadeAtual();
     const elBaseVal = document.getElementById('metricValorMensalidadeVigente');
-    if (elBaseVal) elBaseVal.textContent = `R$ ${infoVigencia.valor.toFixed(2).replace('.', ',')}`;
+    if (elBaseVal) elBaseVal.textContent = R$ ;
 
     const lbls = document.querySelectorAll('.lblAnoMensalidadeMetrica');
     lbls.forEach(el => el.textContent = ano);
 
-    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    let list = [];
+    try {
+        list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    } catch (e) { list = []; }
+
+    if (!list || !Array.isArray(list) || list.length < 60) {
+        list = (typeof MOCK_DATA_INITIAL !== 'undefined' && MOCK_DATA_INITIAL.associados) ? MOCK_DATA_INITIAL.associados : [];
+        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+    }
+
     const ativos = list.filter(a => a.status === 'ativo' || !a.status);
 
-    const storageKey = `acbcsj_mensalidades_grid_${ano}`;
-    let grid = JSON.parse(localStorage.getItem(storageKey));
+    const storageKey = cbcsj_mensalidades_grid_;
+    let grid = [];
+    try {
+        grid = JSON.parse(localStorage.getItem(storageKey));
+    } catch (e) { grid = []; }
 
-    if (!grid || !Array.isArray(grid) || grid.length === 0) {
-    grid = (INITIAL_MENSAL_DATA && INITIAL_MENSAL_DATA.length > 0) ? INITIAL_MENSAL_DATA : ativos.map(a => ({
-        nome_guerra: a.nome_guerra || a.nome,
-        nome_completo: a.nome,
-        cpf: a.cpf,
-        jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0
-    }));
-    localStorage.setItem(storageKey, JSON.stringify(grid));
-    localStorage.setItem('acbcsj_mensalidades_grid', JSON.stringify(grid));
-}
+    if (!grid || !Array.isArray(grid) || grid.length < 60) {
+        grid = (typeof INITIAL_MENSAL_DATA !== 'undefined' && INITIAL_MENSAL_DATA.length >= 60) ? INITIAL_MENSAL_DATA : ativos.map(a => ({
+            nome_guerra: a.nome_guerra || a.nome,
+            nome_completo: a.nome,
+            cpf: a.cpf,
+            jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0
+        }));
+        localStorage.setItem(storageKey, JSON.stringify(grid));
+        localStorage.setItem('acbcsj_mensalidades_grid', JSON.stringify(grid));
+    }
 
     const searchInput = document.getElementById('searchAssociadoMensalidade');
     const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
