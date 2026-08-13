@@ -2865,7 +2865,6 @@ function renderGestaoMensalidades() {
         mesesKeys.forEach((key, index) => {
             const val = parseFloat(itemGrid[key]) || 0;
             totalPagoSocio += val;
-            totalArrecadadoAno += val;
 
             const st = calcularStatusMensalidade(index + 1, ano, val);
             if (st.isVencido) {
