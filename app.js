@@ -1667,31 +1667,235 @@ function excluirAssociado(cpf) {
 
 // LÓGICA DO ASSOCIADO & GRÁFICOS
 
-function renderBalancetesAssociado() {
-    const financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-    const totalReceitas = financeiro.filter(f => f.tipo === 'receita').reduce((sum, i) => sum + Number(i.valor), 0);
-    const totalDespesas = financeiro.filter(f => f.tipo === 'despesa').reduce((sum, i) => sum + Number(i.valor), 0);
+let chartBalanceteDoughnut = null;
+let chartBalanceteMensalComparativo = null;
+let chartMensalidadesPrevistoVsArrecadado = null;
 
-    const ctx = document.getElementById('chartBalancete');
-    if (ctx && typeof Chart !== 'undefined') {
-        if (currentChart) currentChart.destroy();
-        currentChart = new Chart(ctx, {
+function renderBalancetesAssociado() {
+    const selAno = document.getElementById('selAnoTransparencia');
+    const ano = selAno ? selAno.value : '2026';
+
+    const lblsAno = document.querySelectorAll('.lblAnoTransparencia');
+    lblsAno.forEach(el => el.textContent = ano);
+
+    // 1. Carrega dados de Associados, Financeiro e Grid de Mensalidades para o Ano selecionado
+    const listAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const ativos = listAssociados.filter(a => a.status === 'ativo' || !a.status);
+    const qtdAssociadosAtivos = ativos.length || 1;
+
+    const financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const gridKey = `acbcsj_mensalidades_grid_${ano}`;
+    const grid = JSON.parse(localStorage.getItem(gridKey)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
+
+    const mesesInfo = [
+        { index: 1, key: 'jan', nome: 'Jan' },
+        { index: 2, key: 'fev', nome: 'Fev' },
+        { index: 3, key: 'mar', nome: 'Mar' },
+        { index: 4, key: 'abr', nome: 'Abr' },
+        { index: 5, key: 'mai', nome: 'Mai' },
+        { index: 6, key: 'jun', nome: 'Jun' },
+        { index: 7, key: 'jul', nome: 'Jul' },
+        { index: 8, key: 'ago', nome: 'Ago' },
+        { index: 9, key: 'set', nome: 'Set' },
+        { index: 10, key: 'out', nome: 'Out' },
+        { index: 11, key: 'nov', nome: 'Nov' },
+        { index: 12, key: 'dez', nome: 'Dez' }
+    ];
+
+    const labelsMeses = mesesInfo.map(m => m.nome);
+    const receitasPorMes = Array(12).fill(0);
+    const despesasPorMes = Array(12).fill(0);
+    const mensalidadesPrevistasPorMes = Array(12).fill(0);
+    const mensalidadesArrecadadasPorMes = Array(12).fill(0);
+
+    // Calcula mensalidades acumuladas da Grid do Ano por Mês
+    mesesInfo.forEach((m, idx) => {
+        let somaQuitadaMes = 0;
+        grid.forEach(socio => {
+            somaQuitadaMes += (parseFloat(socio[m.key]) || 0);
+        });
+        mensalidadesArrecadadasPorMes[idx] = somaQuitadaMes;
+
+        // Tarifa base vigente para este mês/ano
+        const tarifaVigenteMes = getValorMensalidadeVigente(m.index, ano);
+        mensalidadesPrevistasPorMes[idx] = qtdAssociadosAtivos * tarifaVigenteMes;
+    });
+
+    // Filtra receitas e despesas lançadas no livro financeiro para o ano selecionado
+    financeiro.forEach(f => {
+        const parsed = extrairMesEAno(f.data, f.data_iso);
+        const fAno = parsed.ano || (f.data_iso ? f.data_iso.substring(0, 4) : '2026');
+        
+        if (fAno === ano) {
+            const mIndex = parseInt(parsed.mes, 10);
+            if (mIndex >= 1 && mIndex <= 12) {
+                const idx = mIndex - 1;
+                const val = parseFloat(f.valor) || 0;
+                if (f.tipo === 'receita') {
+                    receitasPorMes[idx] += val;
+                } else if (f.tipo === 'despesa') {
+                    despesasPorMes[idx] += val;
+                }
+            }
+        }
+    });
+
+    // Totais Consolidados do Ano
+    const totalReceitasAno = receitasPorMes.reduce((a, b) => a + b, 0);
+    const totalDespesasAno = despesasPorMes.reduce((a, b) => a + b, 0);
+    const saldoAno = totalReceitasAno - totalDespesasAno;
+
+    const totalPrevistoMensalidadesAno = mensalidadesPrevistasPorMes.reduce((a, b) => a + b, 0);
+    const totalArrecadadoMensalidadesAno = mensalidadesArrecadadasPorMes.reduce((a, b) => a + b, 0);
+    const percEficiencia = totalPrevistoMensalidadesAno > 0 ? ((totalArrecadadoMensalidadesAno / totalPrevistoMensalidadesAno) * 100).toFixed(1) : '100.0';
+
+    // Atualiza elementos de métricas
+    const elRec = document.getElementById('transpMetricReceitas');
+    const elDes = document.getElementById('transpMetricDespesas');
+    const elSal = document.getElementById('transpMetricSaldo');
+    const elEfi = document.getElementById('transpMetricEficiencia');
+
+    if (elRec) elRec.textContent = `R$ ${totalReceitasAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    if (elDes) elDes.textContent = `R$ ${totalDespesasAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    if (elSal) {
+        elSal.textContent = `R$ ${saldoAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        elSal.style.color = saldoAno >= 0 ? '#2ECC71' : '#E74C3C';
+    }
+    if (elEfi) elEfi.textContent = `${percEficiencia}%`;
+
+    // 2. Renderiza Gráfico 1: Receitas vs Despesas Mês a Mês (Barras)
+    const ctxBarComp = document.getElementById('chartBalanceteMensalComparativo');
+    if (ctxBarComp && typeof Chart !== 'undefined') {
+        if (chartBalanceteMensalComparativo) chartBalanceteMensalComparativo.destroy();
+        chartBalanceteMensalComparativo = new Chart(ctxBarComp, {
+            type: 'bar',
+            data: {
+                labels: labelsMeses,
+                datasets: [
+                    {
+                        label: 'Receitas (Entradas)',
+                        data: receitasPorMes,
+                        backgroundColor: '#2ECC71',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Despesas (Saídas)',
+                        data: despesasPorMes,
+                        backgroundColor: '#E74C3C',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#F4F5F7', font: { size: 11 } } }
+                },
+                scales: {
+                    x: { ticks: { color: '#A0AEC0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#A0AEC0' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            }
+        });
+    }
+
+    // 3. Renderiza Gráfico 2: Mensalidades - Previsto vs Recebido (Barras)
+    const ctxBarMensal = document.getElementById('chartMensalidadesPrevistoVsArrecadado');
+    if (ctxBarMensal && typeof Chart !== 'undefined') {
+        if (chartMensalidadesPrevistoVsArrecadado) chartMensalidadesPrevistoVsArrecadado.destroy();
+        chartMensalidadesPrevistoVsArrecadado = new Chart(ctxBarMensal, {
+            type: 'bar',
+            data: {
+                labels: labelsMeses,
+                datasets: [
+                    {
+                        label: 'Previsto (Meta)',
+                        data: mensalidadesPrevistasPorMes,
+                        backgroundColor: '#3498DB',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Recebido (Arrecadado)',
+                        data: mensalidadesArrecadadasPorMes,
+                        backgroundColor: '#2ECC71',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#F4F5F7', font: { size: 11 } } }
+                },
+                scales: {
+                    x: { ticks: { color: '#A0AEC0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#A0AEC0' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            }
+        });
+    }
+
+    // 4. Renderiza Gráfico 3: Rosca Proporcional do Ano (Entradas vs Saídas)
+    const ctxDoughnut = document.getElementById('chartBalancete');
+    if (ctxDoughnut && typeof Chart !== 'undefined') {
+        if (chartBalanceteDoughnut) chartBalanceteDoughnut.destroy();
+        chartBalanceteDoughnut = new Chart(ctxDoughnut, {
             type: 'doughnut',
             data: {
                 labels: ['Entradas / Receitas', 'Saídas / Despesas'],
                 datasets: [{
-                    data: [totalReceitas, totalDespesas],
+                    data: [totalReceitasAno, totalDespesasAno],
                     backgroundColor: ['#2ECC71', '#E74C3C'],
                     borderWidth: 0
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
-                    legend: { labels: { color: '#F4F5F7' } }
+                    legend: { labels: { color: '#F4F5F7', font: { size: 11 } } }
                 }
             }
         });
+    }
+
+    // 5. Preenche Tabela de Demonstrativos Mensais e Balancetes Oficiais
+    const tbodyTransp = document.getElementById('tableBalancetesMensaisTransparencia');
+    if (tbodyTransp) {
+        const nomesMesesCompletos = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        
+        tbodyTransp.innerHTML = nomesMesesCompletos.map((mNome, idx) => {
+            const mIndexStr = String(idx + 1).padStart(2, '0');
+            const rec = receitasPorMes[idx];
+            const des = despesasPorMes[idx];
+            const mesSaldo = rec - des;
+            
+            const prevMensal = mensalidadesPrevistasPorMes[idx];
+            const arrMensal = mensalidadesArrecadadasPorMes[idx];
+            const percMensal = prevMensal > 0 ? Math.round((arrMensal / prevMensal) * 100) : 100;
+
+            return `
+                <tr>
+                    <td><b>${mIndexStr} - ${mNome} / ${ano}</b></td>
+                    <td style="color: #2ECC71; font-weight: 600;">R$ ${rec.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td>
+                        <b>R$ ${arrMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b>
+                        <small style="color: var(--text-muted);"> / R$ ${prevMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${percMensal}%)</small>
+                    </td>
+                    <td style="color: #E74C3C; font-weight: 600;">R$ ${des.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td style="font-weight: 700; color: ${mesSaldo >= 0 ? '#2ECC71' : '#E74C3C'};">
+                        R$ ${mesSaldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 8px;" onclick="abrirModalBalanceteMensal('${mIndexStr}', '${ano}')">
+                            📄 Abrir Balancete
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
 }
 
@@ -2797,7 +3001,7 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
     openModal('modalBalanceteMensal');
 }
 
-function renderAssociadoOverview() {
+function _old_unused_renderAssociadoOverview() {
     const welcome = document.getElementById('associadoWelcomeName');
     if (welcome && currentUser) {
         welcome.textContent = currentUser.nome_guerra || currentUser.nome;
@@ -3166,15 +3370,19 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
     }
 }
 
-// RENDERIZAR PAINEL DO ASSOCIADO
+// RENDERIZAR PAINEL DO ASSOCIADO (VISÃO GERAL, MENSAGENS E MENSALIDADES)
 function renderAssociadoOverview() {
+    if (!currentUser) return;
+
+    // 1. Nome de boas-vindas
     const welcome = document.getElementById('associadoWelcomeName');
-    if (welcome && currentUser) {
+    if (welcome) {
         welcome.textContent = currentUser.nome_guerra || currentUser.nome;
     }
 
+    // 2. Resumo dos Dados Cadastrais Pessoais
     const profileContainer = document.getElementById('myProfileDetailsDisplay');
-    if (profileContainer && currentUser) {
+    if (profileContainer) {
         const end = [currentUser.logradouro, currentUser.numero ? `Nº ${currentUser.numero}` : '', currentUser.complemento].filter(Boolean).join(', ');
         profileContainer.innerHTML = `
             <div><b>📞 Telefone / WhatsApp:</b> ${currentUser.telefone || 'Não informado'}</div>
@@ -3186,16 +3394,64 @@ function renderAssociadoOverview() {
         `;
     }
 
+    // 3. Comunicados & Avisos da Diretoria destinados ao usuário atual
+    const comunicadosContainer = document.getElementById('containerMeusComunicadosDiretoria');
+    if (comunicadosContainer) {
+        const comunicadosAll = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+        const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
+
+        const meusComunicados = comunicadosAll.filter(c => {
+            if (c.destinatario_tipo === 'todos') return true;
+            if (c.destinatarios_cpfs && Array.isArray(c.destinatarios_cpfs)) {
+                if (c.destinatarios_cpfs.includes('TODOS')) return true;
+                return c.destinatarios_cpfs.some(cpfItem => (cpfItem || '').replace(/\D/g, '') === cleanUserCpf);
+            }
+            return false;
+        });
+
+        if (meusComunicados.length === 0) {
+            comunicadosContainer.innerHTML = `
+                <div style="background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); border-radius: 6px; padding: 14px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                    ✉️ Nenhum comunicado ou aviso recente da Diretoria.
+                </div>
+            `;
+        } else {
+            comunicadosContainer.innerHTML = meusComunicados.map(c => {
+                let badgePrio = '<span class="badge badge-info" style="font-size: 10px;">🟢 Informativo</span>';
+                if (c.prioridade === 'Importante') badgePrio = '<span class="badge badge-warning" style="font-size: 10px;">🟡 Importante</span>';
+                if (c.prioridade === 'Urgente') badgePrio = '<span class="badge badge-danger" style="font-size: 10px;">🔴 Urgente</span>';
+
+                return `
+                    <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-left: 4px solid var(--accent-gold); border-radius: 6px; padding: 14px; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <b style="color: var(--accent-gold); font-size: 15px;">${c.assunto}</b>
+                                ${badgePrio}
+                            </div>
+                            <small style="color: var(--text-muted); font-size: 11px;">📅 ${c.data}</small>
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-color); margin: 6px 0 8px 0; white-space: pre-wrap; line-height: 1.5;">${c.mensagem}</p>
+                        <div style="font-size: 11px; color: var(--text-muted); text-align: right; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">
+                            Enviado por: <b style="color: var(--text-color);">${c.remetente_nome || 'Diretoria ACBCSJ'}</b> (${c.destinatarios_resumo || 'Associados'})
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    // 4. Minhas Mensalidades & Contribuições por Ano
     const selAno = document.getElementById('selAnoMeuPainel');
     const ano = selAno ? selAno.value : '2026';
+
     const lbls = document.querySelectorAll('.lblAnoMeuPainel');
     lbls.forEach(el => el.textContent = ano);
 
-    const baseVal = getValorMensalidadeVigente();
     const storageKey = `acbcsj_mensalidades_grid_${ano}`;
-    const grid = JSON.parse(localStorage.getItem(storageKey)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
-    const container = document.getElementById('tableMinhasMensalidadesBody');
-    if (!container || !currentUser) return;
+    let grid = JSON.parse(localStorage.getItem(storageKey));
+    if (!grid) {
+        grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || INITIAL_MENSAL_DATA || [];
+    }
 
     const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
 
@@ -3208,6 +3464,9 @@ function renderAssociadoOverview() {
         const userNc = (typeof currentUser.nome === 'string' ? currentUser.nome : '').toLowerCase();
         return (ng && userNg && ng === userNg) || (nc && userNc && nc === userNc) || (userNc && nc && nc.includes(userNc));
     }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+
+    const containerTable = document.getElementById('tableMinhasMensalidadesBody');
+    if (!containerTable) return;
 
     const mesesList = [
         { index: 1, key: 'jan', nome: 'Janeiro' },
@@ -3225,45 +3484,79 @@ function renderAssociadoOverview() {
     ];
 
     let totalPagoAno = 0;
-    let totalDebitos = 0;
+    let totalDebitosPendente = 0;
     let temDebitoVencido = false;
 
     const rowsHtml = mesesList.map(m => {
         const valPago = parseFloat(socio[m.key]) || 0;
+        const tarifaVigente = getValorMensalidadeVigente(m.index, ano);
         totalPagoAno += valPago;
 
         const info = calcularStatusMensalidade(m.index, ano, valPago);
         if (info.isVencido) {
             temDebitoVencido = true;
-            totalDebitos += info.debitAmount;
+            totalDebitosPendente += info.debitAmount;
+        }
+
+        let badgeStatus = '';
+        if (info.status === 'pago') {
+            badgeStatus = `<span class="badge badge-success" style="font-weight: bold; font-size: 11px; padding: 4px 8px;">✅ QUITADO / EM DIA</span>`;
+        } else if (info.status === 'parcial') {
+            badgeStatus = `<span class="badge badge-warning" style="font-weight: bold; font-size: 11px; padding: 4px 8px;">⚠️ PAGO PARCIAL (Falta R$ ${info.debitAmount.toFixed(2).replace('.', ',')})</span>`;
+        } else if (info.isVencido) {
+            badgeStatus = `<span class="badge badge-danger" style="font-weight: bold; font-size: 11px; padding: 4px 8px;">🔴 VENCIDO (Inadimplente)</span>`;
+        } else {
+            badgeStatus = `<span style="color: var(--text-muted); font-size: 12px; font-weight: 500;">⏳ A VENCER</span>`;
         }
 
         return `
             <tr>
-                <td><b>${m.nome} / ${ano}</b></td>
-                <td><span class="badge badge-info">${info.vencimento}</span></td>
-                <td>R$ ${baseVal.toFixed(2).replace('.', ',')}</td>
-                <td style="font-weight: 700; color: ${valPago > 0 ? '#2ECC71' : 'var(--text-muted)'};">
+                <td><b style="color: var(--text-color);">${m.index < 10 ? '0' + m.index : m.index} - ${m.nome} / ${ano}</b></td>
+                <td><span style="font-size: 12px; font-weight: 600; color: var(--accent-gold);">${info.vencimento}</span></td>
+                <td>R$ ${tarifaVigente.toFixed(2).replace('.', ',')}</td>
+                <td style="font-weight: 700; color: ${valPago >= tarifaVigente ? '#2ECC71' : (valPago > 0 ? '#F39C12' : 'var(--text-muted)')};">
                     R$ ${valPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
-                <td>${info.badge}</td>
+                <td>${badgeStatus}</td>
             </tr>
         `;
     }).join('');
 
-    container.innerHTML = rowsHtml;
+    containerTable.innerHTML = rowsHtml;
 
-    const elTotalPago = document.getElementById('myMetricTotalPago');
-    const elDebitos = document.getElementById('myMetricDebitos');
-    const elSituacao = document.getElementById('myMetricSituacao');
+    // Atualiza os Banners de Métrica do Associado
+    const bannerAdimplencia = document.getElementById('bannerStatusAdimplenciaAssociado');
+    const elMetricTotalPago = document.getElementById('metricMeuTotalPago');
+    const elMetricTotalPendente = document.getElementById('metricMeuTotalPendente');
 
-    if (elTotalPago) elTotalPago.textContent = `R$ ${totalPagoAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-    if (elDebitos) elDebitos.textContent = `R$ ${totalDebitos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-    if (elSituacao) {
+    if (elMetricTotalPago) {
+        elMetricTotalPago.textContent = `R$ ${totalPagoAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+    if (elMetricTotalPendente) {
+        elMetricTotalPendente.textContent = `R$ ${totalDebitosPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+
+    if (bannerAdimplencia) {
         if (temDebitoVencido) {
-            elSituacao.innerHTML = `<span class="badge badge-danger">🔴 POSSUI PENDÊNCIAS (Vencidas após dia 15)</span>`;
+            bannerAdimplencia.style.background = 'rgba(231, 76, 60, 0.1)';
+            bannerAdimplencia.style.borderColor = 'rgba(231, 76, 60, 0.4)';
+            bannerAdimplencia.innerHTML = `
+                <div style="font-size: 24px;">🔴</div>
+                <div>
+                    <b style="color: #E74C3C; font-size: 13px; display: block;">DÉBITO PENDENTE VENCIDO</b>
+                    <span style="font-size: 11px; color: var(--text-muted);">Vencimento dia 15 do mês corrente. Entre em contato com a Diretoria para regularizar.</span>
+                </div>
+            `;
         } else {
-            elSituacao.innerHTML = `<span class="badge badge-success">🟢 EM DIA COM A ASSOCIAÇÃO</span>`;
+            bannerAdimplencia.style.background = 'rgba(46, 204, 113, 0.1)';
+            bannerAdimplencia.style.borderColor = 'rgba(46, 204, 113, 0.4)';
+            bannerAdimplencia.innerHTML = `
+                <div style="font-size: 24px;">🟢</div>
+                <div>
+                    <b style="color: #2ECC71; font-size: 13px; display: block;">CADASTRO 100% EM DIA</b>
+                    <span style="font-size: 11px; color: var(--text-muted);">Parabéns! Suas contribuições estão em dia com a ACBCSJ.</span>
+                </div>
+            `;
         }
     }
 }
