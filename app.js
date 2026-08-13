@@ -30,9 +30,9 @@ const MOCK_DATA_INITIAL = {
 let currentUser = null;
 let currentChart = null;
 
-// ARMAZENAMENTO ILIMITADO DE ARQUIVOS VIA INDEXEDDB (SEM O LIMITE DE 5MB DO LOCALSTORAGE)
+// ARMAZENAMENTO ILIMITADO DE ARQUIVOS VIA INDEXEDDB
 const idbStorage = {
-    dbName: 'ACBCSJ_IndexedDB',
+    dbName: "ACBCSJ_IndexedDB",
     version: 1,
     db: null,
     async getDB() {
@@ -41,8 +41,8 @@ const idbStorage = {
             const req = indexedDB.open(this.dbName, this.version);
             req.onupgradeneeded = (e) => {
                 const db = e.target.result;
-                if (!db.objectStoreNames.contains('files')) {
-                    db.createObjectStore('files');
+                if (!db.objectStoreNames.contains("files")) {
+                    db.createObjectStore("files");
                 }
             };
             req.onsuccess = (e) => {
@@ -56,14 +56,14 @@ const idbStorage = {
         try {
             const db = await this.getDB();
             return new Promise((resolve, reject) => {
-                const tx = db.transaction('files', 'readwrite');
-                const store = tx.objectStore('files');
+                const tx = db.transaction("files", "readwrite");
+                const store = tx.objectStore("files");
                 store.put(content, id);
                 tx.oncomplete = () => resolve(true);
                 tx.onerror = (e) => reject(e.target.error);
             });
         } catch (e) {
-            console.error('Erro no IndexedDB:', e);
+            console.error("Erro no IndexedDB:", e);
             return false;
         }
     },
@@ -71,8 +71,8 @@ const idbStorage = {
         try {
             const db = await this.getDB();
             return new Promise((resolve) => {
-                const tx = db.transaction('files', 'readonly');
-                const store = tx.objectStore('files');
+                const tx = db.transaction("files", "readonly");
+                const store = tx.objectStore("files");
                 const req = store.get(id);
                 req.onsuccess = () => resolve(req.result || null);
                 req.onerror = () => resolve(null);
@@ -85,8 +85,8 @@ const idbStorage = {
         try {
             const db = await this.getDB();
             return new Promise((resolve) => {
-                const tx = db.transaction('files', 'readwrite');
-                const store = tx.objectStore('files');
+                const tx = db.transaction("files", "readwrite");
+                const store = tx.objectStore("files");
                 store.delete(id);
                 tx.oncomplete = () => resolve(true);
                 tx.onerror = () => resolve(false);
@@ -98,43 +98,53 @@ const idbStorage = {
 };
 
 // INICIALIZAÇÃO E LIMPEZA DE DADOS
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
     initMockData();
     setupCPFMasks();
     setupNavigation();
 });
 
 function resetBancoDadosComandante() {
-    const comandanteUser = { 
-        id: '1', 
-        cpf: '000.000.000-00', 
-        senha: '123', 
-        nome: 'Comandante / Diretoria ACBCSJ', 
-        nome_guerra: 'Comandante', 
-        perfil: 'diretoria', 
-        status: 'ativo', 
-        obm: 'São José', 
-        profissao: 'Comandante da Associação' 
-    };
+    const listAssociados = (typeof MOCK_DATA_INITIAL !== "undefined" && MOCK_DATA_INITIAL.associados)
+        ? MOCK_DATA_INITIAL.associados
+        : [{
+            id: "1",
+            cpf: "000.000.000-00",
+            senha: "123",
+            nome: "Comandante / Diretoria ACBCSJ",
+            nome_guerra: "Comandante",
+            perfil: "diretoria",
+            status: "ativo",
+            obm: "São José",
+            profissao: "Comandante da Associação"
+        }];
 
-    localStorage.setItem('acbcsj_associados', JSON.stringify([comandanteUser]));
-    localStorage.setItem('acbcsj_financeiro', JSON.stringify([]));
-    localStorage.setItem('acbcsj_mensalidades_grid', JSON.stringify([]));
-    localStorage.setItem('acbcsj_mensalidades_grid_2024', JSON.stringify([]));
-    localStorage.setItem('acbcsj_mensalidades_grid_2025', JSON.stringify([]));
-    localStorage.setItem('acbcsj_mensalidades_grid_2026', JSON.stringify([]));
-    localStorage.setItem('acbcsj_mensalidades_grid_2027', JSON.stringify([]));
-    localStorage.setItem('acbcsj_mensalidades_grid_2028', JSON.stringify([]));
-    localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify([]));
-    localStorage.setItem('acbcsj_comunicados_enviados', JSON.stringify([]));
-    localStorage.setItem('acbcsj_documentos', JSON.stringify([]));
-    localStorage.setItem('acbcsj_programacao', JSON.stringify([]));
-    localStorage.setItem('acbcsj_mensagens', JSON.stringify([]));
+    localStorage.setItem("acbcsj_associados", JSON.stringify(listAssociados));
+    localStorage.setItem("acbcsj_financeiro", JSON.stringify([]));
+    localStorage.setItem("acbcsj_mensalidades_grid", JSON.stringify([]));
+    localStorage.setItem("acbcsj_mensalidades_grid_2024", JSON.stringify([]));
+    localStorage.setItem("acbcsj_mensalidades_grid_2025", JSON.stringify([]));
+    localStorage.setItem("acbcsj_mensalidades_grid_2026", JSON.stringify([]));
+    localStorage.setItem("acbcsj_mensalidades_grid_2027", JSON.stringify([]));
+    localStorage.setItem("acbcsj_mensalidades_grid_2028", JSON.stringify([]));
+    localStorage.setItem("acbcsj_mensalidades_historico", JSON.stringify([]));
+    localStorage.setItem("acbcsj_comunicados_enviados", JSON.stringify([]));
+    localStorage.setItem("acbcsj_documentos", JSON.stringify([]));
+    localStorage.setItem("acbcsj_programacao", JSON.stringify([]));
+    localStorage.setItem("acbcsj_mensagens", JSON.stringify([]));
 }
 
 function initMockData() {
-    // Executa a limpeza zerando dados antigos fictícios e mantendo apenas o Comandante
-    resetBancoDadosComandante();
+    let list = [];
+    try {
+        list = JSON.parse(localStorage.getItem("acbcsj_associados")) || [];
+    } catch (e) {
+        list = [];
+    }
+    
+    if (!list || list.length < 60) {
+        resetBancoDadosComandante();
+    }
 }
 
 // MÁSCARA AUTOMÁTICA DE CPF
