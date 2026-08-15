@@ -301,7 +301,7 @@ function renderSidebarMenu() {
 
     if (currentUser.perfil === 'diretoria') {
         menuNav.innerHTML = `
-            <div class="nav-item active" onclick="navigateTab('overview-diretoria')">📊 Painel Geral</div>
+            <div class="nav-item active" onclick="navigateTab('overview-diretoria')">🏠 HOME</div>
             <div class="nav-item" onclick="navigateTab('gestao-associados')">👥 Controle de Associados</div>
             <div class="nav-item" onclick="navigateTab('associados-desligados')">📋 Associados Desligados</div>
             <div class="nav-item" onclick="navigateTab('gestao-mensalidades')">💳 Controle de Mensalidades</div>
