@@ -143,10 +143,12 @@ const idbStorage = {
 };
 
 // INICIALIZAÇÃO E LIMPEZA DE DADOS
-document.addEventListener("DOMContentLoaded", () => {
-    initMockData();
+document.addEventListener("DOMContentLoaded", async () => {
     setupCPFMasks();
     setupNavigation();
+    if (typeof dbService !== 'undefined' && dbService.syncFromSupabase) {
+        await dbService.syncFromSupabase();
+    }
 });
 
 function resetBancoDadosComandante() {
@@ -172,27 +174,12 @@ function resetBancoDadosComandante() {
     localStorage.setItem("acbcsj_mensalidades_grid_2026", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensalidades_grid_2027", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensalidades_grid_2028", JSON.stringify([]));
-    localStorage.setItem("acbcsj_mensalidades_historico", JSON.stringify([])); localStorage.setItem("acbcsj_valor_mensalidade", "20.00"); localStorage.setItem("acbcsj_historico_reajustes_mensalidade", JSON.stringify([{ id: "reaj_inicial", valor: 20.00, mes_inicio: "01", ano_inicio: "2024", data_registro: "01/01/2024", justificativa: "Valor base padrÃ£o (R$ 20,00)" }]));
-    localStorage.setItem("acbcsj_comunicados_enviados", JSON.stringify([]));
-    localStorage.setItem("acbcsj_documentos", JSON.stringify([]));
-    localStorage.setItem("acbcsj_programacao", JSON.stringify([]));
+    localStorage.setItem("acbcsj_mensalidades_historico", JSON.stringify([])); localStorage.setItem("acbcsj_valor_mensalidade", "20.00"); localStorage.setItem("acbcsj_historico_reajustes_mensalidade", JSON.stringify([]));
+    // 100% Exclusivo Supabase - sem dados ficticios  localStorage.setItem("acbcsj_programacao", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensagens", JSON.stringify([]));
 }
 
 function initMockData() {
-    let list = [];
-    try {
-        list = JSON.parse(localStorage.getItem("acbcsj_associados")) || [];
-    } catch (e) {
-        list = [];
-    }
-    
-    if (!list || list.length < 60) {
-        localStorage.setItem("acbcsj_associados", JSON.stringify(MOCK_DATA_INITIAL.associados));
-    }
-
-    let finList = [];
-    try {
         finList = JSON.parse(localStorage.getItem("acbcsj_financeiro")) || [];
     } catch (e) {
         finList = [];

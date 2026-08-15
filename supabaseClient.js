@@ -1,4 +1,4 @@
-// CONECTOR SUPABASE DO PORTAL ACBCSJ (COM SUPORTE A VERCEL E NUVEM)
+// CONECTOR SUPABASE DO PORTAL ACBCSJ (100% EXCLUSIVO SUPABASE - SEM DADOS MOCKADOS)
 
 const SUPABASE_URL = window.ENV_SUPABASE_URL || "https://ucutgspmvbupknjodeit.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = window.ENV_SUPABASE_PUBLISHABLE_KEY || window.ENV_SUPABASE_ANON_KEY || "sb_publishable_drRsr2KSefHZqctSxlU7qA_b3xOj7RJ";
@@ -10,15 +10,13 @@ let supabaseClient = null;
 if (typeof supabase !== 'undefined' && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY) {
     try {
         supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-        console.log("🟢 Conexão com Supabase ativada com sucesso! URL:", SUPABASE_URL);
+        console.log("🟢 Conexão com Supabase ativada! URL:", SUPABASE_URL);
     } catch (e) {
-        console.warn("⚠️ Falha ao inicializar o Supabase SDK. Operando em modo offline/local fallback.", e);
+        console.warn("⚠️ Falha ao inicializar Supabase SDK:", e);
     }
-} else {
-    console.log("ℹ️ Supabase não detectado globalmente. Usando armazenamento LocalStorage.");
 }
 
-// Helper de Higienização de Objetos para evitar erros de schema no Supabase
+// Helpers para sanitização de objetos
 function sanitizeAssociado(item) {
     if (!item) return null;
     return {
@@ -100,23 +98,21 @@ function sanitizeMensagem(item) {
     };
 }
 
-// SERVIÇO DE BANCO DE DADOS INTEGRADO (SUPABASE + LOCALSTORAGE BACKUP)
+// BANCO DE DADOS 100% BASEADO NO SUPABASE
 const dbService = {
-    // ----------------------------------------------------
     // ASSOCIADOS
-    // ----------------------------------------------------
     async getAssociados() {
         if (supabaseClient) {
             try {
                 const { data, error } = await supabaseClient.from('associados').select('*');
-                if (!error && data && data.length > 0) {
+                if (!error && data) {
                     localStorage.setItem('acbcsj_associados', JSON.stringify(data));
                     return data;
                 } else if (error) {
-                    console.warn("⚠️ Supabase GET associados avisou:", error.message);
+                    console.error("⚠️ Supabase GET associados erro:", error.message);
                 }
             } catch (e) {
-                console.error("Erro na busca de associados no Supabase:", e);
+                console.error("Erro no Supabase getAssociados:", e);
             }
         }
         return JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
@@ -126,27 +122,19 @@ const dbService = {
         const clean = sanitizeAssociado(associado);
         if (!clean) return false;
 
-        // Atualiza LocalStorage imediatamente
         let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
         const idx = list.findIndex(a => (a.cpf === clean.cpf || a.id === clean.id));
-        if (idx >= 0) {
-            list[idx] = { ...list[idx], ...clean };
-        } else {
-            list.push(clean);
-        }
+        if (idx >= 0) list[idx] = { ...list[idx], ...clean };
+        else list.push(clean);
         localStorage.setItem('acbcsj_associados', JSON.stringify(list));
 
-        // Envia para o Supabase
         if (supabaseClient) {
             try {
                 const { error } = await supabaseClient.from('associados').upsert([clean], { onConflict: 'cpf' });
-                if (error) {
-                    console.warn("⚠️ Erro ao salvar associado no Supabase:", error.message);
-                } else {
-                    console.log("✅ Associado sincronizado com Supabase:", clean.nome_guerra || clean.nome);
-                }
+                if (error) console.error("⚠️ Erro ao salvar associado no Supabase:", error.message);
+                else console.log("✅ Associado salvo no Supabase:", clean.nome_guerra || clean.nome);
             } catch (e) {
-                console.error("Erro ao sincronizar associado:", e);
+                console.error("Erro ao salvar associado:", e);
             }
         }
         return true;
@@ -160,7 +148,7 @@ const dbService = {
         if (supabaseClient) {
             try {
                 await supabaseClient.from('associados').delete().eq('cpf', cpf);
-                console.log("🗑️ Associado removido no Supabase (CPF:", cpf, ")");
+                console.log("🗑️ Associado excluído do Supabase (CPF:", cpf, ")");
             } catch (e) {
                 console.error("Erro ao deletar associado do Supabase:", e);
             }
@@ -168,21 +156,19 @@ const dbService = {
         return true;
     },
 
-    // ----------------------------------------------------
     // FINANCEIRO
-    // ----------------------------------------------------
     async getFinanceiro() {
         if (supabaseClient) {
             try {
                 const { data, error } = await supabaseClient.from('financeiro_lancamentos').select('*');
-                if (!error && data && data.length > 0) {
+                if (!error && data) {
                     localStorage.setItem('acbcsj_financeiro', JSON.stringify(data));
                     return data;
                 } else if (error) {
-                    console.warn("⚠️ Supabase GET financeiro avisou:", error.message);
+                    console.error("⚠️ Supabase GET financeiro erro:", error.message);
                 }
             } catch (e) {
-                console.error("Erro na busca do financeiro no Supabase:", e);
+                console.error("Erro no Supabase getFinanceiro:", e);
             }
         }
         return JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
@@ -199,13 +185,10 @@ const dbService = {
         if (supabaseClient) {
             try {
                 const { error } = await supabaseClient.from('financeiro_lancamentos').upsert([clean]);
-                if (error) {
-                    console.warn("⚠️ Erro ao salvar lançamento no Supabase:", error.message);
-                } else {
-                    console.log("✅ Lançamento financeiro enviado ao Supabase:", clean.descricao);
-                }
+                if (error) console.error("⚠️ Erro ao salvar financeiro no Supabase:", error.message);
+                else console.log("✅ Lançamento salvo no Supabase:", clean.descricao);
             } catch (e) {
-                console.error("Erro ao enviar lançamento financeiro:", e);
+                console.error("Erro ao salvar lançamento financeiro:", e);
             }
         }
         return true;
@@ -219,22 +202,20 @@ const dbService = {
         if (supabaseClient) {
             try {
                 await supabaseClient.from('financeiro_lancamentos').delete().eq('id', id);
-                console.log("🗑️ Lançamento removido do Supabase:", id);
+                console.log("🗑️ Lançamento excluído do Supabase:", id);
             } catch (e) {
-                console.error("Erro ao deletar lançamento no Supabase:", e);
+                console.error("Erro ao deletar lançamento:", e);
             }
         }
         return true;
     },
 
-    // ----------------------------------------------------
-    // MENSAGENS E COMUNICADOS
-    // ----------------------------------------------------
+    // MENSAGENS
     async getMensagens() {
         if (supabaseClient) {
             try {
                 const { data, error } = await supabaseClient.from('mensagens').select('*');
-                if (!error && data && data.length > 0) {
+                if (!error && data) {
                     localStorage.setItem('acbcsj_mensagens', JSON.stringify(data));
                     return data;
                 }
@@ -253,21 +234,18 @@ const dbService = {
 
         if (supabaseClient) {
             try {
-                const { error } = await supabaseClient.from('mensagens').upsert([clean]);
-                if (!error) console.log("✅ Comunicado/Mensagem sincronizada com Supabase:", clean.assunto);
+                await supabaseClient.from('mensagens').upsert([clean]);
             } catch (e) {}
         }
         return true;
     },
 
-    // ----------------------------------------------------
     // DOCUMENTOS
-    // ----------------------------------------------------
     async getDocumentos() {
         if (supabaseClient) {
             try {
                 const { data, error } = await supabaseClient.from('documentos').select('*');
-                if (!error && data && data.length > 0) {
+                if (!error && data) {
                     localStorage.setItem('acbcsj_documentos', JSON.stringify(data));
                     return data;
                 }
@@ -288,8 +266,7 @@ const dbService = {
 
         if (supabaseClient) {
             try {
-                const { error } = await supabaseClient.from('documentos').upsert([clean]);
-                if (!error) console.log("✅ Documento sincronizado com Supabase:", clean.titulo);
+                await supabaseClient.from('documentos').upsert([clean]);
             } catch (e) {}
         }
         return true;
@@ -308,67 +285,38 @@ const dbService = {
         return true;
     },
 
-    // ----------------------------------------------------
-    // SINCRONIZAÇÃO AUTOMÁTICA GERAL (PULL & SEED)
-    // ----------------------------------------------------
+    // BUSCAR TUDO EXCLUSIVAMENTE DO SUPABASE
     async syncFromSupabase() {
-        if (!supabaseClient) {
-            console.log("ℹ️ Modo Local Ativo (Supabase não conectado).");
-            return;
-        }
+        if (!supabaseClient) return;
 
-        console.log("🔄 Iniciando sincronização completa com o banco remoto Supabase...");
-
+        console.log("🔄 Carregando dados exclusivos do Supabase...");
         try {
-            // 1. ASSOCIADOS
-            const { data: remoteAssociados, error: errAssoc } = await supabaseClient.from('associados').select('*');
-            if (!errAssoc && remoteAssociados && remoteAssociados.length > 0) {
-                console.log(`📥 ${remoteAssociados.length} associados baixados do Supabase.`);
-                localStorage.setItem('acbcsj_associados', JSON.stringify(remoteAssociados));
-            } else {
-                // Se o Supabase estiver vazio, envia os associados locais/iniciais para lá (Seed)
-                const localAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-                if (localAssociados.length > 0) {
-                    console.log(`📤 Enviando ${localAssociados.length} associados iniciais para o Supabase...`);
-                    const cleanList = localAssociados.map(sanitizeAssociado).filter(Boolean);
-                    await supabaseClient.from('associados').upsert(cleanList, { onConflict: 'cpf' });
-                }
-            }
+            const [assocRes, finRes, msgRes, docRes] = await Promise.all([
+                supabaseClient.from('associados').select('*'),
+                supabaseClient.from('financeiro_lancamentos').select('*'),
+                supabaseClient.from('mensagens').select('*'),
+                supabaseClient.from('documentos').select('*')
+            ]);
 
-            // 2. FINANCEIRO
-            const { data: remoteFin, error: errFin } = await supabaseClient.from('financeiro_lancamentos').select('*');
-            if (!errFin && remoteFin && remoteFin.length > 0) {
-                console.log(`📥 ${remoteFin.length} lançamentos financeiros baixados do Supabase.`);
-                localStorage.setItem('acbcsj_financeiro', JSON.stringify(remoteFin));
-            } else {
-                const localFin = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-                if (localFin.length > 0) {
-                    console.log(`📤 Enviando ${localFin.length} lançamentos financeiros iniciais para o Supabase...`);
-                    const cleanFinList = localFin.map(sanitizeFinanceiro).filter(Boolean);
-                    await supabaseClient.from('financeiro_lancamentos').upsert(cleanFinList);
-                }
+            if (!assocRes.error && assocRes.data) {
+                localStorage.setItem('acbcsj_associados', JSON.stringify(assocRes.data));
             }
-
-            // 3. MENSAGENS
-            const { data: remoteMsgs, error: errMsgs } = await supabaseClient.from('mensagens').select('*');
-            if (!errMsgs && remoteMsgs && remoteMsgs.length > 0) {
-                localStorage.setItem('acbcsj_mensagens', JSON.stringify(remoteMsgs));
+            if (!finRes.error && finRes.data) {
+                localStorage.setItem('acbcsj_financeiro', JSON.stringify(finRes.data));
             }
-
-            // 4. DOCUMENTOS
-            const { data: remoteDocs, error: errDocs } = await supabaseClient.from('documentos').select('*');
-            if (!errDocs && remoteDocs && remoteDocs.length > 0) {
-                localStorage.setItem('acbcsj_documentos', JSON.stringify(remoteDocs));
+            if (!msgRes.error && msgRes.data) {
+                localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgRes.data));
             }
-
-            console.log("✨ Sincronização em nuvem (Supabase + Vercel) concluída!");
+            if (!docRes.error && docRes.data) {
+                localStorage.setItem('acbcsj_documentos', JSON.stringify(docRes.data));
+            }
+            console.log("✨ Dados do Supabase carregados com sucesso!");
         } catch (err) {
-            console.warn("⚠️ Aviso durante a sincronização inicial:", err);
+            console.error("⚠️ Erro ao consultar Supabase:", err);
         }
     }
 };
 
-// Exportar configuracoes globalmente para acesso nos scripts da aplicacao
 window.ENV_SUPABASE_URL = SUPABASE_URL;
 window.ENV_SUPABASE_PUBLISHABLE_KEY = SUPABASE_PUBLISHABLE_KEY;
 window.ENV_SUPABASE_SECRET_KEY = SUPABASE_SECRET_KEY;
