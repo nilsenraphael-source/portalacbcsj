@@ -210,6 +210,24 @@ const dbService = {
         return true;
     },
 
+    async limparReceitas() {
+        let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+        list = list.filter(item => item.tipo !== 'receita');
+        localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('financeiro_lancamentos').delete().eq('tipo', 'receita');
+                if (error) console.error("⚠️ Erro ao limpar receitas no Supabase:", error.message);
+                else console.log("🗑️ Todos os lançamentos de receita foram excluídos do Supabase.");
+            } catch (e) {
+                console.error("Erro ao limpar receitas do Supabase:", e);
+            }
+        }
+        return true;
+    },
+
+
     // MENSAGENS
     async getMensagens() {
         if (supabaseClient) {
@@ -289,7 +307,7 @@ const dbService = {
     async syncFromSupabase() {
         if (!supabaseClient) return;
 
-        console.log("🔄 Carregando dados exclusivos do Supabase...");
+        console.log("🌐 Carregando dados exclusivos do Supabase...");
         try {
             const [assocRes, finRes, msgRes, docRes] = await Promise.all([
                 supabaseClient.from('associados').select('*'),
@@ -310,7 +328,7 @@ const dbService = {
             if (!docRes.error && docRes.data) {
                 localStorage.setItem('acbcsj_documentos', JSON.stringify(docRes.data));
             }
-            console.log("✨ Dados do Supabase carregados com sucesso!");
+            console.log("🎉 Dados do Supabase carregados com sucesso!");
         } catch (err) {
             console.error("⚠️ Erro ao consultar Supabase:", err);
         }
