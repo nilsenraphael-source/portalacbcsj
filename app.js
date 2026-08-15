@@ -1,4 +1,4 @@
-// DADOS DE INICIALIZAÇÃO DA ACBCSJ (COMANDANTE + 66 SÓCIOS IMPORTADOS DA PLANILHA SOCIOS.XLSX)
+﻿// DADOS DE INICIALIZAÇÃO DA ACBCSJ (COMANDANTE + 66 SÓCIOS IMPORTADOS DA PLANILHA SOCIOS.XLSX)
 const INITIAL_MENSAL_DATA = [];
 const INITIAL_LANCAMENTOS_DATA = [
     // DESPESAS DA PLANILHA (29 ITENS)
@@ -6,26 +6,26 @@ const INITIAL_LANCAMENTOS_DATA = [
     { id: "desp_2026_02", descricao: "Sandro Martins (Copo B4 / FECABOM)", categoria: "Outros", valor: 50.00, tipo: "despesa", data: "26/01/2026", data_iso: "2026-01-26", mes: "Janeiro", comprovante_nome: null },
     { id: "desp_2026_03", descricao: "Tarifas Caixa Economica Federal", categoria: "Tarifas Banco", valor: 0.17, tipo: "despesa", data: "31/01/2026", data_iso: "2026-01-31", mes: "Janeiro", comprovante_nome: null },
     { id: "desp_2026_04", descricao: "Certificado Digital", categoria: "Outros", valor: 170.00, tipo: "despesa", data: "09/02/2026", data_iso: "2026-02-09", mes: "Fevereiro", comprovante_nome: null },
-    { id: "desp_2026_05", descricao: "Brinde ReuniÃ£o Comando (Camila C Soares)", categoria: "Presentes", valor: 47.61, tipo: "despesa", data: "20/02/2026", data_iso: "2026-02-20", mes: "Fevereiro", comprovante_nome: null },
+    { id: "desp_2026_05", descricao: "Brinde Reunião Comando (Camila C Soares)", categoria: "Presentes", valor: 47.61, tipo: "despesa", data: "20/02/2026", data_iso: "2026-02-20", mes: "Fevereiro", comprovante_nome: null },
     { id: "desp_2026_06", descricao: "Taxa \"Cesta de Relacionamento\" Sicred", categoria: "Tarifas Banco", valor: 35.00, tipo: "despesa", data: "20/02/2026", data_iso: "2026-02-20", mes: "Fevereiro", comprovante_nome: null },
-    { id: "desp_2026_07", descricao: "Lancheira aniversÃ¡rios Compra 1", categoria: "Presentes", valor: 1945.00, tipo: "despesa", data: "23/02/2026", data_iso: "2026-02-23", mes: "Fevereiro", comprovante_nome: null },
-    { id: "desp_2026_08", descricao: "Lancheira aniversÃ¡rios Compra 2", categoria: "Presentes", valor: 775.80, tipo: "despesa", data: "23/02/2026", data_iso: "2026-02-23", mes: "Fevereiro", comprovante_nome: null },
+    { id: "desp_2026_07", descricao: "Lancheira aniversÁrios Compra 1", categoria: "Presentes", valor: 1945.00, tipo: "despesa", data: "23/02/2026", data_iso: "2026-02-23", mes: "Fevereiro", comprovante_nome: null },
+    { id: "desp_2026_08", descricao: "Lancheira aniversÁrios Compra 2", categoria: "Presentes", valor: 775.80, tipo: "despesa", data: "23/02/2026", data_iso: "2026-02-23", mes: "Fevereiro", comprovante_nome: null },
     { id: "desp_2026_09", descricao: "Tarifas Caixa Economica Federal", categoria: "Tarifas Banco", valor: 0.17, tipo: "despesa", data: "28/02/2026", data_iso: "2026-02-28", mes: "Fevereiro", comprovante_nome: null },
-    { id: "desp_2026_10", descricao: "Estampa das lancheiras (Adriano Lima)", categoria: "Presentes", valor: 800.00, tipo: "despesa", data: "12/03/2026", data_iso: "2026-03-12", mes: "MarÃ§o", comprovante_nome: null },
-    { id: "desp_2026_11", descricao: "Taxa \"Cesta de Relacionamento\" Sicred", categoria: "Tarifas Banco", valor: 35.00, tipo: "despesa", data: "20/03/2026", data_iso: "2026-03-20", mes: "MarÃ§o", comprovante_nome: null },
-    { id: "desp_2026_12", descricao: "Tarifas Caixa Economica Federal", categoria: "Tarifas Banco", valor: 0.88, tipo: "despesa", data: "30/03/2026", data_iso: "2026-03-30", mes: "MarÃ§o", comprovante_nome: null },
-    { id: "desp_2026_13", descricao: "Coffee Break Treinamento APH (JoÃ£o Valdeci Moraes)", categoria: "Treinamentos", valor: 240.00, tipo: "despesa", data: "13/04/2026", data_iso: "2026-04-13", mes: "Abril", comprovante_nome: null },
+    { id: "desp_2026_10", descricao: "Estampa das lancheiras (Adriano Lima)", categoria: "Presentes", valor: 800.00, tipo: "despesa", data: "12/03/2026", data_iso: "2026-03-12", mes: "MarÇo", comprovante_nome: null },
+    { id: "desp_2026_11", descricao: "Taxa \"Cesta de Relacionamento\" Sicred", categoria: "Tarifas Banco", valor: 35.00, tipo: "despesa", data: "20/03/2026", data_iso: "2026-03-20", mes: "MarÇo", comprovante_nome: null },
+    { id: "desp_2026_12", descricao: "Tarifas Caixa Economica Federal", categoria: "Tarifas Banco", valor: 0.88, tipo: "despesa", data: "30/03/2026", data_iso: "2026-03-30", mes: "MarÇo", comprovante_nome: null },
+    { id: "desp_2026_13", descricao: "Coffee Break Treinamento APH (João Valdeci Moraes)", categoria: "Treinamentos", valor: 240.00, tipo: "despesa", data: "13/04/2026", data_iso: "2026-04-13", mes: "Abril", comprovante_nome: null },
     { id: "desp_2026_14", descricao: "Coffee Break Treinamento APH (Camila Soares)", categoria: "Treinamentos", valor: 132.08, tipo: "despesa", data: "13/04/2026", data_iso: "2026-04-13", mes: "Abril", comprovante_nome: null },
     { id: "desp_2026_15", descricao: "Taxa \"Cesta de Relacionamento\" Sicred", categoria: "Tarifas Banco", valor: 35.00, tipo: "despesa", data: "20/04/2026", data_iso: "2026-04-20", mes: "Abril", comprovante_nome: null },
-    { id: "desp_2026_16", descricao: "CartÃ³rio (Gabriel F.Farias)", categoria: "CartÃ³rio ou DocumentaÃ§Ã£o em geral", valor: 193.67, tipo: "despesa", data: "24/04/2026", data_iso: "2026-04-24", mes: "Abril", comprovante_nome: null },
+    { id: "desp_2026_16", descricao: "CartÓrio (Gabriel F.Farias)", categoria: "CartÓrio ou DocumentaÇão em geral", valor: 193.67, tipo: "despesa", data: "24/04/2026", data_iso: "2026-04-24", mes: "Abril", comprovante_nome: null },
     { id: "desp_2026_17", descricao: "Taxa \"Cesta de Relacionamento\" Sicred", categoria: "Tarifas Banco", valor: 35.00, tipo: "despesa", data: "20/05/2026", data_iso: "2026-05-20", mes: "Maio", comprovante_nome: null },
-    { id: "desp_2026_18", descricao: "Taxa de funcionamento PMSJ", categoria: "CartÃ³rio ou DocumentaÃ§Ã£o em geral", valor: 440.66, tipo: "despesa", data: "11/06/2026", data_iso: "2026-06-11", mes: "Junho", comprovante_nome: null },
-    { id: "desp_2026_19", descricao: "Certificado Digital (Safe2pay)", categoria: "CartÃ³rio ou DocumentaÃ§Ã£o em geral", valor: 184.00, tipo: "despesa", data: "11/06/2026", data_iso: "2026-06-11", mes: "Junho", comprovante_nome: null },
-    { id: "desp_2026_20", descricao: "DecoraÃ§Ã£o e descartaveis - Jogo Copa do Mundo (Yanka)", categoria: "Mercado", valor: 80.85, tipo: "despesa", data: "18/06/2026", data_iso: "2026-06-18", mes: "Junho", comprovante_nome: null },
+    { id: "desp_2026_18", descricao: "Taxa de funcionamento PMSJ", categoria: "CartÓrio ou DocumentaÇão em geral", valor: 440.66, tipo: "despesa", data: "11/06/2026", data_iso: "2026-06-11", mes: "Junho", comprovante_nome: null },
+    { id: "desp_2026_19", descricao: "Certificado Digital (Safe2pay)", categoria: "CartÓrio ou DocumentaÇão em geral", valor: 184.00, tipo: "despesa", data: "11/06/2026", data_iso: "2026-06-11", mes: "Junho", comprovante_nome: null },
+    { id: "desp_2026_20", descricao: "DecoraÇão e descartaveis - Jogo Copa do Mundo (Yanka)", categoria: "Mercado", valor: 80.85, tipo: "despesa", data: "18/06/2026", data_iso: "2026-06-18", mes: "Junho", comprovante_nome: null },
     { id: "desp_2026_21", descricao: "Mercado - Jogo Copa do Mundo (MundialMIX)", categoria: "Mercado", valor: 248.35, tipo: "despesa", data: "22/06/2026", data_iso: "2026-06-22", mes: "Junho", comprovante_nome: null },
     { id: "desp_2026_22", descricao: "Mercado - Jogo Copa do Mundo (Yanka)", categoria: "Mercado", valor: 35.66, tipo: "despesa", data: "22/06/2026", data_iso: "2026-06-22", mes: "Junho", comprovante_nome: null },
     { id: "desp_2026_23", descricao: "Taxa \"Cesta de Relacionamento\" Sicred", categoria: "Tarifas Banco", valor: 35.00, tipo: "despesa", data: "22/06/2026", data_iso: "2026-06-22", mes: "Junho", comprovante_nome: null },
-    { id: "desp_2026_24", descricao: "PÃ£es - Jogo Copa do Mundo (Industria de Paes)", categoria: "Mercado", valor: 36.00, tipo: "despesa", data: "23/06/2026", data_iso: "2026-06-23", mes: "Junho", comprovante_nome: null },
+    { id: "desp_2026_24", descricao: "Pães - Jogo Copa do Mundo (Industria de Paes)", categoria: "Mercado", valor: 36.00, tipo: "despesa", data: "23/06/2026", data_iso: "2026-06-23", mes: "Junho", comprovante_nome: null },
     { id: "desp_2026_25", descricao: "Tarifas Caixa Economica Federal", categoria: "Tarifas Banco", valor: 0.71, tipo: "despesa", data: "30/06/2026", data_iso: "2026-06-30", mes: "Junho", comprovante_nome: null },
     { id: "desp_2026_26", descricao: "Coffee Break - Palestra (Kiko)", categoria: "Treinamentos", valor: 384.00, tipo: "despesa", data: "17/07/2026", data_iso: "2026-07-17", mes: "Julho", comprovante_nome: null },
     { id: "desp_2026_27", descricao: "Taxa \"Cesta de Relacionamento\" Sicredi", categoria: "Tarifas Banco", valor: 35.00, tipo: "despesa", data: "20/07/2026", data_iso: "2026-07-20", mes: "Julho", comprovante_nome: null },
@@ -35,7 +35,7 @@ const INITIAL_LANCAMENTOS_DATA = [
     // RECEITAS DA PLANILHA (12 ITENS)
     { id: "rec_2026_01", descricao: "Rendimentos Caixa Economica Federal", categoria: "Rendimentos", valor: 0.40, tipo: "receita", data: "31/01/2026", data_iso: "2026-01-31", mes: "Janeiro", comprovante_nome: null },
     { id: "rec_2026_02", descricao: "Rendimentos Caixa Economica Federal", categoria: "Rendimentos", valor: 0.54, tipo: "receita", data: "28/02/2026", data_iso: "2026-02-28", mes: "Fevereiro", comprovante_nome: null },
-    { id: "rec_2026_03", descricao: "Rendimentos Caixa Economica Federal", categoria: "Rendimentos", valor: 0.62, tipo: "receita", data: "30/03/2026", data_iso: "2026-03-30", mes: "MarÃ§o", comprovante_nome: null },
+    { id: "rec_2026_03", descricao: "Rendimentos Caixa Economica Federal", categoria: "Rendimentos", valor: 0.62, tipo: "receita", data: "30/03/2026", data_iso: "2026-03-30", mes: "MarÇo", comprovante_nome: null },
     { id: "rec_2026_04", descricao: "Rendimentos Caixa Economica Federal", categoria: "Rendimentos", valor: 1.34, tipo: "receita", data: "30/04/2026", data_iso: "2026-04-30", mes: "Abril", comprovante_nome: null },
     { id: "rec_2026_05", descricao: "Rendimentos SICREDI", categoria: "Rendimentos", valor: 11.31, tipo: "receita", data: "04/05/2026", data_iso: "2026-05-04", mes: "Maio", comprovante_nome: null },
     { id: "rec_2026_06", descricao: "Rendimentos Caixa Economica Federal", categoria: "Rendimentos", valor: 1.28, tipo: "receita", data: "31/05/2026", data_iso: "2026-05-31", mes: "Maio", comprovante_nome: null },
@@ -172,7 +172,7 @@ function resetBancoDadosComandante() {
     localStorage.setItem("acbcsj_mensalidades_grid_2026", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensalidades_grid_2027", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensalidades_grid_2028", JSON.stringify([]));
-    localStorage.setItem("acbcsj_mensalidades_historico", JSON.stringify([])); localStorage.setItem("acbcsj_valor_mensalidade", "20.00"); localStorage.setItem("acbcsj_historico_reajustes_mensalidade", JSON.stringify([{ id: "reaj_inicial", valor: 20.00, mes_inicio: "01", ano_inicio: "2024", data_registro: "01/01/2024", justificativa: "Valor base padrÃ£o (R$ 20,00)" }]));
+    localStorage.setItem("acbcsj_mensalidades_historico", JSON.stringify([])); localStorage.setItem("acbcsj_valor_mensalidade", "20.00"); localStorage.setItem("acbcsj_historico_reajustes_mensalidade", JSON.stringify([{ id: "reaj_inicial", valor: 20.00, mes_inicio: "01", ano_inicio: "2024", data_registro: "01/01/2024", justificativa: "Valor base padrão (R$ 20,00)" }]));
     localStorage.setItem("acbcsj_comunicados_enviados", JSON.stringify([]));
     localStorage.setItem("acbcsj_documentos", JSON.stringify([]));
     localStorage.setItem("acbcsj_programacao", JSON.stringify([]));
@@ -2227,7 +2227,7 @@ function getHistoricoReajustesMensalidade() {
             mes_inicio: '01',
             ano_inicio: '2024',
             data_registro: '01/01/2024',
-            justificativa: 'Valor base padrÃ£o (R$ 20,00)'
+            justificativa: 'Valor base padrão (R$ 20,00)'
         }];
         localStorage.setItem('acbcsj_historico_reajustes_mensalidade', JSON.stringify(historico));
         localStorage.setItem('acbcsj_valor_mensalidade', '20.00');
