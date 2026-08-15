@@ -1,4 +1,41 @@
-﻿// DADOS DE INICIALIZAÇÃO DA ACBCSJ (COMANDANTE + 66 SÓCIOS IMPORTADOS DA PLANILHA SOCIOS.XLSX)
+// HELPER GLOBAL DE FORMATAÇÃO RIGOROSA DE TELEFONES: (XX) XXXXX-XXXX
+function formatPhoneBR(phone) {
+    if (!phone) return '-';
+    let raw = String(phone).trim();
+    if (raw.includes('E+') || raw.includes('E10') || raw.includes('e+') || raw.includes('E')) {
+        try {
+            const num = parseFloat(raw);
+            if (!isNaN(num)) raw = String(Math.round(num));
+        } catch(e) {}
+    }
+    let digits = raw.replace(/\D/g, '');
+    if (digits.startsWith('55') && digits.length > 11) {
+        digits = digits.substring(2);
+    }
+    if (digits.length === 8) {
+        digits = '489' + digits;
+    } else if (digits.length === 9) {
+        digits = '48' + digits;
+    }
+    if (digits.length === 11) {
+        return `(${digits.substring(0, 2)}) ${digits.substring(2, 7)}-${digits.substring(7)}`;
+    } else if (digits.length === 10) {
+        return `(${digits.substring(0, 2)}) ${digits.substring(2, 6)}-${digits.substring(6)}`;
+    }
+    return raw;
+}
+
+function cleanBadChars(str) {
+    if (!str) return str;
+    return String(str)
+        .replace(/\uFFFD|\?/g, 'é')
+        .replace(/Anglica/g, 'Angélica')
+        .replace(/Palho\?/g, 'Palhoça')
+        .replace(/Bigua\?/g, 'Biguaçu')
+        .replace(/S\?o/g, 'São');
+}
+
+// DADOS DE INICIALIZAÇÃO DA ACBCSJ (COMANDANTE + 66 SÓCIOS IMPORTADOS DA PLANILHA SOCIOS.XLSX)
 const INITIAL_MENSAL_DATA = [];
 const INITIAL_LANCAMENTOS_DATA = [
     // DESPESAS DA PLANILHA (29 ITENS)
@@ -432,19 +469,34 @@ function renderDiretoriaOverview() {
 // EXIBIR APENAS ASSOCIADOS ATIVOS COM CONTROLE DE PERFIL PELA DIRETORIA
 function renderGestaoAssociados() {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const ativos = list.filter(a => a.status === 'ativo');
+    let ativos = list.filter(a => a.status === 'ativo' || !a.status);
+    
+    // Filtro de busca por Nome de Guerra, Nome Completo ou CPF
+    const searchInput = document.getElementById('searchAssociadoGuerra');
+    if (searchInput && searchInput.value.trim() !== '') {
+        const query = searchInput.value.trim().toLowerCase();
+        ativos = ativos.filter(a => 
+            (a.nome_guerra || '').toLowerCase().includes(query) ||
+            (a.nome || '').toLowerCase().includes(query) ||
+            (a.cpf || '').includes(query)
+        );
+    }
+
     const container = document.getElementById('tableTodosAssociadosBody');
     const isDiretoria = currentUser && currentUser.perfil === 'diretoria';
 
     if (container) {
         if (ativos.length === 0) {
-            container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum associado ativo cadastrado.</td></tr>`;
+            container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum associado ativo encontrado.</td></tr>`;
         } else {
             container.innerHTML = ativos.map(a => {
                 const isSelf = a.cpf === currentUser.cpf;
+                const nomeGuerraClean = cleanBadChars(a.nome_guerra || a.nome);
+                const nomeClean = cleanBadChars(a.nome);
+                const telClean = formatPhoneBR(a.telefone);
                 
                 // Se for DIRETORIA, exibe um seletor dropdown para alternar o perfil
-                let perfilControl = `<span class="badge badge-${a.perfil === 'diretoria' ? 'warning' : 'info'}">${a.perfil.toUpperCase()}</span>`;
+                let perfilControl = `<span class="badge badge-${a.perfil === 'diretoria' ? 'warning' : 'info'}">${(a.perfil || 'ASSOCIADO').toUpperCase()}</span>`;
                 if (isDiretoria) {
                     perfilControl = `
                         <select class="form-control" style="padding: 4px 8px; font-size: 12px; font-weight: 600; width: 130px; ${a.perfil === 'diretoria' ? 'border-color: var(--accent-gold); color: var(--accent-gold);' : ''}" 
@@ -458,11 +510,16 @@ function renderGestaoAssociados() {
 
                 return `
                     <tr>
-                        <td><b>${a.nome_guerra || a.nome}</b><br><small style="color:var(--text-muted)">${a.nome}</small></td>
+                        <td><b>${nomeGuerraClean}</b><br><small style="color:var(--text-muted)">${nomeClean}</small></td>
                         <td>${a.cpf}</td>
-                        <td>${a.telefone || a.email || '-'}</td>
+                        <td><b>${telClean}</b></td>
                         <td>${perfilControl}</td>
-                        <td><button class="btn btn-sm btn-gold" onclick="verFichaAssociado('${a.cpf}')">📋 Ver Ficha Completa</button></td>
+                        <td>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <button class="btn btn-sm btn-gold" onclick="verFichaAssociado('${a.cpf}')">📋 Ver Ficha</button>
+                                ${isDiretoria ? `<button class="btn btn-sm btn-outline" style="color:var(--accent-gold); border-color:var(--accent-gold);" onclick="abrirModalEditarAssociado('${a.cpf}')">✏️ Editar Ficha</button>` : ''}
+                            </div>
+                        </td>
                         <td>
                             ${!isSelf ? `<button class="btn btn-sm btn-outline" style="color:#E74C3C; border-color:#E74C3C" onclick="abrirModalDesligar('${a.cpf}')">Desligar Associado</button>` : '<small style="color:var(--text-muted)">Você (Diretoria)</small>'}
                         </td>
@@ -3116,8 +3173,9 @@ function salvarBaixaMensalidade(e) {
     const mesesNomesMap = { jan:'Jan', fev:'Fev', mar:'Mar', abr:'Abr', mai:'Mai', jun:'Jun', jul:'Jul', ago:'Ago', set:'Set', out:'Out', nov:'Nov', dez:'Dez' };
     const mesesTexto = checkedMeses.map(m => mesesNomesMap[m]).join(', ');
 
+    const baixaId = 'mensalidade_' + Date.now();
     const itemHistorico = {
-        id: 'mensalidade_' + Date.now(),
+        id: baixaId,
         cpf: cpf,
         associado_nome: nomeAssociado,
         ano: anoRef,
