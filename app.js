@@ -175,20 +175,12 @@ function resetBancoDadosComandante() {
     localStorage.setItem("acbcsj_mensalidades_grid_2027", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensalidades_grid_2028", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensalidades_historico", JSON.stringify([])); localStorage.setItem("acbcsj_valor_mensalidade", "20.00"); localStorage.setItem("acbcsj_historico_reajustes_mensalidade", JSON.stringify([]));
-    // 100% Exclusivo Supabase - sem dados ficticios  localStorage.setItem("acbcsj_programacao", JSON.stringify([]));
+    // 100% Exclusivo Supabase - sem dados ficticios  
+    localStorage.setItem("acbcsj_programacao", JSON.stringify([]));
     localStorage.setItem("acbcsj_mensagens", JSON.stringify([]));
 }
 
-function initMockData() {
-        finList = JSON.parse(localStorage.getItem("acbcsj_financeiro")) || [];
-    } catch (e) {
-        finList = [];
-    }
-
-    if (!finList || finList.length < 35) {
-        localStorage.setItem("acbcsj_financeiro", JSON.stringify(INITIAL_LANCAMENTOS_DATA));
-    }
-}
+function initMockData() {}
 
 // MÁSCARA AUTOMÁTICA DE CPF
 function setupCPFMasks() {
@@ -206,14 +198,27 @@ function setupCPFMasks() {
 }
 
 // AUTENTICAÇÃO E LOGIN
-function loginWithCPF(cpf, password, roleHint = null) {
+async function loginWithCPF(cpf, password, roleHint = null) {
     try {
-        const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || (typeof MOCK_DATA_INITIAL !== 'undefined' ? MOCK_DATA_INITIAL.associados : []);
+        let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+        if ((!list || list.length === 0) && typeof dbService !== 'undefined' && dbService.getAssociados) {
+            list = await dbService.getAssociados();
+        }
         
         if (roleHint === 'diretoria') {
-            currentUser = list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || (typeof MOCK_DATA_INITIAL !== 'undefined' ? MOCK_DATA_INITIAL.associados[0] : null);
+            currentUser = list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || {
+                id: "1",
+                cpf: "000.000.000-00",
+                senha: "123",
+                nome: "Comandante / Diretoria ACBCSJ",
+                nome_guerra: "Comandante",
+                perfil: "diretoria",
+                status: "ativo",
+                obm: "São José",
+                profissao: "Comandante da Associação"
+            };
         } else if (roleHint === 'associado') {
-            currentUser = list.find(a => a.perfil === 'associado' && a.status === 'ativo') || (typeof MOCK_DATA_INITIAL !== 'undefined' ? MOCK_DATA_INITIAL.associados[1] : null);
+            currentUser = list.find(a => a.perfil === 'associado' && a.status === 'ativo') || list[0] || null;
         } else {
             const cleanInputCPF = (cpf || '').replace(/\D/g, '');
             const found = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanInputCPF || a.cpf === cpf);
