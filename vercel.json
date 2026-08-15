@@ -1,21 +1,3 @@
 {
-  "version": 2,
-  "env": {
-    "SUPABASE_URL": "https://ucutgspmvbupknjodeit.supabase.co",
-    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_drRsr2KSefHZqctSxlU7qA_b3xOj7RJ",
-    "SUPABASE_SECRET_KEY": "sb_secret_eJeO0e8qj_mw8EN2CLNnkw_GlZCM5Qv",
-    "SUPABASE_JWKS_URL": "https://ucutgspmvbupknjodeit.supabase.co/auth/v1/.well-known/jwks.json"
-  },
-  "builds": [
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ]
+  "cleanUrls": true
 }
