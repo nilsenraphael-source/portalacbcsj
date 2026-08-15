@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -166,9 +166,15 @@
 
                 <!-- ABA 2: GESTÃO DE ASSOCIADOS (DIRETORIA) -->
                 <div id="tab-gestao-associados" class="tab-content" style="display: none;">
-                    <div class="page-header">
-                        <h2 class="page-title">Controle de Associados Ativos</h2>
-                        <button class="btn btn-primary btn-sm" onclick="openModal('modalPreCadastro')">+ Novo Cadastro</button>
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">Controle de Associados Ativos</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Listagem completa e gestão dos membros comunitários da ACBCSJ.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <input type="text" id="searchAssociadoGuerra" class="form-control" placeholder="🔍 Pesquisar por Nome de Guerra, Nome ou CPF..." style="width: 290px; padding: 6px 12px; font-size: 12px;" oninput="renderGestaoAssociados()">
+                            <button class="btn btn-primary btn-sm" onclick="openModal('modalPreCadastro')">+ Novo Cadastro</button>
+                        </div>
                     </div>
 
                     <div class="card">
