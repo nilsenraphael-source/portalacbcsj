@@ -25,19 +25,22 @@ function formatPhoneBR(phone) {
     return raw;
 }
 
-function cleanBadChars(str) {
-    if (!str) return str;
-    return String(str)
-        .replace(/\uFFFD|\?/g, 'é')
-        .replace(/Anglica/g, 'Angélica')
-        .replace(/Palho\?/g, 'Palhoça')
-        .replace(/Bigua\?/g, 'Biguaçu')
-        .replace(/S\?o/g, 'São');
+function formatCEPBR(cep) {
+    if (!cep) return '-';
+    let raw = String(cep).trim();
+    if (raw.includes('E+') || raw.includes('E7') || raw.includes('e+') || raw.includes('E')) {
+        try {
+            const num = parseFloat(raw);
+            if (!isNaN(num)) raw = String(Math.round(num));
+        } catch(e) {}
+    }
+    let digits = raw.replace(/\D/g, '');
+    if (digits.length === 8) {
+        return `${digits.substring(0, 5)}-${digits.substring(5)}`;
+    }
+    return raw;
 }
 
-// DADOS DE INICIALIZAÇÃO DA ACBCSJ (COMANDANTE + 66 SÓCIOS IMPORTADOS DA PLANILHA SOCIOS.XLSX)
-const INITIAL_MENSAL_DATA = [];
-const INITIAL_LANCAMENTOS_DATA = [
     // DESPESAS DA PLANILHA (29 ITENS)
     { id: "desp_2026_01", descricao: "Taxa \"Cesta de Relacionamento\" Sicred", categoria: "Tarifas Banco", valor: 35.00, tipo: "despesa", data: "20/01/2026", data_iso: "2026-01-20", mes: "Janeiro", comprovante_nome: null },
     { id: "desp_2026_02", descricao: "Sandro Martins (Copo B4 / FECABOM)", categoria: "Outros", valor: 50.00, tipo: "despesa", data: "26/01/2026", data_iso: "2026-01-26", mes: "Janeiro", comprovante_nome: null },
@@ -596,40 +599,52 @@ function verFichaAssociado(cpf) {
         return;
     }
 
-    document.getElementById('fichaNomeTitle').textContent = `Ficha Cadastral: ${a.nome_guerra || a.nome}`;
+    const nomeGuerraClean = cleanBadChars(a.nome_guerra || a.nome);
+    const nomeClean = cleanBadChars(a.nome);
+    const telClean = formatPhoneBR(a.telefone);
+    const maeClean = cleanBadChars(a.nome_mae);
+    const paiClean = cleanBadChars(a.nome_pai);
+    const logradouroClean = cleanBadChars(a.logradouro);
+    const bairroClean = cleanBadChars(a.bairro);
+    const cidadeClean = cleanBadChars(a.cidade);
+    const obmClean = cleanBadChars(a.obm);
+    const profissaoClean = cleanBadChars(a.profissao);
+    const cepClean = formatCEPBR(a.cep);
+
+    document.getElementById('fichaNomeTitle').textContent = `Ficha Cadastral: ${nomeGuerraClean}`;
 
     const body = document.getElementById('fichaContentBody');
     body.innerHTML = `
         <div style="grid-column: 1 / -1; background-color:#15181C; padding:12px; border-radius:6px; border:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-            <div><b>Status do Cadastro:</b> <span class="badge badge-${a.status === 'ativo' ? 'success' : (a.status === 'desligado' ? 'danger' : 'warning')}">${a.status.toUpperCase()}</span></div>
+            <div><b>Status do Cadastro:</b> <span class="badge badge-${a.status === 'ativo' ? 'success' : (a.status === 'desligado' ? 'danger' : 'warning')}">${(a.status || 'ATIVO').toUpperCase()}</span></div>
             <div style="font-size:11px; color:var(--text-muted)">Cadastrado em: <b>${a.data_cadastro || '-'}</b></div>
         </div>
 
-        <div><b>Nome de Guerra:</b> ${a.nome_guerra || '-'}</div>
-        <div><b>Nome Completo:</b> ${a.nome}</div>
+        <div><b>Nome de Guerra:</b> ${nomeGuerraClean || '-'}</div>
+        <div><b>Nome Completo:</b> ${nomeClean}</div>
         <div><b>CPF:</b> ${a.cpf}</div>
         <div><b>Data de Nascimento:</b> ${a.data_nascimento || '-'}</div>
         <div><b>Sexo:</b> ${a.sexo || '-'}</div>
-        <div><b>Telefone / WhatsApp:</b> ${a.telefone || '-'}</div>
-        <div><b>OBM de Lotação:</b> <b style="color: var(--accent-gold);">${a.obm || '-'}</b></div>
-        <div><b>Profissão:</b> ${a.profissao || '-'}</div>
+        <div><b>Telefone / WhatsApp:</b> <b style="color: var(--accent-gold);">${telClean}</b></div>
+        <div><b>OBM de Lotação:</b> <b style="color: var(--accent-gold);">${obmClean || '-'}</b></div>
+        <div><b>Profissão:</b> ${profissaoClean || '-'}</div>
         <div><b>Perfil no Portal:</b> <b style="color: var(--accent-gold);">${(a.perfil || 'associado').toUpperCase()}</b></div>
         
         <div style="grid-column: 1 / -1; margin-top:8px; border-top:1px dashed var(--border-color); padding-top:8px;"><b>Filiação:</b></div>
-        <div><b>Nome da Mãe:</b> ${a.nome_mae || '-'}</div>
-        <div><b>Nome do Pai:</b> ${a.nome_pai || '-'}</div>
+        <div><b>Nome da Mãe:</b> ${maeClean || '-'}</div>
+        <div><b>Nome do Pai:</b> ${paiClean || '-'}</div>
 
         <div style="grid-column: 1 / -1; margin-top:8px; border-top:1px dashed var(--border-color); padding-top:8px;"><b>Endereço Residencial:</b></div>
-        <div><b>Logradouro / Rua:</b> ${a.logradouro || '-'}, Nº ${a.numero || '-'}</div>
-        <div><b>Complemento:</b> ${a.complemento || 'Nenhum'}</div>
-        <div><b>CEP:</b> ${a.cep || '-'}</div>
-        <div><b>Bairro:</b> ${a.bairro || '-'}</div>
-        <div style="grid-column: 1 / -1;"><b>Cidade:</b> ${a.cidade || '-'}</div>
+        <div><b>Logradouro / Rua:</b> ${logradouroClean || '-'}, Nº ${a.numero || '-'}</div>
+        <div><b>Complemento:</b> ${cleanBadChars(a.complemento) || 'Nenhum'}</div>
+        <div><b>CEP:</b> ${cepClean}</div>
+        <div><b>Bairro:</b> ${bairroClean || '-'}</div>
+        <div style="grid-column: 1 / -1;"><b>Cidade:</b> ${cidadeClean || '-'}</div>
 
         ${a.status === 'desligado' ? `
             <div style="grid-column: 1 / -1; margin-top:10px; background-color:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.4); padding:12px; border-radius:6px; color:#FF6B6B;">
                 <div><b>Data/Hora do Desligamento:</b> ${a.data_desligamento || '-'}</div>
-                <div><b>Motivo do Desligamento:</b> ${a.motivo_desligamento || '-'}</div>
+                <div><b>Motivo do Desligamento:</b> ${cleanBadChars(a.motivo_desligamento) || '-'}</div>
                 <div style="margin-top: 8px;">
                     <b>Carta de Desligamento:</b> 
                     ${a.carta_desligamento_url ? `
