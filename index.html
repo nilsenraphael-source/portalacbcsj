@@ -1517,5 +1517,11 @@
     <!-- SCRIPTS JS -->
     <script src="supabaseClient.js"></script>
     <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof initMockData === 'function') initMockData();
+            if (typeof setupCPFMasks === 'function') setupCPFMasks();
+        });
+    </script>
 </body>
 </html>
