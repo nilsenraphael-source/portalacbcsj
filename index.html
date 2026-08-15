@@ -31,15 +31,15 @@
                 <p class="brand-subtitle">Associação Corpo de Bombeiros Comunitários de São José</p>
             </div>
 
-            <form onsubmit="event.preventDefault(); loginWithCPF(document.getElementById('loginCPF').value, document.getElementById('loginSenha').value);">
+            <form novalidate onsubmit="event.preventDefault(); loginWithCPF(document.getElementById('loginCPF').value, document.getElementById('loginSenha').value);">
                 <div class="form-group">
                     <label for="loginCPF">Seu CPF Registrado</label>
-                    <input type="text" id="loginCPF" class="form-control cpf-mask" placeholder="000.000.000-00" required>
+                    <input type="text" id="loginCPF" class="form-control cpf-mask" placeholder="000.000.000-00">
                 </div>
 
                 <div class="form-group">
                     <label for="loginSenha">Sua Senha de Acesso</label>
-                    <input type="password" id="loginSenha" class="form-control" placeholder="••••••••" required>
+                    <input type="password" id="loginSenha" class="form-control" placeholder="••••••••">
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
@@ -47,23 +47,16 @@
                 </button>
             </form>
 
-            <div style="margin-top: 16px; text-align: center;">
-                <button class="btn btn-outline btn-sm" onclick="openModal('modalPreCadastro')">
+            <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 10px; text-align: center;">
+                <button type="button" class="btn btn-gold" style="width: 100%; font-size: 15px; font-weight: bold; padding: 12px; border-radius: 6px; box-shadow: 0 4px 12px rgba(241,196,15,0.3);" onclick="loginWithCPF('', '', 'diretoria')">
+                    🔑 ENTRAR DIRETO COMO DIRETORIA (CLIQUE AQUI)
+                </button>
+                <button type="button" class="btn btn-secondary" style="width: 100%; font-size: 14px; padding: 10px;" onclick="loginWithCPF('', '', 'associado')">
+                    👤 ENTRAR DIRETO COMO ASSOCIADO
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="openModal('modalPreCadastro')" style="margin-top: 6px;">
                     Não tem acesso? Solicitar Pré-Cadastro
                 </button>
-            </div>
-
-            <!-- DICA DE TESTE RÁPIDO PARA O CLIENTE -->
-            <div class="demo-shortcut-box">
-                <p>💡 <b>Teste Rápido para Avaliação:</b></p>
-                <div class="demo-buttons">
-                    <button type="button" class="btn btn-gold btn-sm" style="flex:1;" onclick="loginWithCPF('000.000.000-00', '123', 'diretoria')">
-                        Entrar como Diretoria
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="flex:1;" onclick="loginWithCPF('111.111.111-11', '123', 'associado')">
-                        Entrar como Associado
-                    </button>
-                </div>
             </div>
         </div>
     </div>
