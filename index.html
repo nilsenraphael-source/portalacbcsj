@@ -34,7 +34,7 @@
             <form onsubmit="event.preventDefault(); loginWithCPF(document.getElementById('loginCPF').value, document.getElementById('loginSenha').value);">
                 <div class="form-group">
                     <label for="loginCPF">Seu CPF Registrado</label>
-                    <input type="text" id="loginCPF" class="form-control cpf-mask" placeholder="000.000.000-00" required>
+                    <input type="text" id="loginCPF" class="form-control cpf-mask" placeholder="000.000.000-00" oninput="formatCPFInput(this)" required>
                 </div>
 
                 <div class="form-group">

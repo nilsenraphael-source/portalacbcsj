@@ -1,4 +1,14 @@
-﻿// HELPER DE BUSCA STRICT DE ASSOCIADO NA GRADE (POR CPF EXATO)
+﻿function formatCPFInput(el) {
+    if (!el) return;
+    let v = el.value.replace(/\D/g, '');
+    if (v.length > 11) v = v.substring(0, 11);
+    v = v.replace(/(\d{3})(\d)/, '.');
+    v = v.replace(/(\d{3})(\d)/, '.');
+    v = v.replace(/(\d{3})(\d{1,2})$/, '-');
+    el.value = v;
+}
+
+// HELPER DE BUSCA STRICT DE ASSOCIADO NA GRADE (POR CPF EXATO)
 function encontrarSocioNaGrade(grid, socioObj, cpfParam) {
     if (!grid || !Array.isArray(grid)) return null;
     const cleanCpf = (cpfParam || (socioObj ? socioObj.cpf : '') || '').replace(/\D/g, '');
@@ -1852,6 +1862,12 @@ function setupCPFMasks() {
 
 // AUTENTICAÇÃO E LOGIN
 function loginWithCPF(cpf, password, roleHint = null) {
+    if (!cpf && !roleHint) {
+        const elCpf = document.getElementById('loginCPF');
+        const elPass = document.getElementById('loginSenha');
+        if (elCpf) cpf = elCpf.value;
+        if (elPass) password = elPass.value;
+    }
     try {
         let list = [];
         try {
