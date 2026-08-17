@@ -1932,7 +1932,7 @@ function loginWithCPF(cpf, password, roleHint = null) {
     }
 }
 
-function logout()" {
+function logout() {
     currentUser = null;
     document.getElementById('appDashboard').style.display = 'none';
     document.getElementById('authScreen').style.display = 'flex';
