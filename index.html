@@ -31,36 +31,36 @@
                 <p class="brand-subtitle">Associação Corpo de Bombeiros Comunitários de São José</p>
             </div>
 
-            <form onsubmit="event.preventDefault(); loginWithCPF();">
+                        <form id="loginForm" onsubmit="event.preventDefault(); handleLoginSubmit();">
                 <div class="form-group">
                     <label for="loginCPF">Seu CPF Registrado</label>
-                    <input type="text" id="loginCPF" class="form-control cpf-mask" placeholder="000.000.000-00" oninput="formatCPFInput(this)" required>
+                    <input type="text" id="loginCPF" class="form-control cpf-mask" placeholder="000.000.000-00" oninput="formatCPFInput(this)" autocomplete="username" required>
                 </div>
 
                 <div class="form-group">
                     <label for="loginSenha">Sua Senha de Acesso</label>
-                    <input type="password" id="loginSenha" class="form-control" placeholder="••••••••" required>
+                    <input type="password" id="loginSenha" class="form-control" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="current-password" required>
                 </div>
 
-                <button type="button" id="btnEntrarPortal" class="btn btn-primary" style="margin-top: 10px;" onclick="loginWithCPF()">
+                <button type="submit" id="btnEntrarPortal" class="btn btn-primary" style="margin-top: 10px;">
                     Entrar no Portal ACBCSJ
                 </button>
             </form>
 
             <div style="margin-top: 16px; text-align: center;">
-                <button class="btn btn-outline btn-sm" onclick="openModal('modalPreCadastro')">
-                    Não tem acesso? Solicitar Pré-Cadastro
+                <button class="btn btn-outline btn-sm" type="button" onclick="openModal('modalPreCadastro')">
+                    NÃ£o tem acesso? Solicitar PrÃ©-Cadastro
                 </button>
             </div>
 
-            <!-- DICA DE TESTE RÁPIDO PARA O CLIENTE -->
+            <!-- DICA DE TESTE RÃPIDO PARA O CLIENTE -->
             <div class="demo-shortcut-box">
-                <p>💡 <b>Teste Rápido para Avaliação:</b></p>
+                <p>ðŸ’¡ <b>Teste RÃ¡pido para AvaliaÃ§Ã£o:</b></p>
                 <div class="demo-buttons">
-                    <button class="btn btn-gold btn-sm" id="btnDiretoriaFast" style="flex:1;" type="button" onclick="loginWithCPF(null, null, 'diretoria')">
+                    <button class="btn btn-gold btn-sm" id="btnDiretoriaFast" style="flex:1;" type="button" onclick="loginWithCPF('000.000.000-00', '123', 'diretoria')">
                         Entrar como Diretoria
                     </button>
-                    <button class="btn btn-secondary btn-sm" id="btnAssociadoFast" style="flex:1;" type="button" onclick="loginWithCPF(null, null, 'associado')">
+                    <button class="btn btn-secondary btn-sm" id="btnAssociadoFast" style="flex:1;" type="button" onclick="loginWithCPF('074.136.669-01', '0741', 'associado')">
                         Entrar como Associado
                     </button>
                 </div>

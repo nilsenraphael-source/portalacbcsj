@@ -8,6 +8,14 @@
     el.value = v;
 }
 
+function handleLoginSubmit() {
+    const elCpf = document.getElementById('loginCPF');
+    const elPass = document.getElementById('loginSenha');
+    const cpf = elCpf ? elCpf.value : '';
+    const pass = elPass ? elPass.value : '';
+    loginWithCPF(cpf, pass);
+}
+
 // HELPER DE BUSCA STRICT DE ASSOCIADO NA GRADE (POR CPF EXATO)
 function encontrarSocioNaGrade(grid, socioObj, cpfParam) {
     if (!grid || !Array.isArray(grid)) return null;
