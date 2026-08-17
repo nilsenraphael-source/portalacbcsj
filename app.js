@@ -2,9 +2,9 @@
     if (!el) return;
     let v = el.value.replace(/\D/g, '');
     if (v.length > 11) v = v.substring(0, 11);
-    v = v.replace(/(\d{3})(\d)/, '.');
-    v = v.replace(/(\d{3})(\d)/, '.');
-    v = v.replace(/(\d{3})(\d{1,2})$/, '-');
+    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
     el.value = v;
 }
 
