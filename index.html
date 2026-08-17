@@ -1,13 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ACBCSJ — Associação Corpo de Bombeiros Comunitários de São José</title>
     
-    <!-- Folha de Estilos Customizada (Carregamento Prioritário) -->
-    <link rel="stylesheet" href="styles.css">
-
     <!-- Google Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,6 +15,9 @@
 
     <!-- Supabase JS Client SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Folha de Estilos Customizada -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -31,15 +31,15 @@
                 <p class="brand-subtitle">Associação Corpo de Bombeiros Comunitários de São José</p>
             </div>
 
-            <form novalidate onsubmit="event.preventDefault(); loginWithCPF(document.getElementById('loginCPF').value, document.getElementById('loginSenha').value);">
+            <form onsubmit="event.preventDefault(); loginWithCPF(document.getElementById('loginCPF').value, document.getElementById('loginSenha').value);">
                 <div class="form-group">
                     <label for="loginCPF">Seu CPF Registrado</label>
-                    <input type="text" id="loginCPF" class="form-control cpf-mask" placeholder="000.000.000-00">
+                    <input type="text" id="loginCPF" class="form-control cpf-mask" placeholder="000.000.000-00" required>
                 </div>
 
                 <div class="form-group">
                     <label for="loginSenha">Sua Senha de Acesso</label>
-                    <input type="password" id="loginSenha" class="form-control" placeholder="••••••••">
+                    <input type="password" id="loginSenha" class="form-control" placeholder="••••••••" required>
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
@@ -47,16 +47,23 @@
                 </button>
             </form>
 
-            <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 10px; text-align: center;">
-                <button type="button" class="btn btn-gold" style="width: 100%; font-size: 15px; font-weight: bold; padding: 12px; border-radius: 6px; box-shadow: 0 4px 12px rgba(241,196,15,0.3);" onclick="loginWithCPF('', '', 'diretoria')">
-                    🔑 ENTRAR DIRETO COMO DIRETORIA (CLIQUE AQUI)
-                </button>
-                <button type="button" class="btn btn-secondary" style="width: 100%; font-size: 14px; padding: 10px;" onclick="loginWithCPF('', '', 'associado')">
-                    👤 ENTRAR DIRETO COMO ASSOCIADO
-                </button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="openModal('modalPreCadastro')" style="margin-top: 6px;">
+            <div style="margin-top: 16px; text-align: center;">
+                <button class="btn btn-outline btn-sm" onclick="openModal('modalPreCadastro')">
                     Não tem acesso? Solicitar Pré-Cadastro
                 </button>
+            </div>
+
+            <!-- DICA DE TESTE RÁPIDO PARA O CLIENTE -->
+            <div class="demo-shortcut-box">
+                <p>💡 <b>Teste Rápido para Avaliação:</b></p>
+                <div class="demo-buttons">
+                    <button class="btn btn-gold btn-sm" style="flex:1;" onclick="loginWithCPF('000.000.000-00', '123', 'diretoria')">
+                        Entrar como Diretoria
+                    </button>
+                    <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="loginWithCPF('111.111.111-11', '123', 'associado')">
+                        Entrar como Associado
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -159,15 +166,15 @@
 
                 <!-- ABA 2: GESTÃO DE ASSOCIADOS (DIRETORIA) -->
                 <div id="tab-gestao-associados" class="tab-content" style="display: none;">
-                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                        <div>
-                            <h2 class="page-title">Controle de Associados Ativos</h2>
-                            <p style="font-size: 13px; color: var(--text-muted);">Listagem completa e gestão dos membros comunitários da ACBCSJ.</p>
-                        </div>
-                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                            <input type="text" id="searchAssociadoGuerra" class="form-control" placeholder="🔍 Pesquisar por Nome de Guerra, Nome ou CPF..." style="width: 290px; padding: 6px 12px; font-size: 12px;" oninput="renderGestaoAssociados()">
-                            <button class="btn btn-primary btn-sm" onclick="openModal('modalPreCadastro')">+ Novo Cadastro</button>
-                        </div>
+                    <div class="page-header">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 10px;">
+    <h2 class="page-title" style="margin: 0;">Controle de Associados Ativos</h2>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <input type="text" id="searchAssociadosAtivos" class="form-control" placeholder="ðŸ” Buscar por nome, guerra ou CPF..." style="width: 260px; padding: 6px 12px; font-size: 12px;" oninput="renderGestaoAssociados()">
+        
+    </div>
+</div>
+                        
                     </div>
 
                     <div class="card">
@@ -373,7 +380,6 @@
 
                             <button class="btn btn-sm btn-gold" onclick="abrirModalNovoLancamento('receita')">➕ Nova Receita</button>
                             <button class="btn btn-sm btn-outline" style="color: #E74C3C; border-color: #E74C3C;" onclick="abrirModalNovoLancamento('despesa')">➖ Nova Despesa</button>
-
                         </div>
                     </div>
 
@@ -1517,11 +1523,5 @@
     <!-- SCRIPTS JS -->
     <script src="supabaseClient.js"></script>
     <script src="app.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof initMockData === 'function') initMockData();
-            if (typeof setupCPFMasks === 'function') setupCPFMasks();
-        });
-    </script>
 </body>
 </html>
