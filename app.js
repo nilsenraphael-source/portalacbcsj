@@ -4594,3 +4594,39 @@ function excluirBaixaMensalidade(id) {
         verExtratoAssociado(item.cpf);
     }
 }
+
+
+function bindLoginButtonEvents() {
+    const btnPortal = document.getElementById('btnEntrarPortal');
+    const btnDir = document.getElementById('btnDiretoriaFast');
+    const btnAssoc = document.getElementById('btnAssociadoFast');
+
+    if (btnPortal) {
+        btnPortal.onclick = function(e) {
+            if (e) e.preventDefault();
+            loginWithCPF();
+        };
+    }
+    if (btnDir) {
+        btnDir.onclick = function(e) {
+            if (e) e.preventDefault();
+            loginWithCPF(null, null, 'diretoria');
+        };
+    }
+    if (btnAssoc) {
+        btnAssoc.onclick = function(e) {
+            if (e) e.preventDefault();
+            loginWithCPF(null, null, 'associado');
+        };
+    }
+}
+
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    try { bindLoginButtonEvents(); } catch (e) {}
+}
+document.addEventListener('DOMContentLoaded', () => {
+    try { bindLoginButtonEvents(); } catch (e) {}
+});
+window.addEventListener('load', () => {
+    try { bindLoginButtonEvents(); } catch (e) {}
+});

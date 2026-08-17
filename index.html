@@ -42,7 +42,7 @@
                     <input type="password" id="loginSenha" class="form-control" placeholder="••••••••" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                <button type="button" id="btnEntrarPortal" class="btn btn-primary" style="margin-top: 10px;" onclick="loginWithCPF()">
                     Entrar no Portal ACBCSJ
                 </button>
             </form>
@@ -57,10 +57,10 @@
             <div class="demo-shortcut-box">
                 <p>💡 <b>Teste Rápido para Avaliação:</b></p>
                 <div class="demo-buttons">
-                    <button class="btn btn-gold btn-sm" style="flex:1;" type="button" onclick="loginWithCPF(null, null, 'diretoria')">
+                    <button class="btn btn-gold btn-sm" id="btnDiretoriaFast" style="flex:1;" type="button" onclick="loginWithCPF(null, null, 'diretoria')">
                         Entrar como Diretoria
                     </button>
-                    <button class="btn btn-secondary btn-sm" style="flex:1;" type="button" onclick="loginWithCPF(null, null, 'associado')">
+                    <button class="btn btn-secondary btn-sm" id="btnAssociadoFast" style="flex:1;" type="button" onclick="loginWithCPF(null, null, 'associado')">
                         Entrar como Associado
                     </button>
                 </div>
