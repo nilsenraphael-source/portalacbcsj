@@ -1,0 +1,21 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script>
+    window.onerror = function(msg, url, line, col, error) {
+        alert("JS_RUNTIME_ERROR: " + msg + " at Line " + line + ":" + col);
+        return false;
+    };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
+    <script src="app.js"></script>
+</head>
+<body>
+    <h1>Testing Harness</h1>
+    <script>
+    console.log("App loaded smoothly!");
+    </script>
+</body>
+</html>
