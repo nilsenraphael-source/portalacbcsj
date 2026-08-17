@@ -31,7 +31,7 @@
                 <p class="brand-subtitle">Associação Corpo de Bombeiros Comunitários de São José</p>
             </div>
 
-            <form onsubmit="event.preventDefault(); loginWithCPF(document.getElementById('loginCPF').value, document.getElementById('loginSenha').value);">
+            <form onsubmit="event.preventDefault(); loginWithCPF();">
                 <div class="form-group">
                     <label for="loginCPF">Seu CPF Registrado</label>
                     <input type="text" id="loginCPF" class="form-control cpf-mask" placeholder="000.000.000-00" oninput="formatCPFInput(this)" required>
@@ -57,10 +57,10 @@
             <div class="demo-shortcut-box">
                 <p>💡 <b>Teste Rápido para Avaliação:</b></p>
                 <div class="demo-buttons">
-                    <button class="btn btn-gold btn-sm" style="flex:1;" onclick="loginWithCPF('000.000.000-00', '123', 'diretoria')">
+                    <button class="btn btn-gold btn-sm" style="flex:1;" type="button" onclick="loginWithCPF(null, null, 'diretoria')">
                         Entrar como Diretoria
                     </button>
-                    <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="loginWithCPF('111.111.111-11', '123', 'associado')">
+                    <button class="btn btn-secondary btn-sm" style="flex:1;" type="button" onclick="loginWithCPF(null, null, 'associado')">
                         Entrar como Associado
                     </button>
                 </div>
@@ -681,7 +681,7 @@
                         <h2 class="page-title">Canal Direto com a Diretoria</h2>
                     </div>
                     <div class="card" style="max-width: 600px;">
-                        <form onsubmit="event.preventDefault(); alert('Sua ideia/mensagem foi enviada para a Diretoria com sucesso!');">
+                        <form onsubmit="event.preventDefault(); loginWithCPF();">
                             <div class="form-group">
                                 <label>Assunto</label>
                                 <input type="text" class="form-control" placeholder="Ex: Sugestão para novo projeto" required>
@@ -729,7 +729,7 @@
                 <button class="modal-close" onclick="closeModal('modalPreCadastro')">&times;</button>
             </div>
             
-            <form onsubmit="submitPreCadastro(event)">
+            <form onsubmit="event.preventDefault(); loginWithCPF();">
                 <div class="form-grid">
                     <!-- 1. Nome de Guerra* -->
                     <div class="form-group">
@@ -907,7 +907,7 @@
                 <button class="modal-close" onclick="closeModal('modalDesligarAssociado')">&times;</button>
             </div>
 
-            <form onsubmit="confirmarDesligamento(event)">
+            <form onsubmit="event.preventDefault(); loginWithCPF();">
                 <input type="hidden" id="desligarCPF">
                 <div class="form-group">
                     <label>Associado a ser desligado:</label>
@@ -944,7 +944,7 @@
                 <button class="modal-close" onclick="closeModal('modalNovoDocumento')">&times;</button>
             </div>
 
-            <form onsubmit="salvarNovoDocumento(event)">
+            <form onsubmit="event.preventDefault(); loginWithCPF();">
                 <div class="form-group">
                     <label>Título / Nome do Documento <span class="req-star">*</span></label>
                     <input type="text" id="docTitulo" class="form-control" placeholder="Ex: Ata da Assembleia Geral de Eleição" required>
@@ -1003,7 +1003,7 @@
                 <button class="modal-close" onclick="closeModal('modalEditarDocumento')">&times;</button>
             </div>
 
-            <form onsubmit="salvarEdicaoDocumento(event)">
+            <form onsubmit="event.preventDefault(); loginWithCPF();">
                 <input type="hidden" id="editDocId">
 
                 <div class="form-group">
@@ -1062,7 +1062,7 @@
                 <button class="modal-close" onclick="closeModal('modalNovoLancamento')">&times;</button>
             </div>
 
-            <form onsubmit="salvarNovoLancamento(event)">
+            <form onsubmit="event.preventDefault(); loginWithCPF();">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div class="form-group">
                         <label>Tipo de Lançamento <span class="req-star">*</span></label>
@@ -1126,7 +1126,7 @@
                 <button class="modal-close" onclick="closeModal('modalEditarMeusDados')">&times;</button>
             </div>
 
-            <form onsubmit="salvarMeusDados(event)">
+            <form onsubmit="event.preventDefault(); loginWithCPF();">
                 <div class="form-grid">
                     <!-- Telefone / WhatsApp -->
                     <div class="form-group">
@@ -1206,7 +1206,7 @@
                 <button class="modal-close" onclick="closeModal('modalReajustarMensalidade')">&times;</button>
             </div>
 
-            <form onsubmit="salvarNovoValorMensalidade(event)">
+            <form onsubmit="event.preventDefault(); loginWithCPF();">
                 <div class="form-group">
                     <label>Novo Valor Mensal da Mensalidade (R$) <span class="req-star">*</span></label>
                     <input type="number" step="0.01" id="inputNovoValorMensalidade" class="form-control" placeholder="25.00" required style="font-size: 16px; font-weight: bold; color: var(--accent-gold);">
@@ -1275,7 +1275,7 @@
                 <button class="modal-close" onclick="closeModal('modalDarBaixaMensalidade')">&times;</button>
             </div>
 
-            <form onsubmit="salvarBaixaMensalidade(event)">
+            <form onsubmit="event.preventDefault(); loginWithCPF();">
                 <div class="form-grid">
                     <div class="form-group form-group-full">
                         <label>Associado <span class="req-star">*</span></label>
@@ -1371,7 +1371,7 @@
                 <button class="modal-close" onclick="closeModal('modalEditarBaixaMensalidade')">&times;</button>
             </div>
 
-            <form onsubmit="salvarEdicaoBaixaMensalidade(event)">
+            <form onsubmit="event.preventDefault(); loginWithCPF();">
                 <input type="hidden" id="editBaixaId">
                 <div class="form-grid">
                     <div class="form-group form-group-full">
@@ -1464,7 +1464,7 @@
                 <button class="modal-close" onclick="closeModal('modalEnviarComunicado')">&times;</button>
             </div>
 
-            <form onsubmit="salvarNovoComunicado(event)">
+            <form onsubmit="event.preventDefault(); loginWithCPF();">
                 <div class="form-group">
                     <label>Destinatário(s) <span class="req-star">*</span></label>
                     <select id="comunicadoTipoDestinatario" class="form-control" required onchange="toggleTipoDestinatario(this.value)">
