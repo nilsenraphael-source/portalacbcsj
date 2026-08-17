@@ -1,4 +1,4 @@
-﻿// CONECTOR SUPABASE DO PORTAL ACBCSJ (100% EXCLUSIVO SUPABASE - SEM DADOS MOCKADOS)
+﻿﻿// CONECTOR SUPABASE DO PORTAL ACBCSJ (100% EXCLUSIVO SUPABASE - SEM DADOS MOCKADOS)
 
 const SUPABASE_URL = window.ENV_SUPABASE_URL || "https://ucutgspmvbupknjodeit.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = window.ENV_SUPABASE_PUBLISHABLE_KEY || window.ENV_SUPABASE_ANON_KEY || "sb_publishable_drRsr2KSefHZqctSxlU7qA_b3xOj7RJ";
@@ -105,7 +105,7 @@ const dbService = {
         if (supabaseClient) {
             try {
                 const { data, error } = await supabaseClient.from('associados').select('*');
-                if (!error && data && Array.isArray(data) && data.length > 0) {
+                if (!error && data) {
                     localStorage.setItem('acbcsj_associados', JSON.stringify(data));
                     return data;
                 } else if (error) {
@@ -161,7 +161,7 @@ const dbService = {
         if (supabaseClient) {
             try {
                 const { data, error } = await supabaseClient.from('financeiro_lancamentos').select('*');
-                if (!error && data && Array.isArray(data) && data.length > 0) {
+                if (!error && data) {
                     localStorage.setItem('acbcsj_financeiro', JSON.stringify(data));
                     return data;
                 } else if (error) {
@@ -233,7 +233,7 @@ const dbService = {
         if (supabaseClient) {
             try {
                 const { data, error } = await supabaseClient.from('mensagens').select('*');
-                if (!error && data && Array.isArray(data) && data.length > 0) {
+                if (!error && data) {
                     localStorage.setItem('acbcsj_mensagens', JSON.stringify(data));
                     return data;
                 }
@@ -263,7 +263,7 @@ const dbService = {
         if (supabaseClient) {
             try {
                 const { data, error } = await supabaseClient.from('documentos').select('*');
-                if (!error && data && Array.isArray(data) && data.length > 0) {
+                if (!error && data) {
                     localStorage.setItem('acbcsj_documentos', JSON.stringify(data));
                     return data;
                 }
@@ -316,16 +316,16 @@ const dbService = {
                 supabaseClient.from('documentos').select('*')
             ]);
 
-            if (!assocRes.error && assocRes.data && Array.isArray(assocRes.data) && assocRes.data.length > 0) {
+            if (!assocRes.error && assocRes.data) {
                 localStorage.setItem('acbcsj_associados', JSON.stringify(assocRes.data));
             }
-            if (!finRes.error && finRes.data && Array.isArray(finRes.data) && finRes.data.length > 0) {
+            if (!finRes.error && finRes.data) {
                 localStorage.setItem('acbcsj_financeiro', JSON.stringify(finRes.data));
             }
-            if (!msgRes.error && msgRes.data && Array.isArray(msgRes.data) && msgRes.data.length > 0) {
+            if (!msgRes.error && msgRes.data) {
                 localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgRes.data));
             }
-            if (!docRes.error && docRes.data && Array.isArray(docRes.data) && docRes.data.length > 0) {
+            if (!docRes.error && docRes.data) {
                 localStorage.setItem('acbcsj_documentos', JSON.stringify(docRes.data));
             }
             console.log("🎉 Dados do Supabase carregados com sucesso!");
