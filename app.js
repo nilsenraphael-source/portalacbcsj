@@ -3708,7 +3708,7 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
     openModal('modalBalanceteMensal');
 }
 
-function _old_unused_renderAssociadoOverview() {
+function renderAssociadoOverview() {
     const welcome = document.getElementById('associadoWelcomeName');
     if (welcome && currentUser) {
         welcome.textContent = currentUser.nome_guerra || currentUser.nome;
