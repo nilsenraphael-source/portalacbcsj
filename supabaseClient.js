@@ -256,11 +256,12 @@ const dbService = {
             try {
                 const { data, error } = await supabaseClient.from('mensalidades').select('*');
                 if (!error && data && Array.isArray(data)) {
-                    localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(data));
+                    const sanitized = data.map(item => sanitizeMensalidade(item)).filter(Boolean);
+                    localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(sanitized));
                     if (typeof recalcularTodasGridsMensalidades === 'function') {
                         recalcularTodasGridsMensalidades();
                     }
-                    return data;
+                    return sanitized;
                 }
             } catch (e) {
                 console.error("Erro no Supabase getMensalidades:", e);
@@ -428,7 +429,8 @@ const dbService = {
                 localStorage.setItem('acbcsj_documentos', JSON.stringify(docRes.data));
             }
             if (!mensRes.error && mensRes.data && Array.isArray(mensRes.data)) {
-                localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(mensRes.data));
+                const sanitizedMens = mensRes.data.map(item => sanitizeMensalidade(item)).filter(Boolean);
+                localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(sanitizedMens));
                 if (typeof recalcularTodasGridsMensalidades === 'function') {
                     recalcularTodasGridsMensalidades();
                 }

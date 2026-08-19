@@ -1,30 +1,29 @@
-function extrairListaMesesDoLancamento(rawMesesStr) {
-    if (!rawMesesStr) return [];
-    const rawStr = String(rawMesesStr).trim();
-    let lista = rawStr.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+function extrairListaMesesDoLancamento(rawMesesStr, obsStr = '') {
+    const textoCompleto = ((rawMesesStr || '') + ' ' + (obsStr || '')).trim();
+    if (!textoCompleto) return [];
 
-    if (lista.length === 1 && rawStr.includes('-')) {
-        const mMatch = rawStr.match(/([A-Z]{3})-([A-Z]{3})/i);
-        if (mMatch) {
-            const sSigla = mMatch[1].toLowerCase();
-            const eSigla = mMatch[2].toLowerCase();
-            const todasSiglas = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-            const sIdx = todasSiglas.indexOf(sSigla);
-            const eIdx = todasSiglas.indexOf(eSigla);
-            if (sIdx >= 0 && eIdx >= sIdx) {
-                lista = todasSiglas.slice(sIdx, eIdx + 1);
-            }
+    const todasSiglas = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    
+    // Suporte a intervalos no formato Jan-Dez, Jan a Dez, Fev-Jul, etc.
+    const rangeMatch = textoCompleto.match(/([a-z]{3})\s*[-a]\s*([a-z]{3})/i);
+    if (rangeMatch) {
+        const sSigla = rangeMatch[1].toLowerCase();
+        const eSigla = rangeMatch[2].toLowerCase();
+        const sIdx = todasSiglas.indexOf(sSigla);
+        const eIdx = todasSiglas.indexOf(eSigla);
+        if (sIdx >= 0 && eIdx >= sIdx) {
+            return todasSiglas.slice(sIdx, eIdx + 1);
         }
     }
 
-    const siglasValidas = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
     const resultado = [];
-    lista.forEach(item => {
-        siglasValidas.forEach(sigla => {
-            if (item.includes(sigla) && !resultado.includes(sigla)) {
+    todasSiglas.forEach(sigla => {
+        const regex = new RegExp('\\b' + sigla + '\\b', 'i');
+        if (regex.test(textoCompleto) || textoCompleto.toLowerCase().includes(sigla)) {
+            if (!resultado.includes(sigla)) {
                 resultado.push(sigla);
             }
-        });
+        }
     });
     return resultado;
 }
@@ -32,7 +31,7 @@ function extrairListaMesesDoLancamento(rawMesesStr) {
 function recalcularTodasGridsMensalidades() {
     const listAssoc = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const anos = ['2024', '2025', '2026', '2027', '2028'];
-    const historico = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+    const historicoRaw = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
     anos.forEach(ano => {
         const storageKey = 'acbcsj_mensalidades_grid_' + ano;
@@ -45,7 +44,7 @@ function recalcularTodasGridsMensalidades() {
                 jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0
             };
 
-            if (String(ano) === '2026') {
+            if (String(ano) === '2026' && typeof INITIAL_MENSAL_DATA !== 'undefined') {
                 const basePlanilha = (INITIAL_MENSAL_DATA || []).find(b => (b.cpf || '').replace(/\D/g, '') === cleanCpf);
                 if (basePlanilha) {
                     ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'].forEach(k => {
@@ -54,12 +53,18 @@ function recalcularTodasGridsMensalidades() {
                 }
             }
 
-            const lancamentosSocio = historico.filter(m => (m.cpf || '').replace(/\D/g, '') === cleanCpf && String(m.ano) === String(ano));
+            const lancamentosSocio = historicoRaw.filter(m => (m.cpf || '').replace(/\D/g, '') === cleanCpf && String(m.ano || '2026') === String(ano));
             lancamentosSocio.forEach(m => {
                 const rawMeses = m.meses_quitados || m.mes_referencia || '';
-                const listaMeses = extrairListaMesesDoLancamento(rawMeses);
-                const valorTotal = parseFloat(m.valor) || 0;
-                const valorPorMes = listaMeses.length > 0 ? (valorTotal / listaMeses.length) : valorTotal;
+                const obs = m.observacoes || m.obs || '';
+                const listaMeses = extrairListaMesesDoLancamento(rawMeses, obs);
+                let valNum = 0;
+                if (typeof m.valor === 'number') {
+                    valNum = m.valor;
+                } else if (typeof m.valor === 'string') {
+                    valNum = parseFloat(m.valor.replace(',', '.')) || 0;
+                }
+                const valorPorMes = listaMeses.length > 0 ? (valNum / listaMeses.length) : valNum;
 
                 listaMeses.forEach(mk => {
                     if (row.hasOwnProperty(mk)) {
@@ -78,6 +83,9 @@ function recalcularTodasGridsMensalidades() {
 
     if (typeof renderGestaoMensalidades === 'function' && document.getElementById('tableMensalidadesBody')) {
         renderGestaoMensalidades();
+    }
+    if (typeof renderGestaoFinanceira === 'function' && document.getElementById('tableFinanceiroBody')) {
+        renderGestaoFinanceira();
     }
 }
 
@@ -1725,8 +1733,8 @@ async function abrirComprovanteLancamento(id) {
     }
 }
 
-function extrairMesEAno(dataStr, dataIso) {
-    let str = dataIso || dataStr || '';
+function extrairMesEAno(dataStr, dataIso, dataPagamento) {
+    let str = dataIso || dataStr || dataPagamento || '';
     if (!str) return { mes: '', ano: '' };
 
     // Formato YYYY-MM-DD
@@ -1756,7 +1764,8 @@ function extrairMesEAno(dataStr, dataIso) {
 
 function renderGestaoFinanceira() {
     const listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-    const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+    const listMensalidadesRaw = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+    const listMensalidades = listMensalidadesRaw.map(m => typeof sanitizeMensalidade === 'function' ? sanitizeMensalidade(m) : m).filter(Boolean);
 
     const filtroAnoSelect = document.getElementById('finFiltroAno');
     const anoSelected = filtroAnoSelect ? filtroAnoSelect.value : '2026';
@@ -1797,20 +1806,23 @@ function renderGestaoFinanceira() {
         });
     });
 
-    // B) Lançamentos de Mensalidades PIX
+    // B) LanÃ§amentos de Mensalidades PIX
     listMensalidades.forEach(m => {
-        const dateInfo = extrairMesEAno(m.data, m.data_iso);
+        const dateInfo = extrairMesEAno(m.data, m.data_iso, m.data_pagamento);
         const anoItem = m.ano || dateInfo.ano || anoSelected;
+        let val = typeof m.valor === 'number' ? m.valor : (parseFloat(String(m.valor).replace(',', '.')) || 0);
+        const nomeSoc = m.associado_nome || m.nome || 'Associado';
+        const mesRef = m.meses_quitados || m.mes_referencia || '';
         combinedList.push({
             id: m.id || ('mens_' + Math.random()),
-            data: m.data || '-',
+            data: m.data || m.data_pagamento || '-',
             data_iso: m.data_iso || '',
             mes: dateInfo.mes,
-            ano: anoItem,
-            descricao: `💳 Mensalidade PIX — ${m.associado_nome || 'Associado'} (${m.meses_quitados || ''}/${anoItem})`,
+            ano: String(anoItem),
+            descricao: `💳 Mensalidade PIX — ${nomeSoc} (${mesRef}/${anoItem})`,
             categoria: 'Mensalidades Associados',
             tipo: 'receita',
-            valor: parseFloat(m.valor) || 0,
+            valor: val,
             comprovante_nome: m.comprovante_pix || '',
             origem: 'mensalidade'
         });
@@ -3066,7 +3078,81 @@ function atualizarCheckboxesBaixa() {
     }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
 
     const mesesNomesMap = { jan:'Jan', fev:'Fev', mar:'Mar', abr:'Abr', mai:'Mai', jun:'Jun', jul:'Jul', ago:'Ago', set:'Set', out:'Out', nov:'Nov', dez:'Dez' };
+
+    const checkboxes = document.querySelectorAll('input[name="baixaMeses"]');
+    checkboxes.forEach(cb => {
+        const mKey = cb.value;
+        const valPago = parseFloat(socioGrid[mKey]) || 0;
+        const parentLabel = cb.closest('label');
+
+        if (valPago >= baseVal) {
+            // Mês já pago/quitado: pré-marcar e desabilitar
+            cb.checked = true;
+            cb.disabled = true;
+            if (parentLabel) {
+                parentLabel.style.opacity = '0.65';
+                parentLabel.style.background = 'rgba(46, 204, 113, 0.25)';
+                parentLabel.style.borderColor = '#2ECC71';
+                parentLabel.style.padding = '4px 6px';
+                parentLabel.style.borderRadius = '4px';
+                parentLabel.style.cursor = 'not-allowed';
+                parentLabel.title = `Mês de ${mesesNomesMap[mKey]} já foi quitado (R$ ${valPago.toFixed(2).replace('.', ',')})`;
+            }
+        } else {
+            // Mês em aberto: desmarcar e habilitar
+            cb.checked = false;
+            cb.disabled = false;
+            if (parentLabel) {
+                parentLabel.style.opacity = '1';
+                parentLabel.style.background = 'transparent';
+                parentLabel.style.borderColor = 'transparent';
+                parentLabel.style.padding = '0';
+                parentLabel.style.borderRadius = '0';
+                parentLabel.style.cursor = 'pointer';
+                parentLabel.title = `Mês de ${mesesNomesMap[mKey]} pendente para baixa`;
+            }
+        }
+    });
+
+    atualizarValoresBaixa();
+}
+
+function atualizarValoresBaixa() {
+    const anoRef = document.getElementById('baixaAnoRef')?.value || '2026';
+    const checkedNovos = document.querySelectorAll('input[name="baixaMeses"]:checked:not(:disabled)');
+    
+    const mesesKeysMap = { jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6, jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12 };
+    
+    let total = 0;
+    checkedNovos.forEach(cb => {
+        const mIndex = mesesKeysMap[cb.value] || 1;
+        total += getValorMensalidadeVigente(mIndex, anoRef);
+    });
+
+    const inputTotal = document.getElementById('baixaValorTotal');
     if (inputTotal) inputTotal.value = total.toFixed(2);
+}
+
+async function salvarBaixaMensalidade(e) {
+    e.preventDefault();
+    const selectAssoc = document.getElementById('baixaAssociadoCPF');
+    const cpf = selectAssoc ? selectAssoc.value : '';
+    const anoRef = document.getElementById('baixaAnoRef').value;
+    const dataInput = document.getElementById('baixaData').value;
+    const valorTotal = parseFloat(document.getElementById('baixaValorTotal').value) || 0;
+    const comprovantePix = document.getElementById('baixaComprovantePix').value.trim();
+    const obs = document.getElementById('baixaObs').value.trim();
+
+    // Pega somente os meses NOVOS selecionados (que não estavam previamente marcados/desabilitados)
+    const checkedMeses = Array.from(document.querySelectorAll('input[name="baixaMeses"]:checked:not(:disabled)')).map(c => c.value);
+
+    if (!cpf || checkedMeses.length === 0 || valorTotal <= 0 || !dataInput) {
+        alert('Por favor, selecione ao menos um mês pendente para dar baixa e informe a data e valor.');
+        return;
+    }
+
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const socio = list.find(a => (a.cpf || '').replace(/\D/g, '') === (cpf || '').replace(/\D/g, ''));
     const nomeAssociado = socio ? (socio.nome_guerra || socio.nome) : 'Associado';
 
     const [anoD, mesD, diaD] = dataInput.split('-');
