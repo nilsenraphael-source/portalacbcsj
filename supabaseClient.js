@@ -1,4 +1,4 @@
-﻿// CLIENTE SUPABASE OFICIAL DA ACBCSJ
+// CLIENTE SUPABASE OFICIAL DA ACBCSJ
 const SUPABASE_URL = "https://ucutgspmvbupknjodeit.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_drRsr2KSefHZqctSxlU7qA_b3xOj7RJ";
 const SUPABASE_SECRET_KEY = "sb_secret_9N99Zf3L9d!q4Y3wP";
