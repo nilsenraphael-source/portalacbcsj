@@ -3026,7 +3026,7 @@ function atualizarValoresBaixa() {
     if (inputTotal) inputTotal.value = total.toFixed(2);
 }
 
-function salvarBaixaMensalidade(e) {
+async function salvarBaixaMensalidade(e) {
     e.preventDefault();
     const selectAssoc = document.getElementById('baixaAssociadoCPF');
     const cpf = selectAssoc ? selectAssoc.value : '';
@@ -3073,7 +3073,7 @@ function salvarBaixaMensalidade(e) {
     localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(historicoGeral));
 
         if (typeof dbService !== 'undefined' && dbService.addMensalidade) {
-        dbService.addMensalidade(itemHistorico);
+        try { await dbService.addMensalidade(itemHistorico); } catch(e) { console.error('Erro ao enviar para Supabase:', e); }
     }
     recalcularGridAssociado(cpf, anoRef);
 

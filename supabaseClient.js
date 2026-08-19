@@ -92,6 +92,40 @@ function sanitizeMensalidade(item) {
         if (assoc) assocId = String(assoc.id);
     }
 
+    const removerAcentos = (str) => {
+        if (!str) return '';
+        return String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    };
+
+    let rawMes = String(item.meses_quitados || item.mes_referencia || 'Jan').trim();
+    if (rawMes.length > 20) {
+        const parts = rawMes.split(',').map(s => s.trim()).filter(Boolean);
+        if (parts.length > 1) {
+            rawMes = ${parts[0]}- (m);
+        }
+        if (rawMes.length > 20) {
+            rawMes = rawMes.substring(0, 20);
+        }
+    }
+
+    const cleanObs = removerAcentos(item.obs || item.observacoes || item.comprovante_pix || 'Quitacao de mensalidade PIX');
+
+    return {
+        id: String(item.id || 'mensalidade_' + Date.now()),
+        associado_id: assocId,
+        cpf: String(item.cpf || '').substring(0, 20),
+        ano: String(item.ano || '2026').substring(0, 20),
+        mes_referencia: removerAcentos(rawMes).substring(0, 20),
+        valor: parseFloat(item.valor) || 20.00,
+        status: String(item.status || 'pago').substring(0, 20),
+        data_pagamento: String(item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR')).substring(0, 20),
+        observacoes: cleanObs
+    };
+} catch(e) {}
+        const assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
+        if (assoc) assocId = String(assoc.id);
+    }
+
     let rawMes = String(item.meses_quitados || item.mes_referencia || 'Jan').trim();
     if (rawMes.length > 20) {
         const parts = rawMes.split(',').map(s => s.trim()).filter(Boolean);
