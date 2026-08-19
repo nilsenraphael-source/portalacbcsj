@@ -315,11 +315,12 @@ function renderSidebarMenu() {
 
 // NAVEGAÇÃO ENTRE ABAS
 function navigateTab(tabId) {
-    if (currentUser) {
+    if (currentUser && currentUser.perfil !== 'diretoria') {
         const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-        const currentDbState = list.find(a => a.cpf === currentUser.cpf);
+        const cleanCpf = (currentUser.cpf || '').replace(/\D/g, '');
+        const currentDbState = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
         if (currentDbState && currentDbState.status === 'desligado') {
-            alert('🚫 ACESSO REVOGADO!\n\nSeu cadastro consta como DESLIGADO da Associação. Você foi desconectado do sistema.');
+            alert('ðŸš« ACESSO REVOGADO!\n\nSeu cadastro consta como DESLIGADO da AssociaÃ§Ã£o.');
             logout();
             return;
         }
