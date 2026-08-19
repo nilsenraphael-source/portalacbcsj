@@ -319,8 +319,11 @@ const dbService = {
         if (supabaseClient) {
             try {
                 const { data, error } = await supabaseClient.from('mensalidades').select('*');
-                if (!error && data && data.length > 0) {
+                if (!error && data && Array.isArray(data)) {
                     localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(data));
+                    if (typeof recalcularTodasGridsMensalidades === 'function') {
+                        recalcularTodasGridsMensalidades();
+                    }
                     return data;
                 }
             } catch (e) {
@@ -346,6 +349,24 @@ const dbService = {
                 else console.log("âœ… Mensalidade salva no Supabase:", clean.associado_nome, clean.meses_quitados);
             } catch (e) {
                 console.error("Erro ao enviar mensalidade para Supabase:", e);
+            }
+        }
+        return true;
+    },
+
+        async clearMensalidades() {
+        localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify([]));
+        localStorage.setItem('acbcsj_mensalidades_grid_2026', JSON.stringify([]));
+        if (typeof recalcularTodasGridsMensalidades === 'function') {
+            recalcularTodasGridsMensalidades();
+        }
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('mensalidades').delete().neq('id', '0');
+                if (error) console.error("âš ï¸ Erro ao limpar mensalidades no Supabase:", error.message);
+                else console.log("ðŸ—‘ï¸ Todas as mensalidades foram excluÃ­das do Supabase.");
+            } catch (e) {
+                console.error("Erro ao limpar mensalidades do Supabase:", e);
             }
         }
         return true;
