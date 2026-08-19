@@ -1733,15 +1733,10 @@ function renderGestaoFinanceira() {
             .filter(item => item.origem === 'financeiro' && item.tipo === 'receita' && item.ano === anoSelected && item.mes === strMes)
             .reduce((sum, item) => sum + item.valor, 0);
 
-        // Sum Mensalidades PIX (do histórico de transações OU da grade anual)
-        let mensPixHistorico = combinedList
+                // Sum Mensalidades PIX (do histÃ³rico real de baixas de mensalidade efetuadas)
+        let mensPix = combinedList
             .filter(item => item.origem === 'mensalidade' && item.ano === anoSelected && item.mes === strMes)
             .reduce((sum, item) => sum + item.valor, 0);
-
-        let mensPixGrid = gridMensalidades.reduce((sum, g) => sum + (parseFloat(g[mKey]) || 0), 0);
-
-        // Usa o valor da grade ou histórico para consistência total
-        let mensPix = Math.max(mensPixHistorico, mensPixGrid);
 
         // Sum Despesas Gerais
         let despsGerais = combinedList
@@ -3072,6 +3067,9 @@ function salvarBaixaMensalidade(e) {
     historicoGeral.unshift(itemHistorico);
     localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(historicoGeral));
 
+        if (typeof dbService !== 'undefined' && dbService.addMensalidade) {
+        dbService.addMensalidade(itemHistorico);
+    }
     recalcularGridAssociado(cpf, anoRef);
 
     alert(`Baixa de mensalidade de R$ ${valorTotal.toFixed(2).replace('.', ',')} (${mesesTexto}/${anoRef}) efetuada com sucesso para ${nomeAssociado}!`);
@@ -3271,6 +3269,9 @@ function salvarEdicaoBaixaMensalidade(e) {
     historicoGeral[index].obs = obs || `Baixa de mensalidade PIX (${mesesTexto}/${historicoGeral[index].ano})`;
 
     localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(historicoGeral));
+        if (typeof dbService !== 'undefined' && dbService.addMensalidade) {
+        dbService.addMensalidade(historicoGeral[index]);
+    }
     recalcularGridAssociado(historicoGeral[index].cpf, historicoGeral[index].ano);
 
     alert('Lançamento de mensalidade atualizado com sucesso!');
@@ -3289,7 +3290,10 @@ function excluirBaixaMensalidade(id) {
         historicoGeral = historicoGeral.filter(h => h.id !== id);
         localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(historicoGeral));
 
-        recalcularGridAssociado(item.cpf, item.ano);
+            if (typeof dbService !== 'undefined' && dbService.deleteMensalidade) {
+        dbService.deleteMensalidade(id);
+    }
+    recalcularGridAssociado(item.cpf, item.ano);
 
         alert('Lançamento de mensalidade removido com sucesso.');
         renderGestaoMensalidades();

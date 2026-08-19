@@ -81,6 +81,23 @@ function sanitizeDocumento(item) {
     };
 }
 
+function sanitizeMensalidade(item) {
+    if (!item) return null;
+    return {
+        id: String(item.id || 'mensalidade_' + Date.now()),
+        cpf: item.cpf || '',
+        associado_nome: item.associado_nome || '',
+        ano: String(item.ano || '2026'),
+        valor: parseFloat(item.valor) || 0,
+        data: item.data || new Date().toLocaleDateString('pt-BR'),
+        data_iso: item.data_iso || new Date().toISOString().split('T')[0],
+        forma: item.forma || 'PIX',
+        comprovante_pix: item.comprovante_pix || 'Comprovante PIX',
+        meses_quitados: item.meses_quitados || '',
+        obs: item.obs || ''
+    };
+}
+
 function sanitizeMensagem(item) {
     if (!item) return null;
     return {
@@ -227,6 +244,59 @@ const dbService = {
         return true;
     },
 
+
+        // MENSALIDADES (BAIXAS)
+    async getMensalidades() {
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from('mensalidades').select('*');
+                if (!error && data && data.length > 0) {
+                    localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(data));
+                    return data;
+                }
+            } catch (e) {
+                console.error("Erro no Supabase getMensalidades:", e);
+            }
+        }
+        return JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+    },
+
+    async addMensalidade(item) {
+        const clean = sanitizeMensalidade(item);
+        if (!clean) return false;
+
+        let list = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+        list = list.filter(m => m.id !== clean.id);
+        list.unshift(clean);
+        localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(list));
+
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('mensalidades').upsert([clean]);
+                if (error) console.error("âš ï¸ Erro ao salvar mensalidade no Supabase:", error.message);
+                else console.log("âœ… Mensalidade salva no Supabase:", clean.associado_nome, clean.meses_quitados);
+            } catch (e) {
+                console.error("Erro ao enviar mensalidade para Supabase:", e);
+            }
+        }
+        return true;
+    },
+
+    async deleteMensalidade(id) {
+        let list = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+        list = list.filter(m => m.id !== id);
+        localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(list));
+
+        if (supabaseClient) {
+            try {
+                await supabaseClient.from('mensalidades').delete().eq('id', id);
+                console.log("ðŸ—‘ï¸ Mensalidade excluÃ­da do Supabase ID:", id);
+            } catch (e) {
+                console.error("Erro ao excluir mensalidade do Supabase:", e);
+            }
+        }
+        return true;
+    },
 
     // MENSAGENS
     async getMensagens() {
