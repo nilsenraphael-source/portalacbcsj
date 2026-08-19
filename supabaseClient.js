@@ -95,16 +95,17 @@ function sanitizeMensalidade(item) {
         const assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
         if (assoc && assoc.id) assocId = String(assoc.id);
     }
-    if (!assocId) assocId = "3"; // ID fallback vÃ¡lido (Douglas Antunes) para restriÃ§Ã£o de chave estrangeira
+    if (!assocId) assocId = "3"; // ID fallback para chave estrangeira
 
-    let rawMes = String(item.meses_quitados || item.mes_referencia || 'Jan').trim();
-    if (rawMes.length > 20) {
-        const parts = rawMes.split(',').map(s => s.trim()).filter(Boolean);
+    const rawMeses = String(item.meses_quitados || item.mes_referencia || 'Jan').trim();
+    let rawMesTruncated = rawMeses;
+    if (rawMesTruncated.length > 20) {
+        const parts = rawMesTruncated.split(',').map(s => s.trim()).filter(Boolean);
         if (parts.length > 1) {
-            rawMes = parts[0] + '-' + parts[parts.length - 1] + ' (' + parts.length + 'm)';
+            rawMesTruncated = parts[0] + '-' + parts[parts.length - 1] + ' (' + parts.length + 'm)';
         }
-        if (rawMes.length > 20) {
-            rawMes = rawMes.substring(0, 20);
+        if (rawMesTruncated.length > 20) {
+            rawMesTruncated = rawMesTruncated.substring(0, 20);
         }
     }
 
@@ -115,11 +116,16 @@ function sanitizeMensalidade(item) {
         associado_id: String(assocId),
         cpf: String(item.cpf || '').substring(0, 20),
         ano: String(item.ano || '2026').substring(0, 20),
-        mes_referencia: removerAcentos(rawMes).substring(0, 20),
+        mes_referencia: removerAcentos(rawMesTruncated).substring(0, 20),
+        meses_quitados: rawMeses,
+        data: String(item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR')).substring(0, 20),
+        data_iso: item.data_iso || new Date().toISOString().split('T')[0],
         valor: parseFloat(item.valor) || 20.00,
         status: String(item.status || 'pago').substring(0, 20),
         data_pagamento: String(item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR')).substring(0, 20),
-        observacoes: cleanObs
+        observacoes: cleanObs,
+        comprovante_pix: item.comprovante_pix || 'PIX',
+        obs: item.obs || cleanObs
     };
 }
 
