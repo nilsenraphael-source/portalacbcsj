@@ -4,7 +4,7 @@ function recalcularTodasGridsMensalidades() {
     const historico = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
     anos.forEach(ano => {
-        const storageKey = cbcsj_mensalidades_grid_;
+        const storageKey = 'acbcsj_mensalidades_grid_' + ano;
         let grid = listAssoc.map(a => {
             const cleanCpf = (a.cpf || '').replace(/\D/g, '');
             const row = {
