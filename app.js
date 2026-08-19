@@ -1,4 +1,4 @@
-﻿function recalcularTodasGridsMensalidades() {
+function recalcularTodasGridsMensalidades() {
     const listAssoc = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const anos = ['2024', '2025', '2026', '2027', '2028'];
     const historico = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
@@ -220,10 +220,7 @@ async function loginWithCPF(cpf, password, roleHint = null) {
 
         if (roleHint === 'diretoria') {
             currentUser = list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || list[0] || { nome: 'Comandante / Diretoria ACBCSJ', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
-<<<<<<< HEAD
             if (currentUser) currentUser.status = 'ativo';
-=======
->>>>>>> dc11dc47d3fc578ac3d11bc300bbe96031b3397d
         } else if (roleHint === 'associado') {
             currentUser = list.find(a => a.perfil === 'associado' && a.status === 'ativo') || list[1] || list[0];
         } else {
