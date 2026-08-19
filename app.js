@@ -218,7 +218,8 @@ async function loginWithCPF(cpf, password, roleHint = null) {
         }
 
         if (roleHint === 'diretoria') {
-            currentUser = list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || list[0] || { nome: 'Comandante', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
+            currentUser = list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || list[0] || { nome: 'Comandante / Diretoria ACBCSJ', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
+            if (currentUser) currentUser.status = 'ativo';
         } else if (roleHint === 'associado') {
             currentUser = list.find(a => a.perfil === 'associado' && a.status === 'ativo') || list[1] || list[0];
         } else {
