@@ -374,7 +374,8 @@ function renderDiretoriaOverview() {
 // EXIBIR APENAS ASSOCIADOS ATIVOS COM CONTROLE DE PERFIL PELA DIRETORIA
 function renderGestaoAssociados() {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const ativos = list.filter(a => a.status === 'ativo');
+    let ativos = list.filter(a => a.status === 'ativo');
+    ativos.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
     const container = document.getElementById('tableTodosAssociadosBody');
     const isDiretoria = currentUser && currentUser.perfil === 'diretoria';
 
@@ -442,7 +443,8 @@ function alterarPerfilAssociado(cpf, novoPerfil) {
 // EXIBIR ASSOCIADOS DESLIGADOS
 function renderAssociadosDesligados() {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const desligados = list.filter(a => a.status === 'desligado');
+    let desligados = list.filter(a => a.status === 'desligado');
+    desligados.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
     const container = document.getElementById('tableAssociadosDesligadosBody');
     if (container) {
         if (desligados.length === 0) {
@@ -1241,8 +1243,9 @@ function renderMensagensDiretoria() {
 }
 
 function abrirModalEnviarComunicado() {
-    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const ativos = list.filter(a => a.status === 'ativo' || !a.status);
+        const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    let ativos = list.filter(a => a.status === 'ativo' || !a.status);
+    ativos.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
 
     // Preenche select individual
     const selectUnico = document.getElementById('comunicadoAssociadoUnico');
@@ -2913,7 +2916,8 @@ function renderGestaoMensalidades() {
 
 // BAIXA DE MENSALIDADE VIA PIX
 function abrirModalDarBaixa(cpf = null) {
-    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    list.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
 
     const selectAssoc = document.getElementById('baixaAssociadoCPF');
     if (selectAssoc) {
