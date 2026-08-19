@@ -1,22 +1,21 @@
-﻿﻿// CONECTOR SUPABASE DO PORTAL ACBCSJ (100% EXCLUSIVO SUPABASE - SEM DADOS MOCKADOS)
-
-const SUPABASE_URL = window.ENV_SUPABASE_URL || "https://ucutgspmvbupknjodeit.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = window.ENV_SUPABASE_PUBLISHABLE_KEY || window.ENV_SUPABASE_ANON_KEY || "sb_publishable_drRsr2KSefHZqctSxlU7qA_b3xOj7RJ";
-const SUPABASE_SECRET_KEY = window.ENV_SUPABASE_SECRET_KEY || "sb_secret_eJeO0e8qj_mw8EN2CLNnkw_GlZCM5Qv";
-const SUPABASE_JWKS_URL = window.ENV_SUPABASE_JWKS_URL || "https://ucutgspmvbupknjodeit.supabase.co/auth/v1/.well-known/jwks.json";
+﻿// CLIENTE SUPABASE OFICIAL DA ACBCSJ
+const SUPABASE_URL = "https://ucutgspmvbupknjodeit.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_drRsr2KSefHZqctSxlU7qA_b3xOj7RJ";
+const SUPABASE_SECRET_KEY = "sb_secret_9N99Zf3L9d!q4Y3wP";
+const SUPABASE_JWKS_URL = "https://ucutgspmvbupknjodeit.supabase.co/rest/v1/";
 
 let supabaseClient = null;
 
-if (typeof supabase !== 'undefined' && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY) {
+if (typeof supabase !== 'undefined' && supabase.createClient) {
     try {
         supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-        console.log("🟢 Conexão com Supabase ativada! URL:", SUPABASE_URL);
+        console.log("âœ… Supabase inicializado com sucesso!");
     } catch (e) {
-        console.warn("⚠️ Falha ao inicializar Supabase SDK:", e);
+        console.error("âš ï¸ Erro ao inicializar Supabase:", e);
     }
 }
 
-// Helpers para sanitização de objetos
+// HIGIENIZAÃ‡ÃƒO DE DADOS
 function sanitizeAssociado(item) {
     if (!item) return null;
     return {
@@ -35,7 +34,7 @@ function sanitizeAssociado(item) {
         complemento: item.complemento || '',
         cep: item.cep || '',
         bairro: item.bairro || '',
-        cidade: item.cidade || 'São José - SC',
+        cidade: item.cidade || 'SÃ£o JosÃ© - SC',
         perfil: item.perfil || 'associado',
         status: item.status || 'pendente',
         data_cadastro: item.data_cadastro || new Date().toLocaleString('pt-BR'),
@@ -43,8 +42,8 @@ function sanitizeAssociado(item) {
         motivo_desligamento: item.motivo_desligamento || null,
         carta_desligamento_url: item.carta_desligamento_url || null,
         carta_desligamento_nome: item.carta_desligamento_nome || null,
-        obm: item.obm || 'São José',
-        profissao: item.profissao || 'Bombeiro Comunitário',
+        obm: item.obm || 'SÃ£o JosÃ©',
+        profissao: item.profissao || 'Bombeiro ComunitÃ¡rio',
         senha: item.senha || '1234'
     };
 }
@@ -121,50 +120,6 @@ function sanitizeMensalidade(item) {
         data_pagamento: String(item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR')).substring(0, 20),
         observacoes: cleanObs
     };
-} catch(e) {}
-        const assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
-        if (assoc) assocId = String(assoc.id);
-    }
-
-    let rawMes = String(item.meses_quitados || item.mes_referencia || 'Jan').trim();
-    if (rawMes.length > 20) {
-        const parts = rawMes.split(',').map(s => s.trim()).filter(Boolean);
-        if (parts.length > 1) {
-            rawMes = ${parts[0]}- (m);
-        }
-        if (rawMes.length > 20) {
-            rawMes = rawMes.substring(0, 20);
-        }
-    }
-
-    return {
-        id: String(item.id || 'mensalidade_' + Date.now()),
-        associado_id: assocId,
-        cpf: String(item.cpf || '').substring(0, 20),
-        ano: String(item.ano || '2026').substring(0, 20),
-        mes_referencia: rawMes,
-        valor: parseFloat(item.valor) || 20.00,
-        status: String(item.status || 'pago').substring(0, 20),
-        data_pagamento: String(item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR')).substring(0, 20),
-        observacoes: item.obs || item.observacoes || item.comprovante_pix || 'Quitacao de mensalidade PIX'
-    };
-} catch(e) {}
-        const assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
-        if (assoc) assocId = String(assoc.id);
-    }
-
-    return {
-        id: String(item.id || 'mensalidade_' + Date.now()),
-        associado_id: assocId,
-        cpf: item.cpf || '',
-        ano: String(item.ano || '2026'),
-        mes_referencia: String(item.meses_quitados || item.mes_referencia || 'Jan'),
-        valor: parseFloat(item.valor) || 20.00,
-        status: item.status || 'pago',
-        data_pagamento: item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR'),
-        observacoes: item.obs || item.observacoes || item.comprovante_pix || 'Quitacao de mensalidade PIX'
-    };
-};
 }
 
 function sanitizeMensagem(item) {
@@ -191,11 +146,9 @@ const dbService = {
         if (supabaseClient) {
             try {
                 const { data, error } = await supabaseClient.from('associados').select('*');
-                if (!error && data) {
+                if (!error && data && data.length > 0) {
                     localStorage.setItem('acbcsj_associados', JSON.stringify(data));
                     return data;
-                } else if (error) {
-                    console.error("⚠️ Supabase GET associados erro:", error.message);
                 }
             } catch (e) {
                 console.error("Erro no Supabase getAssociados:", e);
@@ -204,23 +157,21 @@ const dbService = {
         return JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     },
 
-    async saveAssociado(associado) {
-        const clean = sanitizeAssociado(associado);
+    async saveAssociado(item) {
+        const clean = sanitizeAssociado(item);
         if (!clean) return false;
 
         let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-        const idx = list.findIndex(a => (a.cpf === clean.cpf || a.id === clean.id));
-        if (idx >= 0) list[idx] = { ...list[idx], ...clean };
+        const idx = list.findIndex(a => a.cpf === clean.cpf || a.id === clean.id);
+        if (idx >= 0) list[idx] = clean;
         else list.push(clean);
         localStorage.setItem('acbcsj_associados', JSON.stringify(list));
 
         if (supabaseClient) {
             try {
-                const { error } = await supabaseClient.from('associados').upsert([clean], { onConflict: 'cpf' });
-                if (error) console.error("⚠️ Erro ao salvar associado no Supabase:", error.message);
-                else console.log("✅ Associado salvo no Supabase:", clean.nome_guerra || clean.nome);
+                await supabaseClient.from('associados').upsert([clean]);
             } catch (e) {
-                console.error("Erro ao salvar associado:", e);
+                console.error("Erro ao salvar associado no Supabase:", e);
             }
         }
         return true;
@@ -234,9 +185,8 @@ const dbService = {
         if (supabaseClient) {
             try {
                 await supabaseClient.from('associados').delete().eq('cpf', cpf);
-                console.log("🗑️ Associado excluído do Supabase (CPF:", cpf, ")");
             } catch (e) {
-                console.error("Erro ao deletar associado do Supabase:", e);
+                console.error("Erro ao excluir associado do Supabase:", e);
             }
         }
         return true;
@@ -247,11 +197,9 @@ const dbService = {
         if (supabaseClient) {
             try {
                 const { data, error } = await supabaseClient.from('financeiro_lancamentos').select('*');
-                if (!error && data) {
+                if (!error && data && data.length > 0) {
                     localStorage.setItem('acbcsj_financeiro', JSON.stringify(data));
                     return data;
-                } else if (error) {
-                    console.error("⚠️ Supabase GET financeiro erro:", error.message);
                 }
             } catch (e) {
                 console.error("Erro no Supabase getFinanceiro:", e);
@@ -260,21 +208,21 @@ const dbService = {
         return JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
     },
 
-    async addFinanceiro(lancamento) {
-        const clean = sanitizeFinanceiro(lancamento);
+    async saveFinanceiro(item) {
+        const clean = sanitizeFinanceiro(item);
         if (!clean) return false;
 
         let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-        list.unshift(clean);
+        const idx = list.findIndex(f => f.id === clean.id);
+        if (idx >= 0) list[idx] = clean;
+        else list.unshift(clean);
         localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
 
         if (supabaseClient) {
             try {
-                const { error } = await supabaseClient.from('financeiro_lancamentos').upsert([clean]);
-                if (error) console.error("⚠️ Erro ao salvar financeiro no Supabase:", error.message);
-                else console.log("✅ Lançamento salvo no Supabase:", clean.descricao);
+                await supabaseClient.from('financeiro_lancamentos').upsert([clean]);
             } catch (e) {
-                console.error("Erro ao salvar lançamento financeiro:", e);
+                console.error("Erro ao salvar lanÃ§amento financeiro no Supabase:", e);
             }
         }
         return true;
@@ -282,39 +230,20 @@ const dbService = {
 
     async deleteFinanceiro(id) {
         let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-        list = list.filter(item => item.id !== id);
+        list = list.filter(f => f.id !== id);
         localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
 
         if (supabaseClient) {
             try {
                 await supabaseClient.from('financeiro_lancamentos').delete().eq('id', id);
-                console.log("🗑️ Lançamento excluído do Supabase:", id);
             } catch (e) {
-                console.error("Erro ao deletar lançamento:", e);
+                console.error("Erro ao excluir lanÃ§amento financeiro do Supabase:", e);
             }
         }
         return true;
     },
 
-    async limparReceitas() {
-        let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-        list = list.filter(item => item.tipo !== 'receita');
-        localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
-
-        if (supabaseClient) {
-            try {
-                const { error } = await supabaseClient.from('financeiro_lancamentos').delete().eq('tipo', 'receita');
-                if (error) console.error("⚠️ Erro ao limpar receitas no Supabase:", error.message);
-                else console.log("🗑️ Todos os lançamentos de receita foram excluídos do Supabase.");
-            } catch (e) {
-                console.error("Erro ao limpar receitas do Supabase:", e);
-            }
-        }
-        return true;
-    },
-
-
-        // MENSALIDADES (BAIXAS)
+    // MENSALIDADES (BAIXAS)
     async getMensalidades() {
         if (supabaseClient) {
             try {
@@ -346,7 +275,7 @@ const dbService = {
             try {
                 const { error } = await supabaseClient.from('mensalidades').upsert([clean]);
                 if (error) console.error("âš ï¸ Erro ao salvar mensalidade no Supabase:", error.message);
-                else console.log("âœ… Mensalidade salva no Supabase:", clean.associado_nome, clean.meses_quitados);
+                else console.log("âœ… Mensalidade salva no Supabase:", clean.cpf, clean.mes_referencia, clean.valor);
             } catch (e) {
                 console.error("Erro ao enviar mensalidade para Supabase:", e);
             }
@@ -354,7 +283,7 @@ const dbService = {
         return true;
     },
 
-        async clearMensalidades() {
+    async clearMensalidades() {
         localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify([]));
         localStorage.setItem('acbcsj_mensalidades_grid_2026', JSON.stringify([]));
         if (typeof recalcularTodasGridsMensalidades === 'function') {
@@ -380,7 +309,6 @@ const dbService = {
         if (supabaseClient) {
             try {
                 await supabaseClient.from('mensalidades').delete().eq('id', id);
-                console.log("ðŸ—‘ï¸ Mensalidade excluÃ­da do Supabase ID:", id);
             } catch (e) {
                 console.error("Erro ao excluir mensalidade do Supabase:", e);
             }
@@ -467,13 +395,14 @@ const dbService = {
     async syncFromSupabase() {
         if (!supabaseClient) return;
 
-        console.log("🌐 Carregando dados exclusivos do Supabase...");
+        console.log("ðŸŒ Carregando dados exclusivos do Supabase...");
         try {
-            const [assocRes, finRes, msgRes, docRes] = await Promise.all([
+            const [assocRes, finRes, msgRes, docRes, mensRes] = await Promise.all([
                 supabaseClient.from('associados').select('*'),
                 supabaseClient.from('financeiro_lancamentos').select('*'),
                 supabaseClient.from('mensagens').select('*'),
-                supabaseClient.from('documentos').select('*')
+                supabaseClient.from('documentos').select('*'),
+                supabaseClient.from('mensalidades').select('*')
             ]);
 
             if (!assocRes.error && assocRes.data) {
@@ -488,9 +417,15 @@ const dbService = {
             if (!docRes.error && docRes.data) {
                 localStorage.setItem('acbcsj_documentos', JSON.stringify(docRes.data));
             }
-            console.log("🎉 Dados do Supabase carregados com sucesso!");
+            if (!mensRes.error && mensRes.data && Array.isArray(mensRes.data)) {
+                localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(mensRes.data));
+                if (typeof recalcularTodasGridsMensalidades === 'function') {
+                    recalcularTodasGridsMensalidades();
+                }
+            }
+            console.log("ðŸŽ‰ Dados do Supabase carregados com sucesso!");
         } catch (err) {
-            console.error("⚠️ Erro ao consultar Supabase:", err);
+            console.error("âš ï¸ Erro ao consultar Supabase:", err);
         }
     }
 };
