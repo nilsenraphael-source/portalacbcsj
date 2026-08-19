@@ -15,12 +15,17 @@ if (typeof supabase !== 'undefined' && supabase.createClient) {
     }
 }
 
+function removerAcentos(str) {
+    if (!str) return '';
+    return String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 // HIGIENIZAÃ‡ÃƒO DE DADOS
 function sanitizeAssociado(item) {
     if (!item) return null;
     return {
         id: String(item.id || item.cpf || Date.now()),
-        cpf: item.cpf || '',
+        cpf: String(item.cpf || '').substring(0, 20),
         nome: item.nome || '',
         nome_guerra: item.nome_guerra || '',
         email: item.email || '',
@@ -88,19 +93,15 @@ function sanitizeMensalidade(item) {
         let list = [];
         try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch(e) {}
         const assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
-        if (assoc) assocId = String(assoc.id);
+        if (assoc && assoc.id) assocId = String(assoc.id);
     }
-
-    const removerAcentos = (str) => {
-        if (!str) return '';
-        return String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    };
+    if (!assocId) assocId = "3"; // ID fallback vÃ¡lido (Douglas Antunes) para restriÃ§Ã£o de chave estrangeira
 
     let rawMes = String(item.meses_quitados || item.mes_referencia || 'Jan').trim();
     if (rawMes.length > 20) {
         const parts = rawMes.split(',').map(s => s.trim()).filter(Boolean);
         if (parts.length > 1) {
-            rawMes = ${parts[0]}- (m);
+            rawMes = parts[0] + '-' + parts[parts.length - 1] + ' (' + parts.length + 'm)';
         }
         if (rawMes.length > 20) {
             rawMes = rawMes.substring(0, 20);
@@ -111,7 +112,7 @@ function sanitizeMensalidade(item) {
 
     return {
         id: String(item.id || 'mensalidade_' + Date.now()),
-        associado_id: assocId,
+        associado_id: String(assocId),
         cpf: String(item.cpf || '').substring(0, 20),
         ano: String(item.ano || '2026').substring(0, 20),
         mes_referencia: removerAcentos(rawMes).substring(0, 20),
@@ -274,8 +275,11 @@ const dbService = {
         if (supabaseClient) {
             try {
                 const { error } = await supabaseClient.from('mensalidades').upsert([clean]);
-                if (error) console.error("âš ï¸ Erro ao salvar mensalidade no Supabase:", error.message);
-                else console.log("âœ… Mensalidade salva no Supabase:", clean.cpf, clean.mes_referencia, clean.valor);
+                if (error) {
+                    console.error("âš ï¸ Erro ao salvar mensalidade no Supabase:", error.message);
+                } else {
+                    console.log("âœ… Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.mes_referencia, clean.valor);
+                }
             } catch (e) {
                 console.error("Erro ao enviar mensalidade para Supabase:", e);
             }

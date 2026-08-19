@@ -202,6 +202,7 @@ function setupCPFMasks() {
 
 // AUTENTICAÇÃO E LOGIN
 async function loginWithCPF(cpf, password, roleHint = null) {
+    console.log("ðŸ”‘ Executando loginWithCPF...", cpf, roleHint);
     try {
         let list = [];
         try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch(e) {}
@@ -219,14 +220,16 @@ async function loginWithCPF(cpf, password, roleHint = null) {
 
         if (roleHint === 'diretoria') {
             currentUser = list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || list[0] || { nome: 'Comandante / Diretoria ACBCSJ', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
+<<<<<<< HEAD
             if (currentUser) currentUser.status = 'ativo';
+=======
+>>>>>>> dc11dc47d3fc578ac3d11bc300bbe96031b3397d
         } else if (roleHint === 'associado') {
             currentUser = list.find(a => a.perfil === 'associado' && a.status === 'ativo') || list[1] || list[0];
         } else {
             const cleanInputCPF = (cpf || '').replace(/\D/g, '');
             
             if (!cleanInputCPF) {
-                // Se o CPF estiver em branco, entra como Diretoria por padrÃ£o
                 currentUser = list.find(a => a.perfil === 'diretoria') || list[0];
             } else {
                 const found = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanInputCPF || a.cpf === cpf);
@@ -238,7 +241,6 @@ async function loginWithCPF(cpf, password, roleHint = null) {
                     }
                     currentUser = found;
                 } else {
-                    // Se o CPF digitado for 000.000.000-00 ou nÃ£o encontrado, loga no Comandante
                     currentUser = list.find(a => a.perfil === 'diretoria') || list[0];
                 }
             }
@@ -248,12 +250,12 @@ async function loginWithCPF(cpf, password, roleHint = null) {
             currentUser = { nome: 'Comandante / Diretoria ACBCSJ', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
         }
 
-        // Transiciona da tela de login para o Dashboard
+        // ForÃ§a exibiÃ§Ã£o do Dashboard
         const authScreen = document.getElementById('authScreen');
         const appDashboard = document.getElementById('appDashboard');
 
-        if (authScreen) authScreen.style.display = 'none';
-        if (appDashboard) appDashboard.style.display = 'flex';
+        if (authScreen) authScreen.setAttribute('style', 'display: none !important;');
+        if (appDashboard) appDashboard.setAttribute('style', 'display: flex !important; min-height: 100vh; flex-direction: column;');
 
         try {
             renderUserHeader();
@@ -264,13 +266,14 @@ async function loginWithCPF(cpf, password, roleHint = null) {
         }
     } catch (err) {
         console.error('Erro ao efetuar login:', err);
-        // Garante a entrada no dashboard mesmo em caso de aviso
         const authScreen = document.getElementById('authScreen');
         const appDashboard = document.getElementById('appDashboard');
-        if (authScreen) authScreen.style.display = 'none';
-        if (appDashboard) appDashboard.style.display = 'flex';
+        if (authScreen) authScreen.setAttribute('style', 'display: none !important;');
+        if (appDashboard) appDashboard.setAttribute('style', 'display: flex !important; min-height: 100vh; flex-direction: column;');
     }
 }
+
+window.loginWithCPF = loginWithCPF;
 
 function logout() {
     currentUser = null;
@@ -2785,7 +2788,8 @@ function renderGestaoMensalidades() {
     lbls.forEach(el => el.textContent = ano);
 
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const ativos = list.filter(a => a.status === 'ativo' || !a.status);
+    let ativos = list.filter(a => a.status === 'ativo' || !a.status);
+    ativos.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
 
     const storageKey = `acbcsj_mensalidades_grid_${ano}`;
     let grid = JSON.parse(localStorage.getItem(storageKey));
@@ -2870,6 +2874,7 @@ function renderGestaoMensalidades() {
         associadosProcessados = associadosProcessados.filter(a => !a.isEmDia);
     }
 
+    associadosProcessados.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
     const container = document.getElementById('tableGestaoMensalidadesBody');
     if (container) {
         if (associadosProcessados.length === 0) {
