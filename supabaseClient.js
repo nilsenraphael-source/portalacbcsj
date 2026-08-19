@@ -281,11 +281,22 @@ const dbService = {
 
         if (supabaseClient) {
             try {
-                const { error } = await supabaseClient.from('mensalidades').upsert([clean]);
+                const payloadSupabase = {
+                    id: clean.id,
+                    associado_id: clean.associado_id,
+                    cpf: clean.cpf,
+                    ano: clean.ano,
+                    mes_referencia: clean.mes_referencia,
+                    valor: clean.valor,
+                    status: clean.status,
+                    data_pagamento: clean.data_pagamento,
+                    observacoes: clean.observacoes
+                };
+                const { error } = await supabaseClient.from('mensalidades').upsert([payloadSupabase]);
                 if (error) {
-                    console.error("âš ï¸ Erro ao salvar mensalidade no Supabase:", error.message);
+                    console.error("⚠️ Erro ao salvar mensalidade no Supabase:", error.message);
                 } else {
-                    console.log("âœ… Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.mes_referencia, clean.valor);
+                    console.log("✅ Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.mes_referencia, clean.valor);
                 }
             } catch (e) {
                 console.error("Erro ao enviar mensalidade para Supabase:", e);
