@@ -202,6 +202,7 @@ function setupCPFMasks() {
 
 // AUTENTICAÇÃO E LOGIN
 async function loginWithCPF(cpf, password, roleHint = null) {
+    console.log("ðŸ”‘ Executando loginWithCPF...", cpf, roleHint);
     try {
         let list = [];
         try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch(e) {}
@@ -218,14 +219,13 @@ async function loginWithCPF(cpf, password, roleHint = null) {
         }
 
         if (roleHint === 'diretoria') {
-            currentUser = list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || list[0] || { nome: 'Comandante', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
+            currentUser = list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || list[0] || { nome: 'Comandante / Diretoria ACBCSJ', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
         } else if (roleHint === 'associado') {
             currentUser = list.find(a => a.perfil === 'associado' && a.status === 'ativo') || list[1] || list[0];
         } else {
             const cleanInputCPF = (cpf || '').replace(/\D/g, '');
             
             if (!cleanInputCPF) {
-                // Se o CPF estiver em branco, entra como Diretoria por padrÃ£o
                 currentUser = list.find(a => a.perfil === 'diretoria') || list[0];
             } else {
                 const found = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanInputCPF || a.cpf === cpf);
@@ -237,7 +237,6 @@ async function loginWithCPF(cpf, password, roleHint = null) {
                     }
                     currentUser = found;
                 } else {
-                    // Se o CPF digitado for 000.000.000-00 ou nÃ£o encontrado, loga no Comandante
                     currentUser = list.find(a => a.perfil === 'diretoria') || list[0];
                 }
             }
@@ -247,12 +246,12 @@ async function loginWithCPF(cpf, password, roleHint = null) {
             currentUser = { nome: 'Comandante / Diretoria ACBCSJ', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
         }
 
-        // Transiciona da tela de login para o Dashboard
+        // ForÃ§a exibiÃ§Ã£o do Dashboard
         const authScreen = document.getElementById('authScreen');
         const appDashboard = document.getElementById('appDashboard');
 
-        if (authScreen) authScreen.style.display = 'none';
-        if (appDashboard) appDashboard.style.display = 'flex';
+        if (authScreen) authScreen.setAttribute('style', 'display: none !important;');
+        if (appDashboard) appDashboard.setAttribute('style', 'display: flex !important; min-height: 100vh; flex-direction: column;');
 
         try {
             renderUserHeader();
@@ -263,13 +262,14 @@ async function loginWithCPF(cpf, password, roleHint = null) {
         }
     } catch (err) {
         console.error('Erro ao efetuar login:', err);
-        // Garante a entrada no dashboard mesmo em caso de aviso
         const authScreen = document.getElementById('authScreen');
         const appDashboard = document.getElementById('appDashboard');
-        if (authScreen) authScreen.style.display = 'none';
-        if (appDashboard) appDashboard.style.display = 'flex';
+        if (authScreen) authScreen.setAttribute('style', 'display: none !important;');
+        if (appDashboard) appDashboard.setAttribute('style', 'display: flex !important; min-height: 100vh; flex-direction: column;');
     }
 }
+
+window.loginWithCPF = loginWithCPF;
 
 function logout() {
     currentUser = null;
