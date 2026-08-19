@@ -83,19 +83,27 @@ function sanitizeDocumento(item) {
 
 function sanitizeMensalidade(item) {
     if (!item) return null;
+    const cleanCpf = (item.cpf || '').replace(/\D/g, '');
+    let assocId = item.associado_id || null;
+    if (!assocId) {
+        let list = [];
+        try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch(e) {}
+        const assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
+        if (assoc) assocId = String(assoc.id);
+    }
+
     return {
         id: String(item.id || 'mensalidade_' + Date.now()),
+        associado_id: assocId,
         cpf: item.cpf || '',
-        associado_nome: item.associado_nome || '',
         ano: String(item.ano || '2026'),
-        valor: parseFloat(item.valor) || 0,
-        data: item.data || new Date().toLocaleDateString('pt-BR'),
-        data_iso: item.data_iso || new Date().toISOString().split('T')[0],
-        forma: item.forma || 'PIX',
-        comprovante_pix: item.comprovante_pix || 'Comprovante PIX',
-        meses_quitados: item.meses_quitados || '',
-        obs: item.obs || ''
+        mes_referencia: String(item.meses_quitados || item.mes_referencia || 'Jan'),
+        valor: parseFloat(item.valor) || 20.00,
+        status: item.status || 'pago',
+        data_pagamento: item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR'),
+        observacoes: item.obs || item.observacoes || item.comprovante_pix || 'Quitacao de mensalidade PIX'
     };
+};
 }
 
 function sanitizeMensagem(item) {
