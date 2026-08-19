@@ -2784,7 +2784,8 @@ function renderGestaoMensalidades() {
     lbls.forEach(el => el.textContent = ano);
 
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const ativos = list.filter(a => a.status === 'ativo' || !a.status);
+    let ativos = list.filter(a => a.status === 'ativo' || !a.status);
+    ativos.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
 
     const storageKey = `acbcsj_mensalidades_grid_${ano}`;
     let grid = JSON.parse(localStorage.getItem(storageKey));
@@ -2869,6 +2870,7 @@ function renderGestaoMensalidades() {
         associadosProcessados = associadosProcessados.filter(a => !a.isEmDia);
     }
 
+    associadosProcessados.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
     const container = document.getElementById('tableGestaoMensalidadesBody');
     if (container) {
         if (associadosProcessados.length === 0) {
