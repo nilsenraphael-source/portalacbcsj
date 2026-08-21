@@ -1271,6 +1271,159 @@
         </div>
     </div>
 
+    <!-- MODAL DE EDIÇÃO DE ASSOCIADO PELA DIRETORIA -->
+    <div id="modalEditarAssociadoDiretoria" class="modal-backdrop">
+        <div class="modal-content modal-content-lg" style="max-width: 750px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title">✏️ Editar Dados Cadastrais do Associado</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Edição administrativa dos dados cadastrais, data de ingresso, OBM e perfil.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalEditarAssociadoDiretoria')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarEdicaoAssociadoDiretoria(event)">
+                <input type="hidden" id="editDiretoriaOriginalCPF">
+
+                <div class="form-grid">
+                    <!-- Nome de Guerra -->
+                    <div class="form-group">
+                        <label>Nome de Guerra <span class="req-star">*</span></label>
+                        <input type="text" id="editDiretoriaNomeGuerra" class="form-control" placeholder="Ex: Silva" required>
+                    </div>
+
+                    <!-- Nome Completo -->
+                    <div class="form-group">
+                        <label>Nome Completo <span class="req-star">*</span></label>
+                        <input type="text" id="editDiretoriaNome" class="form-control" placeholder="Ex: João da Silva" required>
+                    </div>
+
+                    <!-- CPF -->
+                    <div class="form-group">
+                        <label>CPF <span class="req-star">*</span></label>
+                        <input type="text" id="editDiretoriaCPF" class="form-control" placeholder="000.000.000-00" required>
+                    </div>
+
+                    <!-- Data de Nascimento -->
+                    <div class="form-group">
+                        <label>Data de Nascimento</label>
+                        <input type="text" id="editDiretoriaDataNascimento" class="form-control" placeholder="DD/MM/AAAA">
+                    </div>
+
+                    <!-- Sexo -->
+                    <div class="form-group">
+                        <label>Sexo</label>
+                        <select id="editDiretoriaSexo" class="form-control">
+                            <option value="">Selecione...</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Feminino">Feminino</option>
+                        </select>
+                    </div>
+
+                    <!-- Telefone / WhatsApp -->
+                    <div class="form-group">
+                        <label>Telefone / WhatsApp <span class="req-star">*</span></label>
+                        <input type="text" id="editDiretoriaTelefone" class="form-control" placeholder="(48) 99999-9999" required>
+                    </div>
+
+                    <!-- OBM de Lotação -->
+                    <div class="form-group">
+                        <label>OBM de Lotação <span class="req-star">*</span></label>
+                        <input type="text" id="editDiretoriaOBM" class="form-control" placeholder="Ex: São José, Florianópolis, Palhoça" required>
+                    </div>
+
+                    <!-- Profissão -->
+                    <div class="form-group">
+                        <label>Profissão / Ocupação</label>
+                        <input type="text" id="editDiretoriaProfissao" class="form-control" placeholder="Ex: Autônomo, Engenheiro">
+                    </div>
+
+                    <!-- Data de Ingresso / Cadastro -->
+                    <div class="form-group">
+                        <label>Data de Ingresso / Cadastro <span class="req-star">*</span></label>
+                        <input type="text" id="editDiretoriaDataCadastro" class="form-control" placeholder="DD/MM/AAAA" required>
+                        <small style="color: var(--accent-gold); font-size: 10px;">Utilizada para definir isenção de mensalidades anteriores ao ingresso.</small>
+                    </div>
+
+                    <!-- Perfil de Acesso -->
+                    <div class="form-group">
+                        <label>Perfil de Acesso no Portal <span class="req-star">*</span></label>
+                        <select id="editDiretoriaPerfil" class="form-control" required>
+                            <option value="associado">ASSOCIADO</option>
+                            <option value="diretoria">DIRETORIA</option>
+                        </select>
+                    </div>
+
+                    <!-- Status do Cadastro -->
+                    <div class="form-group">
+                        <label>Status do Cadastro <span class="req-star">*</span></label>
+                        <select id="editDiretoriaStatus" class="form-control" required>
+                            <option value="ativo">ATIVO</option>
+                            <option value="pendente">PENDENTE</option>
+                            <option value="pendente_desligamento">PENDENTE DE DESLIGAMENTO</option>
+                            <option value="desligado">DESLIGADO</option>
+                        </select>
+                    </div>
+
+                    <!-- Filiação -->
+                    <div class="form-group-full" style="border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 5px;">
+                        <h4 style="font-size: 13px; color: var(--accent-gold); margin-bottom: 10px;">👨‍👩‍👧 Filiação & Dados Familiares:</h4>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nome da Mãe</label>
+                        <input type="text" id="editDiretoriaNomeMae" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nome do Pai</label>
+                        <input type="text" id="editDiretoriaNomePai" class="form-control">
+                    </div>
+
+                    <!-- Endereço -->
+                    <div class="form-group-full" style="border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 5px;">
+                        <h4 style="font-size: 13px; color: var(--accent-gold); margin-bottom: 10px;">🏠 Endereço Residencial Completo:</h4>
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label>Logradouro (Rua, Avenida...)</label>
+                        <input type="text" id="editDiretoriaLogradouro" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Número</label>
+                        <input type="text" id="editDiretoriaNumero" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Complemento</label>
+                        <input type="text" id="editDiretoriaComplemento" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>CEP</label>
+                        <input type="text" id="editDiretoriaCEP" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bairro</label>
+                        <input type="text" id="editDiretoriaBairro" class="form-control">
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label>Cidade</label>
+                        <input type="text" id="editDiretoriaCidade" class="form-control">
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarAssociadoDiretoria')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold" style="width: auto;">💾 Salvar Alterações Cadastrais</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL DE REAJUSTE DO VALOR BASE DA MENSALIDADE (SOMENTE DIRETORIA) -->
     <div id="modalReajustarMensalidade" class="modal-backdrop">
         <div class="modal-content" style="max-width: 500px;">

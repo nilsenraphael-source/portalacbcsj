@@ -1,4 +1,4 @@
-function extrairListaMesesDoLancamento(rawMesesStr, obsStr = '') {
+﻿function extrairListaMesesDoLancamento(rawMesesStr, obsStr = '') {
     const textoCompleto = ((rawMesesStr || '') + ' ' + (obsStr || '')).trim();
     if (!textoCompleto) return [];
 
@@ -545,7 +545,10 @@ function renderGestaoAssociados() {
                         <td>${perfilControl}</td>
                         <td><button class="btn btn-sm btn-gold" onclick="verFichaAssociado('${a.cpf}')">📋 Ver Ficha Completa</button></td>
                         <td>
-                            ${!isSelf ? `<button class="btn btn-sm btn-outline" style="color:#E74C3C; border-color:#E74C3C" onclick="abrirModalDesligar('${a.cpf}')">Desligar Associado</button>` : '<small style="color:var(--text-muted)">Você (Diretoria)</small>'}
+                            <div style="display: flex; gap: 6px; justify-content: center;">
+                                <button class="btn btn-sm btn-outline" style="color: var(--accent-gold); border-color: var(--accent-gold); font-size: 11px; padding: 2px 8px;" onclick="abrirModalEditarAssociadoDiretoria('${a.cpf}')">✏️ Editar Dados</button>
+                                ${!isSelf ? `<button class="btn btn-sm btn-outline" style="color:#E74C3C; border-color:#E74C3C; font-size: 11px; padding: 2px 8px;" onclick="abrirModalDesligar('${a.cpf}')">Desligar</button>` : '<small style="color:var(--text-muted); align-self:center;">Você</small>'}
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -3717,4 +3720,90 @@ function rejeitarDesligamentoDiretoria(cpf) {
         renderGestaoAssociados();
         renderGestaoMensalidades();
     }
+}
+
+// EDIÃ‡ÃƒO COMPLETA DO CADASTRO DE ASSOCIADO PELA DIRETORIA
+function abrirModalEditarAssociadoDiretoria(cpf) {
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const cleanCpfTarget = (cpf || '').replace(/\D/g, '');
+    const a = list.find(item => (item.cpf || '').replace(/\D/g, '') === cleanCpfTarget);
+
+    if (!a) {
+        alert('Associado nÃ£o encontrado.');
+        return;
+    }
+
+    document.getElementById('editDiretoriaOriginalCPF').value = a.cpf;
+    document.getElementById('editDiretoriaNomeGuerra').value = a.nome_guerra || '';
+    document.getElementById('editDiretoriaNome').value = a.nome || '';
+    document.getElementById('editDiretoriaCPF').value = a.cpf || '';
+    document.getElementById('editDiretoriaDataNascimento').value = a.data_nascimento || '';
+    document.getElementById('editDiretoriaSexo').value = a.sexo || '';
+    document.getElementById('editDiretoriaTelefone').value = a.telefone || '';
+    document.getElementById('editDiretoriaOBM').value = a.obm || '';
+    document.getElementById('editDiretoriaProfissao').value = a.profissao || '';
+    document.getElementById('editDiretoriaDataCadastro').value = parseDataCadastro(a.data_cadastro)?.formatted || (a.data_cadastro ? a.data_cadastro.split(' ')[0] : '');
+    document.getElementById('editDiretoriaPerfil').value = a.perfil || 'associado';
+    document.getElementById('editDiretoriaStatus').value = a.status || 'ativo';
+    document.getElementById('editDiretoriaNomeMae').value = a.nome_mae || '';
+    document.getElementById('editDiretoriaNomePai').value = a.nome_pai || '';
+    document.getElementById('editDiretoriaLogradouro').value = a.logradouro || '';
+    document.getElementById('editDiretoriaNumero').value = a.numero || '';
+    document.getElementById('editDiretoriaComplemento').value = a.complemento || '';
+    document.getElementById('editDiretoriaCEP').value = a.cep || '';
+    document.getElementById('editDiretoriaBairro').value = a.bairro || '';
+    document.getElementById('editDiretoriaCidade').value = a.cidade || '';
+
+    openModal('modalEditarAssociadoDiretoria');
+}
+
+function salvarEdicaoAssociadoDiretoria(e) {
+    e.preventDefault();
+
+    const originalCpf = document.getElementById('editDiretoriaOriginalCPF').value;
+    const cleanOrigCpf = (originalCpf || '').replace(/\D/g, '');
+
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const item = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanOrigCpf);
+
+    if (!item) {
+        alert('Erro ao localizar o associado original para salvar.');
+        return;
+    }
+
+    item.nome_guerra = document.getElementById('editDiretoriaNomeGuerra').value.trim();
+    item.nome = document.getElementById('editDiretoriaNome').value.trim();
+    item.cpf = document.getElementById('editDiretoriaCPF').value.trim();
+    item.data_nascimento = document.getElementById('editDiretoriaDataNascimento').value.trim();
+    item.sexo = document.getElementById('editDiretoriaSexo').value;
+    item.telefone = document.getElementById('editDiretoriaTelefone').value.trim();
+    item.obm = document.getElementById('editDiretoriaOBM').value.trim();
+    item.profissao = document.getElementById('editDiretoriaProfissao').value.trim();
+    item.data_cadastro = document.getElementById('editDiretoriaDataCadastro').value.trim();
+    item.perfil = document.getElementById('editDiretoriaPerfil').value;
+    item.status = document.getElementById('editDiretoriaStatus').value;
+    item.nome_mae = document.getElementById('editDiretoriaNomeMae').value.trim();
+    item.nome_pai = document.getElementById('editDiretoriaNomePai').value.trim();
+    item.logradouro = document.getElementById('editDiretoriaLogradouro').value.trim();
+    item.numero = document.getElementById('editDiretoriaNumero').value.trim();
+    item.complemento = document.getElementById('editDiretoriaComplemento').value.trim();
+    item.cep = document.getElementById('editDiretoriaCEP').value.trim();
+    item.bairro = document.getElementById('editDiretoriaBairro').value.trim();
+    item.cidade = document.getElementById('editDiretoriaCidade').value.trim();
+
+    localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+    dbService.saveAssociado(item);
+
+    if (currentUser && (currentUser.cpf || '').replace(/\D/g, '') === cleanOrigCpf) {
+        sessionStorage.setItem('acbcsj_current_user', JSON.stringify(item));
+        currentUser = item;
+    }
+
+    alert(`Dados do associado ${item.nome_guerra || item.nome} atualizados com sucesso!`);
+    closeModal('modalEditarAssociadoDiretoria');
+
+    renderGestaoAssociados();
+    renderGestaoMensalidades();
+    renderDiretoriaOverview();
+    renderAssociadosDesligados();
 }
