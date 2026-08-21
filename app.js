@@ -44,14 +44,7 @@ function recalcularTodasGridsMensalidades() {
                 jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0
             };
 
-            if (String(ano) === '2026' && typeof INITIAL_MENSAL_DATA !== 'undefined') {
-                const basePlanilha = (INITIAL_MENSAL_DATA || []).find(b => (b.cpf || '').replace(/\D/g, '') === cleanCpf);
-                if (basePlanilha) {
-                    ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'].forEach(k => {
-                        row[k] = parseFloat(basePlanilha[k]) || 0;
-                    });
-                }
-            }
+            // A grid Ã© calculada exclusivamente com base nos lanÃ§amentos reais do histÃ³rico e Supabase
 
             const lancamentosSocio = historicoRaw.filter(m => (m.cpf || '').replace(/\D/g, '') === cleanCpf && String(m.ano || '2026') === String(ano));
             lancamentosSocio.forEach(m => {
@@ -2948,6 +2941,7 @@ function salvarMeusDados(e) {
 
 // CONTROLE DE MENSALIDADES DOS ASSOCIADOS (DIRETORIA)
 function renderGestaoMensalidades() {
+    recalcularTodasGridsMensalidades();
     const selAno = document.getElementById('selAnoMensalidades');
     const ano = selAno ? selAno.value : '2026';
 
@@ -3144,6 +3138,7 @@ function renderGestaoMensalidades() {
 
 // BAIXA DE MENSALIDADE VIA PIX
 function abrirModalDarBaixa(cpf = null) {
+    recalcularTodasGridsMensalidades();
     let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     list.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
 

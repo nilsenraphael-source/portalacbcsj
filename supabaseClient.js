@@ -1,4 +1,4 @@
-// CLIENTE SUPABASE OFICIAL DA ACBCSJ
+﻿// CLIENTE SUPABASE OFICIAL DA ACBCSJ
 const SUPABASE_URL = "https://ucutgspmvbupknjodeit.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_drRsr2KSefHZqctSxlU7qA_b3xOj7RJ";
 const SUPABASE_SECRET_KEY = "sb_secret_9N99Zf3L9d!q4Y3wP";
@@ -120,7 +120,7 @@ function sanitizeMensalidade(item) {
         meses_quitados: rawMeses,
         data: String(item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR')).substring(0, 20),
         data_iso: item.data_iso || new Date().toISOString().split('T')[0],
-        valor: parseFloat(item.valor) || 20.00,
+        valor: (typeof item.valor !== 'undefined' && item.valor !== null && !isNaN(parseFloat(item.valor))) ? parseFloat(item.valor) : 0,
         status: String(item.status || 'pago').substring(0, 20),
         data_pagamento: String(item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR')).substring(0, 20),
         observacoes: cleanObs,
