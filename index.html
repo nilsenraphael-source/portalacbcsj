@@ -162,6 +162,30 @@
                             </table>
                         </div>
                     </div>
+
+                    <!-- CARD DE SOLICITAÇÕES DE DESLIGAMENTO PENDENTES DA DIRETORIA -->
+                    <div class="card" style="margin-top: 20px; border-left: 4px solid #E74C3C;">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 class="card-title" style="color: #FF6B6B;">🚫 Solicitações de Desligamento Pendentes de Homologação</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Associados que solicitaram o desligamento voluntário com a carta assinada anexada.</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 12px; text-align: center;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left;">Associado / Nome Completo</th>
+                                        <th>CPF / OBM</th>
+                                        <th>Data Solicitação</th>
+                                        <th>Carta de Desligamento</th>
+                                        <th style="min-width: 180px;">Ações da Diretoria</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableDesligamentosPendentesBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ABA 2: GESTÃO DE ASSOCIADOS (DIRETORIA) -->
@@ -461,7 +485,10 @@
                             <h2 class="page-title">Bem-vindo(a), <span id="associadoWelcomeName">Associado</span></h2>
                             <p style="font-size: 13px; color: var(--text-muted);">Acompanhe suas mensalidades, contribuições e mantenha seus dados atualizados na ACBCSJ.</p>
                         </div>
-                        <button class="btn btn-gold btn-sm" onclick="abrirModalEditarMeusDados()">✏️ Atualizar Meus Dados Cadastrais</button>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn btn-gold btn-sm" onclick="abrirModalEditarMeusDados()">✏️ Atualizar Meus Dados Cadastrais</button>
+                            <button class="btn btn-sm" id="btnPedirDesligamentoAssociado" style="background: #E74C3C; color: #fff; font-weight: bold; border: none;" onclick="abrirModalPedirDesligamento()">🚫 Pedir Desligamento</button>
+                        </div>
                     </div>
 
                     <!-- CARTÃO DE RESUMO DOS DADOS CADASTRAIS DO USUÁRIO -->
@@ -1185,6 +1212,60 @@
                 <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarMeusDados')">Cancelar</button>
                     <button type="submit" class="btn btn-gold" style="width: auto;">Salvar Minhas Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE SOLICITAÇÃO DE DESLIGAMENTO PELO ASSOCIADO -->
+    <div id="modalPedirDesligamento" class="modal-backdrop">
+        <div class="modal-content modal-content-lg" style="max-width: 680px;">
+            <div class="modal-header" style="border-bottom: 2px solid #E74C3C;">
+                <div>
+                    <h3 class="card-title" style="color: #FF6B6B;">🚫 Solicitação de Desligamento da Associação</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Preencha o pedido e anexe obrigatoriamente a carta de desligamento assinada para apreciação da Diretoria.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalPedirDesligamento')">&times;</button>
+            </div>
+
+            <form onsubmit="confirmarPedidoDesligamento(event)">
+                <div style="background: rgba(231, 76, 60, 0.08); border: 1px solid rgba(231, 76, 60, 0.3); padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+                    <div style="font-size: 12px; color: var(--text-color);">
+                        <b>Requerente:</b> <span id="pedirDesligNomeDisplay" style="color: var(--accent-gold); font-weight: bold;">-</span><br>
+                        <b>CPF:</b> <span id="pedirDesligCPFDisplay">-</span> | <b>OBM:</b> <span id="pedirDesligOBMDisplay">-</span>
+                    </div>
+                </div>
+
+                <div class="card" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); padding: 12px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <h4 style="font-size: 13px; color: var(--accent-gold); margin: 0;">📄 Carta de Termo de Desligamento Voluntário</h4>
+                        <button type="button" class="btn btn-sm btn-gold" onclick="gerarEImprimirCartaDesligamento()" style="font-size: 11px; padding: 3px 8px;">🖨️ Baixar / Imprimir Modelo Preenchido</button>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Você pode baixar ou imprimir a carta oficial preenchida com seus dados para assinar e anexar abaixo.</p>
+                    <textarea id="pedirDesligTextoModelo" class="form-control" rows="6" readonly style="font-size: 11px; font-family: monospace; background: #111; color: #ddd;"></textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-size: 13px; font-weight: bold;">Anexar Carta de Desligamento Assinada <span class="req-star">* (Obrigatório)</span></label>
+                    <input type="file" id="pedirDesligArquivo" class="form-control" accept=".pdf,image/*,.doc,.docx" required>
+                    <small style="color: var(--text-muted); font-size: 11px;">Anexe a foto ou arquivo PDF da sua carta de desligamento devidamente assinada.</small>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-size: 13px;">Motivo / Observações do Pedido <small style="color: var(--text-muted); font-weight: normal;">(Opcional)</small></label>
+                    <textarea id="pedirDesligMotivo" class="form-control" rows="2" placeholder="Informe brevemente a justificativa ou observações sobre o pedido de desligamento..."></textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; cursor: pointer; color: #FF6B6B;">
+                        <input type="checkbox" id="pedirDesligCheck" required style="margin-top: 2px;">
+                        <span>Declaro estar ciente de que estou solicitando o meu desligamento voluntário e que o pedido passará por homologação da Diretoria da ACBCSJ.</span>
+                    </label>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalPedirDesligamento')">Cancelar</button>
+                    <button type="submit" class="btn btn-danger" style="background: #E74C3C; border: none; font-weight: bold;">🚨 Confirmar e Enviar Pedido à Diretoria</button>
                 </div>
             </form>
         </div>

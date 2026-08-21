@@ -450,6 +450,42 @@ function renderDiretoriaOverview() {
     const saldo = totalReceitas - totalDespesas;
     document.getElementById('metricSaldoCaixa').textContent = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
+    // Tabela de solicitações de desligamento pendentes
+    const pendentesDesligamento = associados.filter(a => a.status === 'pendente_desligamento');
+    const containerDeslig = document.getElementById('tableDesligamentosPendentesBody');
+    if (containerDeslig) {
+        if (pendentesDesligamento.length === 0) {
+            containerDeslig.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 15px;">Nenhuma solicitação de desligamento pendente de homologação.</td></tr>`;
+        } else {
+            containerDeslig.innerHTML = pendentesDesligamento.map(d => `
+                <tr>
+                    <td style="text-align: left;">
+                        <b>${d.nome_guerra || d.nome}</b><br>
+                        <small style="color: var(--text-muted);">${d.nome}</small>
+                    </td>
+                    <td>
+                        <b>${d.cpf}</b><br>
+                        <small style="color: var(--accent-gold);">${d.obm || '-'}</small>
+                    </td>
+                    <td><small style="color: var(--text-muted);">${d.data_solicitacao_desligamento || '-'}</small></td>
+                    <td>
+                        ${d.carta_desligamento_url ? `
+                            <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 8px; color: var(--accent-gold); border-color: var(--accent-gold);" onclick="abrirCartaDesligamento('${d.cpf}')">
+                                📄 Ver Carta Anexada
+                            </button>
+                        ` : '<small style="color: #FF6B6B; font-style: italic;">Sem carta anexada</small>'}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 6px; justify-content: center;">
+                            <button class="btn btn-sm btn-success" style="padding: 3px 8px; font-size: 11px; background: #2ECC71; color: #fff; border: none; font-weight: bold;" onclick="homologarDesligamentoDiretoria('${d.cpf}')">✅ Homologar</button>
+                            <button class="btn btn-sm btn-outline" style="padding: 3px 8px; font-size: 11px; color: #E74C3C; border-color: #E74C3C;" onclick="rejeitarDesligamentoDiretoria('${d.cpf}')">❌ Rejeitar</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    }
+
     // Tabela de aprovação rápida
     const container = document.getElementById('tablePendentesBody');
     if (container) {
@@ -2408,8 +2444,62 @@ function salvarNovoValorMensalidade(e) {
     renderAssociadoOverview();
 }
 
+// HELPER PARA FORMATAR E EXTRAIR DATA DE INGRESSO/CADASTRO DO ASSOCIADO
+function parseDataCadastro(dataStr) {
+    if (!dataStr) return null;
+    const strClean = String(dataStr).trim();
+    if (!strClean) return null;
+
+    const datePart = strClean.split(' ')[0].trim();
+    if (!datePart) return null;
+
+    const parts = datePart.split(/[/-]/);
+    if (parts.length < 3) return null;
+
+    let p1 = parseInt(parts[0], 10);
+    let p2 = parseInt(parts[1], 10);
+    let y = parseInt(parts[2], 10);
+
+    if (isNaN(y) || isNaN(p1) || isNaN(p2)) return null;
+
+    let day, month;
+    if (p1 > 12) {
+        day = p1;
+        month = p2;
+    } else if (p2 > 12) {
+        day = p2;
+        month = p1;
+    } else {
+        day = p1;
+        month = p2;
+    }
+
+    const dayStr = String(day).padStart(2, '0');
+    const monthStr = String(month).padStart(2, '0');
+
+    return {
+        formatted: `${dayStr}/${monthStr}/${y}`,
+        year: y,
+        month: month,
+        day: day
+    };
+}
+
+function isMesAnteriorAoIngresso(mesIndex, anoStr, dataCadastroStr) {
+    const ingresso = parseDataCadastro(dataCadastroStr);
+    if (!ingresso) return false;
+
+    const anoNum = parseInt(anoStr, 10);
+    if (isNaN(anoNum)) return false;
+
+    if (anoNum < ingresso.year) return true;
+    if (anoNum === ingresso.year && mesIndex < ingresso.month) return true;
+
+    return false;
+}
+
 // CÁLCULO DE VENCIMENTO DIA 15 E STATUS DE MENSALIDADE
-function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
+function calcularStatusMensalidade(mesIndex, anoStr, valorPago, dataCadastroStr = null) {
     const valor = parseFloat(valorPago) || 0;
     const baseVal = getValorMensalidadeVigente(mesIndex, anoStr);
     const hoje = new Date();
@@ -2419,6 +2509,9 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
 
     const anoNum = parseInt(anoStr, 10);
     const dataVencimentoStr = `15/${String(mesIndex).padStart(2, '0')}/${anoNum}`;
+
+    const ingressoInfo = parseDataCadastro(dataCadastroStr);
+    const eAnteriorAoIngresso = isMesAnteriorAoIngresso(mesIndex, anoStr, dataCadastroStr);
 
     if (valor >= baseVal) {
         return {
@@ -2430,15 +2523,26 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
         };
     } else if (valor > 0) {
         const falta = baseVal - valor;
-        const isV = (anoNum < anoAtual || (anoNum === anoAtual && (mesIndex < mesAtualNum || (mesIndex === mesAtualNum && diaAtual > 15))));
+        const isV = !eAnteriorAoIngresso && (anoNum < anoAtual || (anoNum === anoAtual && (mesIndex < mesAtualNum || (mesIndex === mesAtualNum && diaAtual > 15))));
         return {
             status: 'parcial',
             badge: `<span class="badge badge-warning" style="font-size:10px; padding:2px 4px;">⚠️ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
             vencimento: dataVencimentoStr,
             isVencido: isV,
-            debitAmount: falta
+            debitAmount: isV ? falta : 0
         };
     } else {
+        if (eAnteriorAoIngresso) {
+            const dateTip = ingressoInfo ? `Anterior à data de ingresso (${ingressoInfo.formatted})` : 'Anterior ao ingresso';
+            return {
+                status: 'anterior_ingresso',
+                badge: `<span class="badge badge-secondary" style="font-size:10px; padding:2px 4px; opacity:0.6; background:#34495e; color:#bdc3c7;" title="${dateTip}">⚪ Isento</span>`,
+                vencimento: dataVencimentoStr,
+                isVencido: false,
+                debitAmount: 0
+            };
+        }
+
         let isVencido = false;
         if (anoNum < anoAtual) {
             isVencido = true;
@@ -2475,6 +2579,17 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
 // RENDERIZAR PAINEL DO ASSOCIADO (VISÃO GERAL, MENSAGENS E MENSALIDADES)
 function renderAssociadoOverview() {
     if (!currentUser) return;
+
+    const btnPedirDeslig = document.getElementById('btnPedirDesligamentoAssociado');
+    if (btnPedirDeslig) {
+        if (currentUser.status === 'pendente_desligamento') {
+            btnPedirDeslig.textContent = 'â³ Desligamento em AnÃ¡lise';
+            btnPedirDeslig.style.background = '#F39C12';
+        } else {
+            btnPedirDeslig.textContent = 'ðŸš« Pedir Desligamento';
+            btnPedirDeslig.style.background = '#E74C3C';
+        }
+    }
 
     // 1. Nome de boas-vindas
     const welcome = document.getElementById('associadoWelcomeName');
@@ -2886,7 +3001,7 @@ function renderGestaoMensalidades() {
             totalPagoSocio += val;
             totalArrecadadoAno += val;
 
-            const st = calcularStatusMensalidade(index + 1, ano, val);
+            const st = calcularStatusMensalidade(index + 1, ano, val, socio.data_cadastro);
             if (st.isVencido) {
                 mesesDevidos++;
             }
@@ -2936,7 +3051,7 @@ function renderGestaoMensalidades() {
             container.innerHTML = associadosProcessados.map(a => {
                 const cellsMeses = mesesKeys.map((k, idx) => {
                     const val = parseFloat(a.gridData[k]) || 0;
-                    const info = calcularStatusMensalidade(idx + 1, ano, val);
+                    const info = calcularStatusMensalidade(idx + 1, ano, val, a.data_cadastro);
                     return `<td>${info.badge}</td>`;
                 }).join('');
 
@@ -2948,7 +3063,8 @@ function renderGestaoMensalidades() {
                     <tr>
                         <td style="text-align: left;">
                             <b>${a.nome_guerra || a.nome}</b><br>
-                            <small style="color: var(--text-muted);">${a.cpf}</small>
+                            <small style="color: var(--text-muted);">${a.cpf}</small><br>
+                            <small style="color: var(--accent-gold); font-size: 10px;" title="Data de Ingresso do Associado">ðŸ“… Ingresso: ${parseDataCadastro(a.data_cadastro)?.formatted || (a.data_cadastro ? a.data_cadastro.split(' ')[0] : '-')}</small>
                         </td>
                         ${cellsMeses}
                         <td style="font-weight: 700; color: var(--accent-gold);">
@@ -2990,7 +3106,7 @@ function renderGestaoMensalidades() {
                 const cellsMeses = mesesKeys.map((k, idx) => {
                     const val = parseFloat(itemGrid[k]) || 0;
                     totalPagoSocio += val;
-                    const info = calcularStatusMensalidade(idx + 1, ano, val);
+                    const info = calcularStatusMensalidade(idx + 1, ano, val, socio.data_cadastro);
                     return `<td>${info.badge}</td>`;
                 }).join('');
 
@@ -3001,6 +3117,7 @@ function renderGestaoMensalidades() {
                         <td style="text-align: left;">
                             <b>${socio.nome_guerra || socio.nome}</b><br>
                             <small style="color: var(--text-muted);">${socio.cpf}</small><br>
+                            <small style="color: var(--accent-gold); font-size: 10px;" title="Data de Ingresso do Associado">📅 Ingresso: ${parseDataCadastro(socio.data_cadastro)?.formatted || (socio.data_cadastro ? socio.data_cadastro.split(' ')[0] : '-')}</small><br>
                             <span class="badge badge-danger" style="font-size: 9px; margin-top: 2px;">🚫 DESLIGADO em ${dataDeslig}</span>
                         </td>
                         ${cellsMeses}
@@ -3208,7 +3325,7 @@ function verExtratoAssociado(cpf) {
                 <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <div style="font-size: 11px; color: var(--text-muted);">ASSOCIADO</div>
                     <div style="font-size: 15px; font-weight: bold; color: var(--accent-gold);">${a.nome_guerra || a.nome}</div>
-                    <div style="font-size: 11px; color: var(--text-muted);">${a.nome}</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">${a.nome}</div><div style="font-size: 11px; color: var(--accent-gold); margin-top: 2px;">ðŸ“… Ingresso: <b>${parseDataCadastro(a.data_cadastro)?.formatted || (a.data_cadastro ? a.data_cadastro.split(' ')[0] : '-')}</b></div>
                 </div>
                 <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <div style="font-size: 11px; color: var(--text-muted);">TOTAL CONTRIBUÍDO VIA PIX</div>
@@ -3411,5 +3528,193 @@ function excluirBaixaMensalidade(id) {
         renderGestaoMensalidades();
         renderGestaoFinanceira();
         verExtratoAssociado(item.cpf);
+    }
+}
+
+
+// SOLICITAÃ‡ÃƒO E HOMOLOGAÃ‡ÃƒO DE DESLIGAMENTO VOLUNTÃRIO
+function abrirModalPedirDesligamento() {
+    if (!currentUser) return;
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const me = list.find(a => (a.cpf || '').replace(/\D/g, '') === (currentUser.cpf || '').replace(/\D/g, '')) || currentUser;
+
+    if (me.status === 'pendente_desligamento') {
+        alert(`Sua solicitaÃ§Ã£o de desligamento jÃ¡ foi enviada em ${me.data_solicitacao_desligamento || 'data recente'} e estÃ¡ aguardando a homologaÃ§Ã£o e aprovaÃ§Ã£o da Diretoria.`);
+        return;
+    }
+
+    if (me.status === 'desligado') {
+        alert('Seu cadastro jÃ¡ se encontra registrado como desligado da associaÃ§Ã£o.');
+        return;
+    }
+
+    document.getElementById('pedirDesligNomeDisplay').textContent = me.nome || me.nome_guerra;
+    document.getElementById('pedirDesligCPFDisplay').textContent = me.cpf;
+    document.getElementById('pedirDesligOBMDisplay').textContent = me.obm || 'SÃ£o JosÃ©';
+
+    const hojeStr = new Date().toLocaleDateString('pt-BR');
+    const modeloTexto = `TERMO E SOLICITAÃ‡ÃƒO DE DESLIGAMENTO VOLUNTÃRIO DA ACBCSJ\n\n` +
+        `Eu, ${me.nome}, portador(a) do CPF nÂº ${me.cpf}, Bombeiro(a) ComunitÃ¡rio(a) integrante da OBM de ${me.obm || 'SÃ£o JosÃ©'}, venho por meio desta solicitar formalmente o meu DESLIGAMENTO VOLUNTÃRIO do quadro de associados da AssociaÃ§Ã£o dos Bombeiros ComunitÃ¡rios de SÃ£o JosÃ© (ACBCSJ).\n\n` +
+        `Declaro estar ciente de que, apÃ³s a homologaÃ§Ã£o deste pedido pela Diretoria, cessarÃ£o todos os meus direitos e deveres estatutÃ¡rios referentes Ã  ACBCSJ.\n\n` +
+        `SÃ£o JosÃ©/SC, ${hojeStr}.\n\n` +
+        `____________________________________________________\n` +
+        `Assinatura do(a) Associado(a)`;
+
+    document.getElementById('pedirDesligTextoModelo').value = modeloTexto;
+    document.getElementById('pedirDesligMotivo').value = '';
+    const fileInp = document.getElementById('pedirDesligArquivo');
+    if (fileInp) fileInp.value = '';
+    const checkInp = document.getElementById('pedirDesligCheck');
+    if (checkInp) checkInp.checked = false;
+
+    openModal('modalPedirDesligamento');
+}
+
+function gerarEImprimirCartaDesligamento() {
+    if (!currentUser) return;
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const me = list.find(a => (a.cpf || '').replace(/\D/g, '') === (currentUser.cpf || '').replace(/\D/g, '')) || currentUser;
+    const hojeStr = new Date().toLocaleDateString('pt-BR');
+
+    const win = window.open('', '_blank');
+    if (win) {
+        win.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Carta de Desligamento VoluntÃ¡rio - ${me.nome_guerra || me.nome}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; color: #000; line-height: 1.6; }
+                    .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 30px; }
+                    .header h2 { margin: 0; font-size: 18px; text-transform: uppercase; }
+                    .header p { margin: 4px 0 0 0; font-size: 13px; color: #444; }
+                    .title { text-align: center; margin: 30px 0; font-size: 16px; font-weight: bold; text-decoration: underline; }
+                    .content { text-align: justify; font-size: 14px; margin-bottom: 40px; text-indent: 30px; }
+                    .signature-section { margin-top: 60px; text-align: center; }
+                    .signature-line { width: 350px; margin: 0 auto; border-top: 1px solid #000; padding-top: 5px; font-size: 13px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>AssociaÃ§Ã£o dos Bombeiros ComunitÃ¡rios de SÃ£o JosÃ© - ACBCSJ</h2>
+                    <p>CNPJ: 46.128.369/0001-79 | SÃ£o JosÃ© - SC</p>
+                </div>
+
+                <div class="title">TERMO E SOLICITAÃ‡ÃƒO DE DESLIGAMENTO VOLUNTÃRIO</div>
+
+                <div class="content">
+                    <p>Eu, <b>${me.nome}</b>, inscrito(a) no CPF sob o nÂº <b>${me.cpf}</b>, Bombeiro(a) ComunitÃ¡rio(a) lotado(a) na OBM de <b>${me.obm || 'SÃ£o JosÃ©'}</b>, venho por meio desta solicitar formalmente o meu <b>DESLIGAMENTO VOLUNTÃRIO</b> do quadro de associados da AssociaÃ§Ã£o dos Bombeiros ComunitÃ¡rios de SÃ£o JosÃ© (ACBCSJ).</p>
+
+                    <p>Declaro estar ciente de que, apÃ³s a apreciaÃ§Ã£o e homologaÃ§Ã£o deste pedido pela Diretoria da AssociaÃ§Ã£o, cessarÃ£o todos os meus direitos e deveres estatutÃ¡rios, bem como o desconto ou cobranÃ§a de contribuiÃ§Ãµes associativas mensais.</p>
+
+                    <p style="text-align: right; margin-top: 30px;">SÃ£o JosÃ©/SC, ${hojeStr}.</p>
+                </div>
+
+                <div class="signature-section">
+                    <div class="signature-line">
+                        <b>${me.nome}</b><br>
+                        CPF: ${me.cpf}
+                    </div>
+                </div>
+
+                <script>
+                    window.onload = function() { window.print(); };
+                </script>
+            </body>
+            </html>
+        `);
+    } else {
+        alert('A janela de impressÃ£o foi bloqueada pelo navegador. Permita pop-ups para imprimir a carta.');
+    }
+}
+
+function confirmarPedidoDesligamento(e) {
+    e.preventDefault();
+    if (!currentUser) return;
+    const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
+
+    const fileInp = document.getElementById('pedirDesligArquivo');
+    const file = fileInp && fileInp.files ? fileInp.files[0] : null;
+    const motivo = (document.getElementById('pedirDesligMotivo')?.value || '').trim();
+
+    if (!file) {
+        alert('Por favor, anexe a carta de desligamento assinada para prosseguir.');
+        return;
+    }
+
+    const agora = new Date();
+    const dataHoraSolicitacao = agora.toLocaleDateString('pt-BR') + ' Ã s ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    const concluirSolicitacao = (fileDataUrl, fileName) => {
+        let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+        const item = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanUserCpf);
+
+        if (item) {
+            item.status = 'pendente_desligamento';
+            item.data_solicitacao_desligamento = dataHoraSolicitacao;
+            item.motivo_desligamento = motivo || 'SolicitaÃ§Ã£o voluntÃ¡ria do associado';
+            item.carta_desligamento_url = fileDataUrl;
+            item.carta_desligamento_nome = fileName;
+
+            localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+            dbService.saveAssociado(item);
+
+            currentUser.status = 'pendente_desligamento';
+            currentUser.data_solicitacao_desligamento = dataHoraSolicitacao;
+            sessionStorage.setItem('acbcsj_current_user', JSON.stringify(currentUser));
+
+            alert(`Sua solicitaÃ§Ã£o de desligamento voluntÃ¡rio foi enviada com sucesso em ${dataHoraSolicitacao}!\n\nðŸ“„ A carta assinada (${fileName}) foi registrada no sistema e o pedido foi encaminhado para aprovaÃ§Ã£o e homologaÃ§Ã£o da Diretoria.`);
+            closeModal('modalPedirDesligamento');
+            renderAssociadoOverview();
+            renderDiretoriaOverview();
+        }
+    };
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        concluirSolicitacao(event.target.result, file.name);
+    };
+    reader.readAsDataURL(file);
+}
+
+function homologarDesligamentoDiretoria(cpf) {
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const item = list.find(a => a.cpf === cpf || (a.cpf || '').replace(/\D/g, '') === (cpf || '').replace(/\D/g, ''));
+    if (!item) return;
+
+    if (confirm(`Confirma a homologaÃ§Ã£o e aprovaÃ§Ã£o do desligamento do(a) associado(a) ${item.nome_guerra || item.nome}?`)) {
+        const agora = new Date();
+        const dataHoraDesligamento = agora.toLocaleDateString('pt-BR') + ' Ã s ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        item.status = 'desligado';
+        item.data_desligamento = dataHoraDesligamento;
+
+        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+        dbService.saveAssociado(item);
+
+        alert(`O desligamento de ${item.nome_guerra || item.nome} foi homologado com sucesso pela Diretoria.`);
+        renderDiretoriaOverview();
+        renderGestaoAssociados();
+        renderAssociadosDesligados();
+        renderGestaoMensalidades();
+    }
+}
+
+function rejeitarDesligamentoDiretoria(cpf) {
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const item = list.find(a => a.cpf === cpf || (a.cpf || '').replace(/\D/g, '') === (cpf || '').replace(/\D/g, ''));
+    if (!item) return;
+
+    if (confirm(`Deseja rejeitar a solicitaÃ§Ã£o de desligamento do(a) associado(a) ${item.nome_guerra || item.nome}? O cadastro retornarÃ¡ ao status de Ativo.`)) {
+        item.status = 'ativo';
+        item.data_solicitacao_desligamento = null;
+
+        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+        dbService.saveAssociado(item);
+
+        alert(`A solicitaÃ§Ã£o de desligamento foi rejeitada. O associado ${item.nome_guerra || item.nome} retornou ao status Ativo.`);
+        renderDiretoriaOverview();
+        renderGestaoAssociados();
+        renderGestaoMensalidades();
     }
 }
