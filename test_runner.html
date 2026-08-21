@@ -1,0 +1,19 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test System Syntax</title>
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            document.body.innerHTML += '<h1 style="color:red">ERROR: ' + msg + ' at line ' + line + ':' + col + '</h1><pre>' + (error ? error.stack : '') + '</pre>';
+            return false;
+        };
+    </script>
+    <script src="supabaseClient.js"></script>
+    <script src="app.js"></script>
+</head>
+<body style="background:#222; color:#fff; font-family:sans-serif; padding:20px;">
+    <h2>Testing System Scripts...</h2>
+    <div id="testOutput">If this text is visible, the page loaded!</div>
+</body>
+</html>
