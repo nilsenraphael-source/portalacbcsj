@@ -39,7 +39,7 @@ function sanitizeAssociado(item) {
         complemento: item.complemento || '',
         cep: item.cep || '',
         bairro: item.bairro || '',
-        cidade: item.cidade || 'SÃ£o JosÃ© - SC',
+        cidade: item.cidade || 'São José - SC',
         perfil: item.perfil || 'associado',
         status: item.status || 'pendente',
         data_cadastro: item.data_cadastro || new Date().toLocaleString('pt-BR'),
@@ -47,8 +47,8 @@ function sanitizeAssociado(item) {
         motivo_desligamento: item.motivo_desligamento || null,
         carta_desligamento_url: item.carta_desligamento_url || null,
         carta_desligamento_nome: item.carta_desligamento_nome || null,
-        obm: item.obm || 'SÃ£o JosÃ©',
-        profissao: item.profissao || 'Bombeiro ComunitÃ¡rio',
+        obm: item.obm || 'São José',
+        profissao: item.profissao || 'Bombeiro Comunitário',
         senha: item.senha || '1234'
     };
 }
