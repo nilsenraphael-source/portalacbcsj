@@ -368,11 +368,19 @@ const dbService = {
                 const cleanCpfDigits = (clean.cpf || '').replace(/\D/g, '');
                 let validAssocId = clean.associado_id;
 
-                // Resolve o ID exato da tabela 'associados' no Supabase para satisfazer a chave estrangeira (FK)
+                // Resolve o ID exato da tabela 'associados' no Supabase via consulta direta pelo CPF
                 if (cleanCpfDigits) {
-                    const { data: assocDb } = await supabaseClient
+                    let { data: assocDb } = await supabaseClient
                         .from('associados')
-                        .select('id, cpf');
+                        .select('id, cpf')
+                        .eq('cpf', clean.cpf);
+
+                    if (!assocDb || assocDb.length === 0) {
+                        const { data: allAssoc } = await supabaseClient
+                            .from('associados')
+                            .select('id, cpf');
+                        if (allAssoc) assocDb = allAssoc;
+                    }
                         
                     if (assocDb && assocDb.length > 0) {
                         const match = assocDb.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpfDigits);
@@ -411,7 +419,7 @@ const dbService = {
                 if (error) {
                     console.error("⚠️ Erro ao salvar mensalidade no Supabase:", error.message);
                 } else {
-                    console.log("✅ Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.meses_quitados, clean.valor);
+                    console.log("✅ Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.meses_quitados, clean.valor, "ID Associado:", validAssocId);
                 }
             } catch (e) {
                 console.error("Erro ao enviar mensalidade para Supabase:", e);
