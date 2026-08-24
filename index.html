@@ -11,7 +11,7 @@
     <meta http-equiv="Expires" content="0">
     
     <!-- Folha de Estilos Customizada (Carregamento Prioritário com Cache Buster) -->
-    <link rel="stylesheet" href="styles.css?v=20260824_v6">
+    <link rel="stylesheet" href="styles.css?v=20260824_v7">
 
     <!-- Google Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1586,7 +1586,7 @@
                 <button class="modal-close" onclick="closeModal('modalExtratoAssociado')">&times;</button>
             </div>
 
-            <div id="extratoAssociadoConteudo"></div>
+            <div id="extratoAssociadoConteudo" class="pagina-impressao-timbrada"></div>
 
             <div style="margin-top: 20px; display: flex; justify-content: space-between;">
                 <button class="btn btn-outline" onclick="window.print()">🖨️ Imprimir Extrato</button>
@@ -1677,7 +1677,7 @@
                 <button class="modal-close" onclick="closeModal('modalBalanceteMensal')">&times;</button>
             </div>
 
-            <div id="conteudoBalanceteMensal" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px;">
+            <div id="conteudoBalanceteMensal" class="pagina-impressao-timbrada" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px;">
                 <!-- Preenchido via JS -->
             </div>
 
@@ -1756,7 +1756,7 @@
     </div>
 
     <!-- SCRIPTS JS (COM CACHE BUSTER PARA FORÇAR ATUALIZAÇÃO NO NAVEGADOR) -->
-    <script src="supabaseClient.js?v=20260824_v6"></script>
-    <script src="app.js?v=20260824_v6"></script>
+    <script src="supabaseClient.js?v=20260824_v7"></script>
+    <script src="app.js?v=20260824_v7"></script>
 </body>
 </html>

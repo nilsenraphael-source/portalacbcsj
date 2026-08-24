@@ -535,7 +535,6 @@ body {
   cursor: pointer;
 }
 
-/* RESPONSIVIDADE */
 @media (max-width: 768px) {
   .app-container {
     flex-direction: column;
@@ -551,5 +550,102 @@ body {
   
   .user-info {
     display: none;
+  }
+}
+
+/* ==========================================
+   ESTILOS DE IMPRESSÃO OFICIAL COM PAPEL TIMBRADO (papel_timbrado.jpg)
+   ========================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ocultar elementos da interface que não devem ser impressos */
+  .app-header, 
+  .sidebar-nav, 
+  .user-profile-menu, 
+  .modal-close, 
+  .btn, 
+  button, 
+  nav, 
+  header, 
+  .no-print,
+  #authScreen {
+    display: none !important;
+  }
+
+  /* Exibir apenas o modal ativo em tela cheia na impressão */
+  .modal-backdrop.active {
+    display: block !important;
+    position: static !important;
+    background: #fff !important;
+    padding: 0 !important;
+  }
+
+  .modal-backdrop.active .modal-content {
+    position: static !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+    color: #000000 !important;
+    padding: 0 !important;
+  }
+
+  /* Estrutura Padronizada de Folha Timbrada A4 */
+  .folha-timbrada, 
+  .pagina-impressao-timbrada,
+  .timbrado-container {
+    position: relative !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    margin: 0 auto !important;
+    padding: 45mm 20mm 35mm 20mm !important; /* Espaçamento para cabeçalho e rodapé do papel timbrado */
+    box-sizing: border-box !important;
+    background-image: url('papel_timbrado.jpg') !important;
+    background-position: center top !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    page-break-after: always !important;
+  }
+
+  /* Formatação de Tabelas na Folha Timbrada */
+  .folha-timbrada table, 
+  .pagina-impressao-timbrada table,
+  .custom-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    color: #000000 !important;
+    margin-bottom: 15px !important;
+  }
+
+  .folha-timbrada th, .folha-timbrada td,
+  .pagina-impressao-timbrada th, .pagina-impressao-timbrada td,
+  .custom-table th, .custom-table td {
+    border: 1px solid #666666 !important;
+    padding: 6px 10px !important;
+    color: #000000 !important;
+    background: transparent !important;
+    font-size: 11pt !important;
+  }
+
+  .folha-timbrada th, .pagina-impressao-timbrada th, .custom-table th {
+    background-color: #f2f2f2 !important;
+    font-weight: bold !important;
   }
 }

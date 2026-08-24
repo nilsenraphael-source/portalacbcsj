@@ -251,7 +251,7 @@ const idbStorage = {
 };
 
 // INICIALIZAÇÃO E LIMPEZA DE DADOS
-const ACBCSJ_BUILD_VERSION = "2026-08-24_v6";
+const ACBCSJ_BUILD_VERSION = "2026-08-24_v7";
 
 function forcarAtualizacaoCacheSistema() {
     localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
@@ -3711,7 +3711,22 @@ function gerarEBaixarCartaDesligamento() {
     <meta charset="UTF-8">
     <title>Carta de Desligamento Voluntário - ${me.nome_guerra || me.nome}</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; color: #000; line-height: 1.6; }
+        @page { size: A4 portrait; margin: 0; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 45mm 20mm 35mm 20mm; 
+            color: #000; 
+            line-height: 1.6;
+            background-image: url('papel_timbrado.jpg');
+            background-position: center top;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            box-sizing: border-box;
+            min-height: 297mm;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
         .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 30px; }
         .header h2 { margin: 0; font-size: 18px; text-transform: uppercase; }
         .header p { margin: 4px 0 0 0; font-size: 13px; color: #444; }
