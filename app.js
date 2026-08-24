@@ -28,17 +28,8 @@ function extrairMesesDeTexto(texto) {
 
     const resultado = [];
 
-    // Suporte a formato YYYY-MM (ex: 2026-08 ou 2026-01) ou MM/YYYY (ex: 08/2026 ou 01/2026)
-    const yyyyMmMatch = texto.match(/(?:19|20)\d\d[-/](0[1-9]|1[0-2])|(0[1-9]|1[0-2])[-/](?:19|20)\d\d/);
-    if (yyyyMmMatch) {
-        const numMes = yyyyMmMatch[1] || yyyyMmMatch[2];
-        if (numMes && mapaMesesNum[numMes]) {
-            resultado.push(mapaMesesNum[numMes]);
-        }
-    }
-
-    // Suporte a intervalos no formato Jan-Dez, Jan a Dez, Fev-Jul, Fev a Jul, etc.
-    const rangeMatch = texto.match(/([a-z]{3}|janeiro|fevereiro|marco|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:-|a|até)\s*([a-z]{3}|janeiro|fevereiro|marco|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)/i);
+    // 1. Suporte a intervalos no formato Jan-Dez, Jan a Dez, Jan/Dez, Jan e Dez, Fev-Jul, Fev a Jul, etc.
+    const rangeMatch = texto.match(/([a-z]{3}|janeiro|fevereiro|marco|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:-|\/|a|e|até)\s*([a-z]{3}|janeiro|fevereiro|marco|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)/i);
     if (rangeMatch) {
         let sStr = rangeMatch[1].toLowerCase();
         let eStr = rangeMatch[2].toLowerCase();
@@ -55,6 +46,7 @@ function extrairMesesDeTexto(texto) {
         }
     }
 
+    // 2. Procura por menções explícitas de siglas ou nomes de meses no texto
     todasSiglas.forEach(sigla => {
         const regex = new RegExp('(?:^|[^a-zA-ZáéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ])' + sigla + '(?:$|[^a-zA-ZáéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ])', 'i');
         if (regex.test(texto)) {
@@ -73,6 +65,20 @@ function extrairMesesDeTexto(texto) {
             }
         }
     });
+
+    // Se encontramos siglas ou nomes de meses explícitos, retorna sem puxar a data ISO de pagamento
+    if (resultado.length > 0) {
+        return resultado;
+    }
+
+    // 3. Fallback: Apenas se NÃO houver nenhum mês por extenso ou sigla, aceita formato YYYY-MM ou MM/YYYY
+    const yyyyMmMatch = texto.match(/(?:19|20)\d\d[-/](0[1-9]|1[0-2])|(0[1-9]|1[0-2])[-/](?:19|20)\d\d/);
+    if (yyyyMmMatch) {
+        const numMes = yyyyMmMatch[1] || yyyyMmMatch[2];
+        if (numMes && mapaMesesNum[numMes]) {
+            resultado.push(mapaMesesNum[numMes]);
+        }
+    }
 
     return resultado;
 }
@@ -245,7 +251,7 @@ const idbStorage = {
 };
 
 // INICIALIZAÇÃO E LIMPEZA DE DADOS
-const ACBCSJ_BUILD_VERSION = "2026-08-24_v3";
+const ACBCSJ_BUILD_VERSION = "2026-08-24_v4";
 
 function forcarAtualizacaoCacheSistema() {
     localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
@@ -3314,6 +3320,8 @@ function atualizarCheckboxesBaixa() {
 
     const mesesNomesMap = { jan:'Jan', fev:'Fev', mar:'Mar', abr:'Abr', mai:'Mai', jun:'Jun', jul:'Jul', ago:'Ago', set:'Set', out:'Out', nov:'Nov', dez:'Dez' };
 
+    let primeiroPendenteCb = null;
+
     const checkboxes = document.querySelectorAll('input[name="baixaMeses"]');
     checkboxes.forEach(cb => {
         const mKey = cb.value;
@@ -3337,6 +3345,7 @@ function atualizarCheckboxesBaixa() {
             // Mês em aberto: desmarcar e habilitar
             cb.checked = false;
             cb.disabled = false;
+            if (!primeiroPendenteCb) primeiroPendenteCb = cb;
             if (parentLabel) {
                 parentLabel.style.opacity = '1';
                 parentLabel.style.background = 'transparent';
@@ -3348,6 +3357,11 @@ function atualizarCheckboxesBaixa() {
             }
         }
     });
+
+    // Auto-seleciona o primeiro mês pendente para que o usuário não veja Valor Total R$ 0,00 por padrão
+    if (primeiroPendenteCb) {
+        primeiroPendenteCb.checked = true;
+    }
 
     atualizarValoresBaixa();
 }
