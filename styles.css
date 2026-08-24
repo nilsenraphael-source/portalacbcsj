@@ -618,7 +618,7 @@ body {
     background-image: url('papel_timbrado.jpg') !important;
     background-position: center top !important;
     background-repeat: no-repeat !important;
-    background-size: 100% 100% !important;
+    background-size: 100% auto !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     page-break-after: always !important;
