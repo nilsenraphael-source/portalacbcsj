@@ -1,16 +1,35 @@
 function extrairListaMesesDoLancamento(rawMesesStr, obsStr = '') {
-    const textoCompleto = ((rawMesesStr || '') + ' ' + (obsStr || '')).trim();
-    if (!textoCompleto) return [];
+    const textoMeses = (rawMesesStr || '').trim();
+    if (textoMeses) {
+        const res = extrairMesesDeTexto(textoMeses);
+        if (res.length > 0) return res;
+    }
+    const obs = (obsStr || '').trim();
+    if (obs) {
+        return extrairMesesDeTexto(obs);
+    }
+    return [];
+}
 
+function extrairMesesDeTexto(texto) {
+    if (!texto) return [];
     const todasSiglas = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-    
-    // Suporte a intervalos no formato Jan-Dez, Jan a Dez, Fev-Jul, etc.
-    const rangeMatch = textoCompleto.match(/([a-z]{3})\s*[-a]\s*([a-z]{3})/i);
+    const nomesCompletos = {
+        'janeiro': 'jan', 'fevereiro': 'fev', 'marco': 'mar', 'março': 'mar',
+        'abril': 'abr', 'maio': 'mai', 'junho': 'jun', 'julho': 'jul',
+        'agosto': 'ago', 'setembro': 'set', 'outubro': 'out', 'novembro': 'nov', 'dezembro': 'dez'
+    };
+
+    // Suporte a intervalos no formato Jan-Dez, Jan a Dez, Fev-Jul, Fev a Jul, etc.
+    const rangeMatch = texto.match(/([a-z]{3}|janeiro|fevereiro|marco|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:-|a|até)\s*([a-z]{3}|janeiro|fevereiro|marco|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)/i);
     if (rangeMatch) {
-        const sSigla = rangeMatch[1].toLowerCase();
-        const eSigla = rangeMatch[2].toLowerCase();
-        const sIdx = todasSiglas.indexOf(sSigla);
-        const eIdx = todasSiglas.indexOf(eSigla);
+        let sStr = rangeMatch[1].toLowerCase();
+        let eStr = rangeMatch[2].toLowerCase();
+        if (sStr.length > 3) sStr = nomesCompletos[sStr] || sStr.substring(0, 3);
+        if (eStr.length > 3) eStr = nomesCompletos[eStr] || eStr.substring(0, 3);
+        
+        const sIdx = todasSiglas.indexOf(sStr);
+        const eIdx = todasSiglas.indexOf(eStr);
         if (sIdx >= 0 && eIdx >= sIdx) {
             return todasSiglas.slice(sIdx, eIdx + 1);
         }
@@ -18,13 +37,24 @@ function extrairListaMesesDoLancamento(rawMesesStr, obsStr = '') {
 
     const resultado = [];
     todasSiglas.forEach(sigla => {
-        const regex = new RegExp('\\b' + sigla + '\\b', 'i');
-        if (regex.test(textoCompleto) || textoCompleto.toLowerCase().includes(sigla)) {
+        const regex = new RegExp('(?:^|[^a-zA-ZáéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ])' + sigla + '(?:$|[^a-zA-ZáéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ])', 'i');
+        if (regex.test(texto)) {
             if (!resultado.includes(sigla)) {
                 resultado.push(sigla);
             }
         }
     });
+
+    Object.keys(nomesCompletos).forEach(nome => {
+        const regex = new RegExp('(?:^|[^a-zA-ZáéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ])' + nome + '(?:$|[^a-zA-ZáéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ])', 'i');
+        if (regex.test(texto)) {
+            const sigla = nomesCompletos[nome];
+            if (!resultado.includes(sigla)) {
+                resultado.push(sigla);
+            }
+        }
+    });
+
     return resultado;
 }
 
@@ -44,9 +74,25 @@ function recalcularTodasGridsMensalidades() {
                 jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0
             };
 
-            // A grid Ã© calculada exclusivamente com base nos lanÃ§amentos reais do histÃ³rico e Supabase
+            const lancamentosSocio = historicoRaw.filter(m => {
+                const mCpf = (m.cpf || '').replace(/\D/g, '');
+                const mAssocId = String(m.associado_id || '');
+                const matchCpf = (mCpf && cleanCpf && mCpf === cleanCpf) || (mAssocId && a.id && String(a.id) === mAssocId);
+                
+                let mAno = String(m.ano || '');
+                if (!mAno || mAno === 'undefined') {
+                    const dtIso = m.data_iso || m.data_pagamento || m.data || '';
+                    if (dtIso.includes('-')) mAno = dtIso.split('-')[0];
+                    else if (dtIso.includes('/')) {
+                        const parts = dtIso.split('/');
+                        if (parts.length === 3) mAno = parts[2];
+                    }
+                }
+                if (!mAno || mAno.length !== 4) mAno = '2026';
 
-            const lancamentosSocio = historicoRaw.filter(m => (m.cpf || '').replace(/\D/g, '') === cleanCpf && String(m.ano || '2026') === String(ano));
+                return matchCpf && mAno === String(ano);
+            });
+
             lancamentosSocio.forEach(m => {
                 const rawMeses = m.meses_quitados || m.mes_referencia || '';
                 const obs = m.observacoes || m.obs || '';
@@ -74,7 +120,7 @@ function recalcularTodasGridsMensalidades() {
         }
     });
 
-    if (typeof renderGestaoMensalidades === 'function' && document.getElementById('tableMensalidadesBody')) {
+    if (typeof renderGestaoMensalidades === 'function' && document.getElementById('tableGestaoMensalidadesBody')) {
         renderGestaoMensalidades();
     }
     if (typeof renderGestaoFinanceira === 'function' && document.getElementById('tableFinanceiroBody')) {

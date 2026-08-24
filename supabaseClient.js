@@ -87,45 +87,80 @@ function sanitizeDocumento(item) {
 
 function sanitizeMensalidade(item) {
     if (!item) return null;
-    const cleanCpf = (item.cpf || '').replace(/\D/g, '');
+
+    let cleanCpf = (item.cpf || '').replace(/\D/g, '');
     let assocId = item.associado_id || null;
-    if (!assocId) {
-        let list = [];
-        try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch(e) {}
-        const assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
-        if (assoc && assoc.id) assocId = String(assoc.id);
-    }
-    if (!assocId) assocId = "3"; // ID fallback para chave estrangeira
 
-    const rawMeses = String(item.meses_quitados || item.mes_referencia || 'Jan').trim();
-    let rawMesTruncated = rawMeses;
-    if (rawMesTruncated.length > 20) {
-        const parts = rawMesTruncated.split(',').map(s => s.trim()).filter(Boolean);
-        if (parts.length > 1) {
-            rawMesTruncated = parts[0] + '-' + parts[parts.length - 1] + ' (' + parts.length + 'm)';
-        }
-        if (rawMesTruncated.length > 20) {
-            rawMesTruncated = rawMesTruncated.substring(0, 20);
-        }
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch(e) {}
+
+    // Se o item vem do Supabase (onde observacoes pode conter a meta string "CPF:...|ANO:...|MESES:..."), extrai os campos:
+    let metaCpf = '';
+    let metaAno = '';
+    let metaMeses = '';
+    let userObs = item.obs || item.observacoes || item.comprovante_pix || '';
+
+    if (userObs && userObs.includes('CPF:') && userObs.includes('MESES:')) {
+        const parts = userObs.split('|');
+        parts.forEach(p => {
+            if (p.startsWith('CPF:')) metaCpf = p.substring(4).trim();
+            if (p.startsWith('ANO:')) metaAno = p.substring(4).trim();
+            if (p.startsWith('MESES:')) metaMeses = p.substring(6).trim();
+            if (p.startsWith('OBS:')) userObs = p.substring(4).trim();
+        });
     }
 
-    const cleanObs = removerAcentos(item.obs || item.observacoes || item.comprovante_pix || 'Quitacao de mensalidade PIX');
+    if (metaCpf) cleanCpf = metaCpf.replace(/\D/g, '');
+
+    // Busca o associado por ID ou por CPF
+    let assoc = null;
+    if (assocId) {
+        assoc = list.find(a => String(a.id) === String(assocId) || (a.cpf || '').replace(/\D/g, '') === String(assocId).replace(/\D/g, ''));
+    }
+    if (!assoc && cleanCpf) {
+        assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
+    }
+
+    if (assoc) {
+        if (!assocId && assoc.id) assocId = String(assoc.id);
+        if (!cleanCpf && assoc.cpf) cleanCpf = (assoc.cpf || '').replace(/\D/g, '');
+        if (!item.cpf && assoc.cpf) item.cpf = assoc.cpf;
+    }
+
+    if (!assocId) assocId = "3"; // ID de contingência caso não localize associado
+
+    const rawMeses = String(metaMeses || item.meses_quitados || item.mes_referencia || 'Jan').trim();
+
+    let anoStr = String(metaAno || item.ano || '').trim();
+    if (!anoStr || anoStr === 'undefined') {
+        const dtIso = item.data_iso || item.data_pagamento || item.data || '';
+        if (dtIso.includes('-')) {
+            anoStr = dtIso.split('-')[0];
+        } else if (dtIso.includes('/')) {
+            const parts = dtIso.split('/');
+            if (parts.length === 3) anoStr = parts[2];
+        }
+    }
+    if (!anoStr || anoStr.length !== 4) anoStr = '2026';
+
+    const cleanObs = userObs || 'Quitacao de mensalidade PIX';
+    const finalCpf = item.cpf || (assoc ? assoc.cpf : (cleanCpf ? cleanCpf : ''));
 
     return {
         id: String(item.id || 'mensalidade_' + Date.now()),
         associado_id: String(assocId),
-        cpf: String(item.cpf || '').substring(0, 20),
-        ano: String(item.ano || '2026').substring(0, 20),
-        mes_referencia: removerAcentos(rawMesTruncated).substring(0, 20),
+        cpf: finalCpf,
+        ano: String(anoStr),
+        mes_referencia: rawMeses,
         meses_quitados: rawMeses,
         data: String(item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR')).substring(0, 20),
         data_iso: item.data_iso || new Date().toISOString().split('T')[0],
         valor: (typeof item.valor !== 'undefined' && item.valor !== null && !isNaN(parseFloat(item.valor))) ? parseFloat(item.valor) : 0,
         status: String(item.status || 'pago').substring(0, 20),
-        data_pagamento: String(item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR')).substring(0, 20),
+        data_pagamento: String(item.data_pagamento || item.data || new Date().toLocaleDateString('pt-BR')).substring(0, 20),
         observacoes: cleanObs,
         comprovante_pix: item.comprovante_pix || 'PIX',
-        obs: item.obs || cleanObs
+        obs: cleanObs
     };
 }
 
@@ -281,22 +316,37 @@ const dbService = {
 
         if (supabaseClient) {
             try {
+                const obsMeta = `CPF:${clean.cpf}|ANO:${clean.ano}|MESES:${clean.meses_quitados}|OBS:${clean.observacoes}`;
                 const payloadSupabase = {
                     id: clean.id,
                     associado_id: clean.associado_id,
                     cpf: clean.cpf,
                     ano: clean.ano,
-                    mes_referencia: clean.mes_referencia,
+                    mes_referencia: clean.meses_quitados.substring(0, 50),
                     valor: clean.valor,
                     status: clean.status,
                     data_pagamento: clean.data_pagamento,
-                    observacoes: clean.observacoes
+                    observacoes: obsMeta
                 };
                 const { error } = await supabaseClient.from('mensalidades').upsert([payloadSupabase]);
                 if (error) {
-                    console.error("⚠️ Erro ao salvar mensalidade no Supabase:", error.message);
+                    const fallbackPayload = {
+                        id: clean.id,
+                        associado_id: clean.associado_id,
+                        mes_referencia: clean.meses_quitados.substring(0, 50),
+                        valor: clean.valor,
+                        status: clean.status,
+                        data_pagamento: clean.data_pagamento,
+                        observacoes: obsMeta
+                    };
+                    const { error: errFallback } = await supabaseClient.from('mensalidades').upsert([fallbackPayload]);
+                    if (errFallback) {
+                        console.error("⚠️ Erro ao salvar mensalidade no Supabase:", errFallback.message);
+                    } else {
+                        console.log("✅ Mensalidade salva com sucesso no Supabase (fallback):", clean.cpf, clean.meses_quitados);
+                    }
                 } else {
-                    console.log("✅ Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.mes_referencia, clean.valor);
+                    console.log("✅ Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.meses_quitados, clean.valor);
                 }
             } catch (e) {
                 console.error("Erro ao enviar mensalidade para Supabase:", e);
