@@ -15,6 +15,25 @@ if (typeof supabase !== 'undefined' && supabase.createClient) {
     }
 }
 
+async function rawFetchSupabase(endpoint, method = 'GET', body = null) {
+    const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;
+    const headers = {
+        'apikey': SUPABASE_PUBLISHABLE_KEY,
+        'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+    };
+    const opts = { method, headers };
+    if (body) opts.body = JSON.stringify(body);
+
+    const r = await fetch(url, opts);
+    if (!r.ok) {
+        const text = await r.text();
+        throw new Error(`HTTP ${r.status}: ${text}`);
+    }
+    return await r.json();
+}
+
 function removerAcentos(str) {
     if (!str) return '';
     return String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -363,67 +382,76 @@ const dbService = {
         list.unshift(clean);
         localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(list));
 
-        if (supabaseClient) {
-            try {
-                const cleanCpfDigits = (clean.cpf || '').replace(/\D/g, '');
-                let validAssocId = clean.associado_id;
+        try {
+            const cleanCpfDigits = (clean.cpf || '').replace(/\D/g, '');
+            let validAssocId = clean.associado_id;
 
-                // Resolve o ID exato da tabela 'associados' no Supabase via consulta direta pelo CPF
-                if (cleanCpfDigits) {
-                    let { data: assocDb } = await supabaseClient
-                        .from('associados')
-                        .select('id, cpf')
-                        .eq('cpf', clean.cpf);
-
-                    if (!assocDb || assocDb.length === 0) {
-                        const { data: allAssoc } = await supabaseClient
-                            .from('associados')
-                            .select('id, cpf');
-                        if (allAssoc) assocDb = allAssoc;
-                    }
-                        
-                    if (assocDb && assocDb.length > 0) {
-                        const match = assocDb.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpfDigits);
-                        if (match) {
-                            validAssocId = String(match.id);
-                        }
-                    }
-
-                    // Se o associado ainda não existir na tabela associados do Supabase, cria ele primeiro!
-                    if (!validAssocId || validAssocId.length > 10) {
-                        let localAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-                        let localAssoc = localAssociados.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpfDigits);
-                        if (localAssoc) {
-                            const cleanAssoc = sanitizeAssociado(localAssoc);
-                            const { data: createdAssoc } = await supabaseClient.from('associados').upsert([cleanAssoc]).select('id');
-                            if (createdAssoc && createdAssoc[0]) {
-                                validAssocId = String(createdAssoc[0].id);
-                            }
-                        }
-                    }
-                }
-
-                const obsMeta = `CPF:${clean.cpf}|ANO:${clean.ano}|MESES:${clean.meses_quitados}|OBS:${clean.observacoes}`;
-                const payloadSupabase = {
-                    id: clean.id,
-                    associado_id: validAssocId || '1',
-                    cpf: clean.cpf,
-                    ano: clean.ano,
-                    mes_referencia: clean.meses_quitados.substring(0, 50),
-                    valor: clean.valor,
-                    status: clean.status,
-                    data_pagamento: clean.data_pagamento,
-                    observacoes: obsMeta
-                };
-                const { error } = await supabaseClient.from('mensalidades').upsert([payloadSupabase]);
-                if (error) {
-                    console.error("⚠️ Erro ao salvar mensalidade no Supabase:", error.message);
+            if (cleanCpfDigits) {
+                let assocDb = null;
+                if (supabaseClient) {
+                    const { data } = await supabaseClient.from('associados').select('id, cpf').eq('cpf', clean.cpf);
+                    assocDb = data;
                 } else {
-                    console.log("✅ Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.meses_quitados, clean.valor, "ID Associado:", validAssocId);
+                    try { assocDb = await rawFetchSupabase(`associados?cpf=eq.${encodeURIComponent(clean.cpf)}&select=id,cpf`); } catch(e) {}
                 }
-            } catch (e) {
-                console.error("Erro ao enviar mensalidade para Supabase:", e);
+
+                if (!assocDb || assocDb.length === 0) {
+                    if (supabaseClient) {
+                        const { data: allAssoc } = await supabaseClient.from('associados').select('id, cpf');
+                        assocDb = allAssoc;
+                    } else {
+                        try { assocDb = await rawFetchSupabase('associados?select=id,cpf'); } catch(e) {}
+                    }
+                }
+                    
+                if (assocDb && assocDb.length > 0) {
+                    const match = assocDb.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpfDigits);
+                    if (match) {
+                        validAssocId = String(match.id);
+                    }
+                }
+
+                // Se o associado ainda não existir na tabela associados do Supabase, cria ele primeiro!
+                if (!validAssocId || validAssocId.length > 10) {
+                    let localAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+                    let localAssoc = localAssociados.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpfDigits);
+                    if (localAssoc) {
+                        const cleanAssoc = sanitizeAssociado(localAssoc);
+                        if (supabaseClient) {
+                            const { data: createdAssoc } = await supabaseClient.from('associados').upsert([cleanAssoc]).select('id');
+                            if (createdAssoc && createdAssoc[0]) validAssocId = String(createdAssoc[0].id);
+                        } else {
+                            try {
+                                const createdAssoc = await rawFetchSupabase('associados', 'POST', [cleanAssoc]);
+                                if (createdAssoc && createdAssoc[0]) validAssocId = String(createdAssoc[0].id);
+                            } catch(e) {}
+                        }
+                    }
+                }
             }
+
+            const obsMeta = `CPF:${clean.cpf}|ANO:${clean.ano}|MESES:${clean.meses_quitados}|OBS:${clean.observacoes}`;
+            const payloadSupabase = {
+                id: clean.id,
+                associado_id: validAssocId || '1',
+                cpf: clean.cpf,
+                ano: clean.ano,
+                mes_referencia: clean.meses_quitados.substring(0, 50),
+                valor: clean.valor,
+                status: clean.status,
+                data_pagamento: clean.data_pagamento,
+                observacoes: obsMeta
+            };
+
+            if (supabaseClient) {
+                const { error } = await supabaseClient.from('mensalidades').upsert([payloadSupabase]);
+                if (error) throw error;
+            } else {
+                await rawFetchSupabase('mensalidades', 'POST', [payloadSupabase]);
+            }
+            console.log("✅ Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.meses_quitados, clean.valor, "ID Associado:", validAssocId);
+        } catch (e) {
+            console.error("⚠️ Erro ao salvar mensalidade no Supabase:", e.message || e);
         }
         return true;
     },
