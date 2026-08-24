@@ -365,10 +365,40 @@ const dbService = {
 
         if (supabaseClient) {
             try {
+                const cleanCpfDigits = (clean.cpf || '').replace(/\D/g, '');
+                let validAssocId = clean.associado_id;
+
+                // Resolve o ID exato da tabela 'associados' no Supabase para satisfazer a chave estrangeira (FK)
+                if (cleanCpfDigits) {
+                    const { data: assocDb } = await supabaseClient
+                        .from('associados')
+                        .select('id, cpf');
+                        
+                    if (assocDb && assocDb.length > 0) {
+                        const match = assocDb.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpfDigits);
+                        if (match) {
+                            validAssocId = String(match.id);
+                        }
+                    }
+
+                    // Se o associado ainda não existir na tabela associados do Supabase, cria ele primeiro!
+                    if (!validAssocId || validAssocId.length > 10) {
+                        let localAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+                        let localAssoc = localAssociados.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpfDigits);
+                        if (localAssoc) {
+                            const cleanAssoc = sanitizeAssociado(localAssoc);
+                            const { data: createdAssoc } = await supabaseClient.from('associados').upsert([cleanAssoc]).select('id');
+                            if (createdAssoc && createdAssoc[0]) {
+                                validAssocId = String(createdAssoc[0].id);
+                            }
+                        }
+                    }
+                }
+
                 const obsMeta = `CPF:${clean.cpf}|ANO:${clean.ano}|MESES:${clean.meses_quitados}|OBS:${clean.observacoes}`;
                 const payloadSupabase = {
                     id: clean.id,
-                    associado_id: clean.associado_id,
+                    associado_id: validAssocId || '1',
                     cpf: clean.cpf,
                     ano: clean.ano,
                     mes_referencia: clean.meses_quitados.substring(0, 50),
@@ -379,21 +409,7 @@ const dbService = {
                 };
                 const { error } = await supabaseClient.from('mensalidades').upsert([payloadSupabase]);
                 if (error) {
-                    const fallbackPayload = {
-                        id: clean.id,
-                        associado_id: clean.associado_id,
-                        mes_referencia: clean.meses_quitados.substring(0, 50),
-                        valor: clean.valor,
-                        status: clean.status,
-                        data_pagamento: clean.data_pagamento,
-                        observacoes: obsMeta
-                    };
-                    const { error: errFallback } = await supabaseClient.from('mensalidades').upsert([fallbackPayload]);
-                    if (errFallback) {
-                        console.error("⚠️ Erro ao salvar mensalidade no Supabase:", errFallback.message);
-                    } else {
-                        console.log("✅ Mensalidade salva com sucesso no Supabase (fallback):", clean.cpf, clean.meses_quitados);
-                    }
+                    console.error("⚠️ Erro ao salvar mensalidade no Supabase:", error.message);
                 } else {
                     console.log("✅ Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.meses_quitados, clean.valor);
                 }
@@ -539,13 +555,30 @@ const dbService = {
                 localStorage.setItem('acbcsj_documentos', JSON.stringify(docRes.data));
             }
             if (!mensRes.error && mensRes.data && Array.isArray(mensRes.data)) {
+                let localHist = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+                const onlineIds = new Set(mensRes.data.map(m => String(m.id)));
+                
+                // Envia para o Supabase qualquer mensalidade cadastrada localmente que ainda não estava lá online
+                const faltantes = localHist.filter(lh => lh && lh.id && !onlineIds.has(String(lh.id)));
+                if (faltantes.length > 0) {
+                    console.log(` Sincronizando ${faltantes.length} mensalidades locais pendentes para o Supabase...`);
+                    for (const itemFaltante of faltantes) {
+                        await this.addMensalidade(itemFaltante);
+                    }
+                    // Re-consulta para obter a lista consolidada
+                    const { data: reMensData } = await supabaseClient.from('mensalidades').select('*');
+                    if (reMensData && Array.isArray(reMensData)) {
+                        mensRes.data = reMensData;
+                    }
+                }
+
                 const sanitizedMens = mensRes.data.map(item => sanitizeMensalidade(item)).filter(Boolean);
                 localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(sanitizedMens));
                 if (typeof recalcularTodasGridsMensalidades === 'function') {
                     recalcularTodasGridsMensalidades();
                 }
             }
-            console.log("ðŸŽ‰ Dados do Supabase carregados com sucesso!");
+            console.log(" Dados do Supabase carregados com sucesso!");
         } catch (err) {
             console.error("âš ï¸ Erro ao consultar Supabase:", err);
         }
