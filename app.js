@@ -251,7 +251,7 @@ const idbStorage = {
 };
 
 // INICIALIZAÇÃO E LIMPEZA DE DADOS
-const ACBCSJ_BUILD_VERSION = "2026-08-24_v4";
+const ACBCSJ_BUILD_VERSION = "2026-08-24_v5";
 
 function forcarAtualizacaoCacheSistema() {
     localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
@@ -3310,10 +3310,12 @@ function atualizarCheckboxesBaixa() {
         const gCpf = (g.cpf || '').replace(/\D/g, '');
         if (gCpf && cleanCpf && gCpf === cleanCpf) return true;
         if (socioObj) {
-            const ng = (typeof g.nome_guerra === 'string' ? g.nome_guerra : '').toLowerCase();
-            const sNg = (typeof socioObj.nome_guerra === 'string' ? socioObj.nome_guerra : '').toLowerCase();
-            const sNc = (typeof socioObj.nome === 'string' ? socioObj.nome : '').toLowerCase();
-            return (ng && sNg && ng === sNg) || (sNc && ng && sNc.includes(ng));
+            const gNg = (typeof g.nome_guerra === 'string' ? g.nome_guerra : '').trim().toLowerCase();
+            const gNc = (typeof g.nome_completo === 'string' ? g.nome_completo : '').trim().toLowerCase();
+            const sNg = (typeof socioObj.nome_guerra === 'string' ? socioObj.nome_guerra : '').trim().toLowerCase();
+            const sNc = (typeof socioObj.nome === 'string' ? socioObj.nome : '').trim().toLowerCase();
+            if (gNg && sNg && gNg === sNg && gNc && sNc && gNc === sNc) return true;
+            if (gNc && sNc && gNc === sNc) return true;
         }
         return false;
     }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };

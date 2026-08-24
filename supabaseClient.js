@@ -141,12 +141,30 @@ function sanitizeMensalidade(item) {
     if (!assoc && (userObs || item.mes_referencia)) {
         const txtBusca = (userObs + ' ' + (item.mes_referencia || '')).toLowerCase();
         assoc = list.find(a => {
-            const ng = (a.nome_guerra || '').toLowerCase();
-            const nc = (a.nome || '').toLowerCase();
+            const ng = (a.nome_guerra || '').trim().toLowerCase();
+            const nc = (a.nome || '').trim().toLowerCase();
             const cpfNum = (a.cpf || '').replace(/\D/g, '');
-            return (ng && ng.length >= 3 && txtBusca.includes(ng)) ||
-                   (nc && nc.length >= 4 && txtBusca.includes(nc)) ||
-                   (cpfNum && cpfNum.length >= 9 && txtBusca.includes(cpfNum));
+
+            // Match por CPF numérico
+            if (cpfNum && cpfNum.length === 11 && txtBusca.includes(cpfNum)) return true;
+
+            // Match por Nome Completo EXATO ou Substring de Nome Completo
+            if (nc && nc.length >= 6 && txtBusca.includes(nc)) return true;
+
+            // Match por Nome de Guerra apenas se não colidir com sobrenome de outro associado
+            if (ng && ng.length >= 3) {
+                const regexWord = new RegExp('(?:^|[^a-zA-ZáéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ])' + ng + '(?:$|[^a-zA-ZáéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ])', 'i');
+                if (regexWord.test(txtBusca)) {
+                    // Evita atribuir quando a palavra faz parte do nome completo de outro associado (ex: Camila Coelho Soares vs Coelho)
+                    const colidindoOutro = list.some(other => {
+                        const otherNc = (other.nome || '').toLowerCase();
+                        return other.cpf !== a.cpf && otherNc && regexWord.test(otherNc);
+                    });
+                    if (colidindoOutro) return false;
+                    return true;
+                }
+            }
+            return false;
         });
     }
 
