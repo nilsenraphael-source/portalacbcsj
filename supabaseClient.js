@@ -88,17 +88,20 @@ function sanitizeDocumento(item) {
 function sanitizeMensalidade(item) {
     if (!item) return null;
 
-    let cleanCpf = (item.cpf || '').replace(/\D/g, '');
-    let assocId = item.associado_id || null;
-
     let list = [];
     try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch(e) {}
+    if (!list || list.length === 0) {
+        if (typeof MOCK_DATA_INITIAL !== 'undefined' && MOCK_DATA_INITIAL.associados) {
+            list = MOCK_DATA_INITIAL.associados;
+        } else if (typeof ASSOCIADOS_PLANILHA_REAL !== 'undefined') {
+            list = ASSOCIADOS_PLANILHA_REAL;
+        }
+    }
 
-    // Se o item vem do Supabase (onde observacoes pode conter a meta string "CPF:...|ANO:...|MESES:..."), extrai os campos:
+    let userObs = item.obs || item.observacoes || item.comprovante_pix || '';
     let metaCpf = '';
     let metaAno = '';
     let metaMeses = '';
-    let userObs = item.obs || item.observacoes || item.comprovante_pix || '';
 
     if (userObs && userObs.includes('CPF:') && userObs.includes('MESES:')) {
         const parts = userObs.split('|');
@@ -110,18 +113,31 @@ function sanitizeMensalidade(item) {
         });
     }
 
-    if (metaCpf) cleanCpf = metaCpf.replace(/\D/g, '');
+    let cleanCpf = (metaCpf || item.cpf || '').replace(/\D/g, '');
+    let assocId = item.associado_id ? String(item.associado_id) : null;
 
-    // Busca o associado por ID ou por CPF
-    let assoc = null;
-    if (assocId) {
-        assoc = list.find(a => String(a.id) === String(assocId) || (a.cpf || '').replace(/\D/g, '') === String(assocId).replace(/\D/g, ''));
+    // Se assocId parecer um CPF de 11 dígitos
+    if (!cleanCpf && assocId && assocId.replace(/\D/g, '').length === 11) {
+        cleanCpf = assocId.replace(/\D/g, '');
     }
-    if (!assoc && cleanCpf) {
+
+    // Se ainda não temos CPF limpo, pesquisa por sequências de 11 dígitos em campos de texto
+    if (!cleanCpf) {
+        const txtTotal = `${userObs} ${item.mes_referencia || ''} ${item.fornecedor_cliente || ''} ${assocId || ''}`;
+        const matchDigits = txtTotal.match(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b|\b\d{11}\b/);
+        if (matchDigits) {
+            cleanCpf = matchDigits[0].replace(/\D/g, '');
+        }
+    }
+
+    // Tenta encontrar o associado na lista cadastrada
+    let assoc = null;
+    if (cleanCpf) {
         assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
     }
-
-    // Se ainda não encontrou, busca por Nome de Guerra, Nome Completo ou CPF dentro do texto de observações/comprovante
+    if (!assoc && assocId) {
+        assoc = list.find(a => String(a.id) === assocId || (a.cpf || '').replace(/\D/g, '') === assocId.replace(/\D/g, ''));
+    }
     if (!assoc && (userObs || item.mes_referencia)) {
         const txtBusca = (userObs + ' ' + (item.mes_referencia || '')).toLowerCase();
         assoc = list.find(a => {
@@ -135,39 +151,41 @@ function sanitizeMensalidade(item) {
     }
 
     if (assoc) {
-        if (!assocId && assoc.id) assocId = String(assoc.id);
-        if (!cleanCpf && assoc.cpf) cleanCpf = (assoc.cpf || '').replace(/\D/g, '');
-        if (!item.cpf && assoc.cpf) item.cpf = assoc.cpf;
+        if (!assocId) assocId = String(assoc.id || assoc.cpf);
+        if (!cleanCpf) cleanCpf = (assoc.cpf || '').replace(/\D/g, '');
     }
 
-    if (!assocId) assocId = "3"; // ID de contingência caso não localize associado
+    // Formata o CPF final garantindo padrão '000.000.000-00' ou fallback do associado
+    let finalCpf = assoc ? assoc.cpf : (item.cpf || '');
+    if (!finalCpf && cleanCpf && cleanCpf.length === 11) {
+        finalCpf = cleanCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
 
     const rawMeses = String(metaMeses || item.meses_quitados || item.mes_referencia || 'Jan').trim();
 
     let anoStr = String(metaAno || item.ano || '').trim();
-    if (!anoStr || anoStr === 'undefined') {
-        const dtIso = item.data_iso || item.data_pagamento || item.data || '';
-        if (dtIso.includes('-')) {
-            anoStr = dtIso.split('-')[0];
-        } else if (dtIso.includes('/')) {
-            const parts = dtIso.split('/');
-            if (parts.length === 3) anoStr = parts[2];
+    if (!anoStr || anoStr === 'undefined' || anoStr === 'null' || anoStr.length !== 4) {
+        const strForDate = `${item.mes_referencia || ''} ${item.data_iso || ''} ${item.data_pagamento || ''} ${item.data || ''} ${userObs}`;
+        const yearMatch = strForDate.match(/\b(202[3-9])\b/);
+        if (yearMatch) {
+            anoStr = yearMatch[1];
+        } else {
+            anoStr = '2026';
         }
     }
-    if (!anoStr || anoStr.length !== 4) anoStr = '2026';
 
-    const cleanObs = userObs || 'Quitacao de mensalidade PIX';
-    const finalCpf = item.cpf || (assoc ? assoc.cpf : (cleanCpf ? cleanCpf : ''));
+    const cleanObs = userObs || 'Quitação de mensalidade PIX';
 
     return {
         id: String(item.id || 'mensalidade_' + Date.now()),
-        associado_id: String(assocId),
+        associado_id: String(assocId || (assoc ? assoc.id : '1')),
+        associado_nome: assoc ? (assoc.nome_guerra || assoc.nome) : (item.associado_nome || 'Associado'),
         cpf: finalCpf,
         ano: String(anoStr),
         mes_referencia: rawMeses,
         meses_quitados: rawMeses,
         data: String(item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR')).substring(0, 20),
-        data_iso: item.data_iso || new Date().toISOString().split('T')[0],
+        data_iso: item.data_iso || (item.data_pagamento && item.data_pagamento.includes('-') ? item.data_pagamento : new Date().toISOString().split('T')[0]),
         valor: (typeof item.valor !== 'undefined' && item.valor !== null && !isNaN(parseFloat(item.valor))) ? parseFloat(item.valor) : 0,
         status: String(item.status || 'pago').substring(0, 20),
         data_pagamento: String(item.data_pagamento || item.data || new Date().toLocaleDateString('pt-BR')).substring(0, 20),

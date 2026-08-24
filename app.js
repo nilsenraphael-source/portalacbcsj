@@ -267,6 +267,15 @@ document.addEventListener("DOMContentLoaded", () => {
     initMockData();
     setupCPFMasks();
     if (typeof setupNavigation === 'function') setupNavigation();
+
+    // Sincroniza automaticamente os dados online do Supabase na inicialização
+    if (typeof dbService !== 'undefined' && dbService.syncFromSupabase) {
+        dbService.syncFromSupabase().then(() => {
+            if (typeof renderGestaoMensalidades === 'function' && document.getElementById('tableGestaoMensalidadesBody')) {
+                renderGestaoMensalidades();
+            }
+        });
+    }
 });
 
 function resetBancoDadosComandante() {
@@ -479,7 +488,15 @@ function navigateTab(tabId) {
     if (tabId === 'overview-diretoria') renderDiretoriaOverview();
     if (tabId === 'gestao-associados') renderGestaoAssociados();
     if (tabId === 'associados-desligados') renderAssociadosDesligados();
-    if (tabId === 'gestao-mensalidades') renderGestaoMensalidades();
+    if (tabId === 'gestao-mensalidades') {
+        if (typeof dbService !== 'undefined' && dbService.getMensalidades) {
+            dbService.getMensalidades().then(() => {
+                renderGestaoMensalidades();
+            });
+        } else {
+            renderGestaoMensalidades();
+        }
+    }
     if (tabId === 'gestao-financeira') renderGestaoFinanceira();
     if (tabId === 'overview-associado') renderAssociadoOverview();
     if (tabId === 'comunicados-associado') renderComunicadosHistoricoAssociado();
