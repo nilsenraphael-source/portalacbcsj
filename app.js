@@ -58,8 +58,18 @@ function extrairMesesDeTexto(texto) {
     return resultado;
 }
 
-function recalcularTodasGridsMensalidades() {
-    const listAssoc = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+function recalcularTodasGridsMensalidades(autoRender = false) {
+    let listAssoc = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    if (!listAssoc || listAssoc.length === 0) {
+        if (typeof MOCK_DATA_INITIAL !== 'undefined' && MOCK_DATA_INITIAL.associados && MOCK_DATA_INITIAL.associados.length > 0) {
+            listAssoc = MOCK_DATA_INITIAL.associados;
+        } else if (typeof ASSOCIADOS_PLANILHA_REAL !== 'undefined' && ASSOCIADOS_PLANILHA_REAL.length > 0) {
+            listAssoc = ASSOCIADOS_PLANILHA_REAL;
+        }
+        if (listAssoc && listAssoc.length > 0) {
+            localStorage.setItem('acbcsj_associados', JSON.stringify(listAssoc));
+        }
+    }
     const anos = ['2024', '2025', '2026', '2027', '2028'];
     const historicoRaw = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
@@ -120,7 +130,7 @@ function recalcularTodasGridsMensalidades() {
         }
     });
 
-    if (typeof renderGestaoMensalidades === 'function' && document.getElementById('tableGestaoMensalidadesBody')) {
+    if (autoRender && typeof renderGestaoMensalidades === 'function' && document.getElementById('tableGestaoMensalidadesBody')) {
         renderGestaoMensalidades();
     }
     if (typeof renderGestaoFinanceira === 'function' && document.getElementById('tableFinanceiroBody')) {
@@ -2987,7 +2997,7 @@ function salvarMeusDados(e) {
 
 // CONTROLE DE MENSALIDADES DOS ASSOCIADOS (DIRETORIA)
 function renderGestaoMensalidades() {
-    recalcularTodasGridsMensalidades();
+    recalcularTodasGridsMensalidades(false);
     const selAno = document.getElementById('selAnoMensalidades');
     const ano = selAno ? selAno.value : '2026';
 
@@ -2998,7 +3008,17 @@ function renderGestaoMensalidades() {
     const lbls = document.querySelectorAll('.lblAnoMensalidadeMetrica');
     lbls.forEach(el => el.textContent = ano);
 
-    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    if (!list || list.length === 0) {
+        if (typeof MOCK_DATA_INITIAL !== 'undefined' && MOCK_DATA_INITIAL.associados && MOCK_DATA_INITIAL.associados.length > 0) {
+            list = MOCK_DATA_INITIAL.associados;
+        } else if (typeof ASSOCIADOS_PLANILHA_REAL !== 'undefined' && ASSOCIADOS_PLANILHA_REAL.length > 0) {
+            list = ASSOCIADOS_PLANILHA_REAL;
+        }
+        if (list && list.length > 0) {
+            localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+        }
+    }
     let ativos = list.filter(a => a.status === 'ativo' || !a.status);
     ativos.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
 
