@@ -14,11 +14,28 @@ function extrairListaMesesDoLancamento(rawMesesStr, obsStr = '') {
 function extrairMesesDeTexto(texto) {
     if (!texto) return [];
     const todasSiglas = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const mapaMesesNum = {
+        '01':'jan', '1':'jan', '02':'fev', '2':'fev', '03':'mar', '3':'mar',
+        '04':'abr', '4':'abr', '05':'mai', '5':'mai', '06':'jun', '6':'jun',
+        '07':'jul', '7':'jul', '08':'ago', '8':'ago', '09':'set', '9':'set',
+        '10':'out', '11':'nov', '12':'dez'
+    };
     const nomesCompletos = {
         'janeiro': 'jan', 'fevereiro': 'fev', 'marco': 'mar', 'março': 'mar',
         'abril': 'abr', 'maio': 'mai', 'junho': 'jun', 'julho': 'jul',
         'agosto': 'ago', 'setembro': 'set', 'outubro': 'out', 'novembro': 'nov', 'dezembro': 'dez'
     };
+
+    const resultado = [];
+
+    // Suporte a formato YYYY-MM (ex: 2026-08 ou 2026-01) ou MM/YYYY (ex: 08/2026 ou 01/2026)
+    const yyyyMmMatch = texto.match(/(?:19|20)\d\d[-/](0[1-9]|1[0-2])|(0[1-9]|1[0-2])[-/](?:19|20)\d\d/);
+    if (yyyyMmMatch) {
+        const numMes = yyyyMmMatch[1] || yyyyMmMatch[2];
+        if (numMes && mapaMesesNum[numMes]) {
+            resultado.push(mapaMesesNum[numMes]);
+        }
+    }
 
     // Suporte a intervalos no formato Jan-Dez, Jan a Dez, Fev-Jul, Fev a Jul, etc.
     const rangeMatch = texto.match(/([a-z]{3}|janeiro|fevereiro|marco|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*(?:-|a|até)\s*([a-z]{3}|janeiro|fevereiro|marco|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)/i);
@@ -31,11 +48,13 @@ function extrairMesesDeTexto(texto) {
         const sIdx = todasSiglas.indexOf(sStr);
         const eIdx = todasSiglas.indexOf(eStr);
         if (sIdx >= 0 && eIdx >= sIdx) {
-            return todasSiglas.slice(sIdx, eIdx + 1);
+            todasSiglas.slice(sIdx, eIdx + 1).forEach(m => {
+                if (!resultado.includes(m)) resultado.push(m);
+            });
+            return resultado;
         }
     }
 
-    const resultado = [];
     todasSiglas.forEach(sigla => {
         const regex = new RegExp('(?:^|[^a-zA-ZáéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ])' + sigla + '(?:$|[^a-zA-ZáéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ])', 'i');
         if (regex.test(texto)) {

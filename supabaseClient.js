@@ -121,6 +121,19 @@ function sanitizeMensalidade(item) {
         assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
     }
 
+    // Se ainda não encontrou, busca por Nome de Guerra, Nome Completo ou CPF dentro do texto de observações/comprovante
+    if (!assoc && (userObs || item.mes_referencia)) {
+        const txtBusca = (userObs + ' ' + (item.mes_referencia || '')).toLowerCase();
+        assoc = list.find(a => {
+            const ng = (a.nome_guerra || '').toLowerCase();
+            const nc = (a.nome || '').toLowerCase();
+            const cpfNum = (a.cpf || '').replace(/\D/g, '');
+            return (ng && ng.length >= 3 && txtBusca.includes(ng)) ||
+                   (nc && nc.length >= 4 && txtBusca.includes(nc)) ||
+                   (cpfNum && cpfNum.length >= 9 && txtBusca.includes(cpfNum));
+        });
+    }
+
     if (assoc) {
         if (!assocId && assoc.id) assocId = String(assoc.id);
         if (!cleanCpf && assoc.cpf) cleanCpf = (assoc.cpf || '').replace(/\D/g, '');
