@@ -245,10 +245,28 @@ const idbStorage = {
 };
 
 // INICIALIZAÇÃO E LIMPEZA DE DADOS
+const ACBCSJ_BUILD_VERSION = "2026-08-24_v3";
+
+function forcarAtualizacaoCacheSistema() {
+    localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
+    recalcularTodasGridsMensalidades(true);
+    if (typeof dbService !== 'undefined' && dbService.syncFromSupabase) {
+        dbService.syncFromSupabase();
+    }
+    alert("Dados e cache do sistema sincronizados com sucesso!");
+    window.location.reload(true);
+}
+window.forcarAtualizacaoCacheSistema = forcarAtualizacaoCacheSistema;
+
 document.addEventListener("DOMContentLoaded", () => {
+    const savedVersion = localStorage.getItem("acbcsj_build_version");
+    if (savedVersion !== ACBCSJ_BUILD_VERSION) {
+        localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
+        recalcularTodasGridsMensalidades(false);
+    }
     initMockData();
     setupCPFMasks();
-    setupNavigation();
+    if (typeof setupNavigation === 'function') setupNavigation();
 });
 
 function resetBancoDadosComandante() {

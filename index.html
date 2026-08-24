@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ACBCSJ — Associação Corpo de Bombeiros Comunitários de São José</title>
     
-    <!-- Folha de Estilos Customizada (Carregamento Prioritário) -->
-    <link rel="stylesheet" href="styles.css">
+    <!-- Meta Cache-Control para forçar o navegador a não armazenar scripts antigos em cache -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- Folha de Estilos Customizada (Carregamento Prioritário com Cache Buster) -->
+    <link rel="stylesheet" href="styles.css?v=20260824_v3">
 
     <!-- Google Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -85,6 +90,7 @@
                     <div id="headerUserName" class="user-name">Usuário</div>
                     <span id="headerUserRole" class="user-role-badge">PERFIL</span>
                 </div>
+                <button class="btn btn-outline btn-sm" style="color: var(--accent-gold); border-color: var(--accent-gold);" onclick="forcarAtualizacaoCacheSistema()" title="Limpar cache local do navegador e recarregar dados do portal">🔄 Recarregar Dados</button>
                 <button class="btn btn-outline btn-sm" onclick="logout()">Sair</button>
             </div>
         </header>
@@ -1749,8 +1755,8 @@
         </div>
     </div>
 
-    <!-- SCRIPTS JS -->
-    <script src="supabaseClient.js"></script>
-    <script src="app.js"></script>
+    <!-- SCRIPTS JS (COM CACHE BUSTER PARA FORÇAR ATUALIZAÇÃO NO NAVEGADOR) -->
+    <script src="supabaseClient.js?v=20260824_v3"></script>
+    <script src="app.js?v=20260824_v3"></script>
 </body>
 </html>
