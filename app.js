@@ -251,7 +251,7 @@ const idbStorage = {
 };
 
 // INICIALIZAÇÃO E LIMPEZA DE DADOS
-const ACBCSJ_BUILD_VERSION = "2026-08-24_v5";
+const ACBCSJ_BUILD_VERSION = "2026-08-24_v6";
 
 function forcarAtualizacaoCacheSistema() {
     localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
@@ -3666,31 +3666,26 @@ function excluirBaixaMensalidade(id) {
 }
 
 
-// SOLICITAÃ‡ÃƒO E HOMOLOGAÃ‡ÃƒO DE DESLIGAMENTO VOLUNTÃRIO
+// SOLICITAÇÃO E HOMOLOGAÇÃO DE DESLIGAMENTO VOLUNTÁRIO
 function abrirModalPedirDesligamento() {
     if (!currentUser) return;
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const me = list.find(a => (a.cpf || '').replace(/\D/g, '') === (currentUser.cpf || '').replace(/\D/g, '')) || currentUser;
 
-    if (me.status === 'pendente_desligamento') {
-        alert(`Sua solicitaÃ§Ã£o de desligamento jÃ¡ foi enviada em ${me.data_solicitacao_desligamento || 'data recente'} e estÃ¡ aguardando a homologaÃ§Ã£o e aprovaÃ§Ã£o da Diretoria.`);
-        return;
-    }
-
     if (me.status === 'desligado') {
-        alert('Seu cadastro jÃ¡ se encontra registrado como desligado da associaÃ§Ã£o.');
+        alert('Seu cadastro já se encontra registrado como desligado da associação.');
         return;
     }
 
     document.getElementById('pedirDesligNomeDisplay').textContent = me.nome || me.nome_guerra;
     document.getElementById('pedirDesligCPFDisplay').textContent = me.cpf;
-    document.getElementById('pedirDesligOBMDisplay').textContent = me.obm || 'SÃ£o JosÃ©';
+    document.getElementById('pedirDesligOBMDisplay').textContent = me.obm || 'São José';
 
     const hojeStr = new Date().toLocaleDateString('pt-BR');
-    const modeloTexto = `TERMO E SOLICITAÃ‡ÃƒO DE DESLIGAMENTO VOLUNTÃRIO DA ACBCSJ\n\n` +
-        `Eu, ${me.nome}, portador(a) do CPF nÂº ${me.cpf}, Bombeiro(a) ComunitÃ¡rio(a) integrante da OBM de ${me.obm || 'SÃ£o JosÃ©'}, venho por meio desta solicitar formalmente o meu DESLIGAMENTO VOLUNTÃRIO do quadro de associados da AssociaÃ§Ã£o dos Bombeiros ComunitÃ¡rios de SÃ£o JosÃ© (ACBCSJ).\n\n` +
-        `Declaro estar ciente de que, apÃ³s a homologaÃ§Ã£o deste pedido pela Diretoria, cessarÃ£o todos os meus direitos e deveres estatutÃ¡rios referentes Ã  ACBCSJ.\n\n` +
-        `SÃ£o JosÃ©/SC, ${hojeStr}.\n\n` +
+    const modeloTexto = `TERMO E SOLICITAÇÃO DE DESLIGAMENTO VOLUNTÁRIO DA ACBCSJ\n\n` +
+        `Eu, ${me.nome}, portador(a) do CPF nº ${me.cpf}, Bombeiro(a) Comunitário(a) integrante da OBM de ${me.obm || 'São José'}, venho por meio desta solicitar formalmente o meu DESLIGAMENTO VOLUNTÁRIO do quadro de associados da Associação dos Bombeiros Comunitários de São José (ACBCSJ).\n\n` +
+        `Declaro estar ciente de que, após a homologação deste pedido pela Diretoria, cessarão todos os meus direitos e deveres estatutários referentes à ACBCSJ.\n\n` +
+        `São José/SC, ${hojeStr}.\n\n` +
         `____________________________________________________\n` +
         `Assinatura do(a) Associado(a)`;
 
@@ -3704,63 +3699,64 @@ function abrirModalPedirDesligamento() {
     openModal('modalPedirDesligamento');
 }
 
-function gerarEImprimirCartaDesligamento() {
+function gerarEBaixarCartaDesligamento() {
     if (!currentUser) return;
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const me = list.find(a => (a.cpf || '').replace(/\D/g, '') === (currentUser.cpf || '').replace(/\D/g, '')) || currentUser;
     const hojeStr = new Date().toLocaleDateString('pt-BR');
 
-    const win = window.open('', '_blank');
-    if (win) {
-        win.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Carta de Desligamento VoluntÃ¡rio - ${me.nome_guerra || me.nome}</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 40px; color: #000; line-height: 1.6; }
-                    .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 30px; }
-                    .header h2 { margin: 0; font-size: 18px; text-transform: uppercase; }
-                    .header p { margin: 4px 0 0 0; font-size: 13px; color: #444; }
-                    .title { text-align: center; margin: 30px 0; font-size: 16px; font-weight: bold; text-decoration: underline; }
-                    .content { text-align: justify; font-size: 14px; margin-bottom: 40px; text-indent: 30px; }
-                    .signature-section { margin-top: 60px; text-align: center; }
-                    .signature-line { width: 350px; margin: 0 auto; border-top: 1px solid #000; padding-top: 5px; font-size: 13px; }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h2>AssociaÃ§Ã£o dos Bombeiros ComunitÃ¡rios de SÃ£o JosÃ© - ACBCSJ</h2>
-                    <p>CNPJ: 46.128.369/0001-79 | SÃ£o JosÃ© - SC</p>
-                </div>
+    const htmlContent = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Carta de Desligamento Voluntário - ${me.nome_guerra || me.nome}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; color: #000; line-height: 1.6; }
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 30px; }
+        .header h2 { margin: 0; font-size: 18px; text-transform: uppercase; }
+        .header p { margin: 4px 0 0 0; font-size: 13px; color: #444; }
+        .title { text-align: center; margin: 30px 0; font-size: 16px; font-weight: bold; text-decoration: underline; }
+        .content { text-align: justify; font-size: 14px; margin-bottom: 40px; text-indent: 30px; }
+        .signature-section { margin-top: 60px; text-align: center; }
+        .signature-line { width: 350px; margin: 0 auto; border-top: 1px solid #000; padding-top: 5px; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Associação dos Bombeiros Comunitários de São José - ACBCSJ</h2>
+        <p>CNPJ: 46.128.369/0001-79 | São José - SC</p>
+    </div>
 
-                <div class="title">TERMO E SOLICITAÃ‡ÃƒO DE DESLIGAMENTO VOLUNTÃRIO</div>
+    <div class="title">TERMO E SOLICITAÇÃO DE DESLIGAMENTO VOLUNTÁRIO</div>
 
-                <div class="content">
-                    <p>Eu, <b>${me.nome}</b>, inscrito(a) no CPF sob o nÂº <b>${me.cpf}</b>, Bombeiro(a) ComunitÃ¡rio(a) lotado(a) na OBM de <b>${me.obm || 'SÃ£o JosÃ©'}</b>, venho por meio desta solicitar formalmente o meu <b>DESLIGAMENTO VOLUNTÃRIO</b> do quadro de associados da AssociaÃ§Ã£o dos Bombeiros ComunitÃ¡rios de SÃ£o JosÃ© (ACBCSJ).</p>
+    <div class="content">
+        <p>Eu, <b>${me.nome}</b>, inscrito(a) no CPF sob o nº <b>${me.cpf}</b>, Bombeiro(a) Comunitário(a) lotado(a) na OBM de <b>${me.obm || 'São José'}</b>, venho por meio desta solicitar formalmente o meu <b>DESLIGAMENTO VOLUNTÁRIO</b> do quadro de associados da Associação dos Bombeiros Comunitários de São José (ACBCSJ).</p>
 
-                    <p>Declaro estar ciente de que, apÃ³s a apreciaÃ§Ã£o e homologaÃ§Ã£o deste pedido pela Diretoria da AssociaÃ§Ã£o, cessarÃ£o todos os meus direitos e deveres estatutÃ¡rios, bem como o desconto ou cobranÃ§a de contribuiÃ§Ãµes associativas mensais.</p>
+        <p>Declaro estar ciente de que, após a apreciação e homologação deste pedido pela Diretoria da Associação, cessarão todos os meus direitos e deveres estatutários, bem como o desconto ou cobrança de contribuições associativas mensais.</p>
 
-                    <p style="text-align: right; margin-top: 30px;">SÃ£o JosÃ©/SC, ${hojeStr}.</p>
-                </div>
+        <p style="text-align: right; margin-top: 30px;">São José/SC, ${hojeStr}.</p>
+    </div>
 
-                <div class="signature-section">
-                    <div class="signature-line">
-                        <b>${me.nome}</b><br>
-                        CPF: ${me.cpf}
-                    </div>
-                </div>
+    <div class="signature-section">
+        <div class="signature-line">
+            <b>${me.nome}</b><br>
+            CPF: ${me.cpf}
+        </div>
+    </div>
+</body>
+</html>`;
 
-                <script>
-                    window.onload = function() { window.print(); };
-                </script>
-            </body>
-            </html>
-        `);
-    } else {
-        alert('A janela de impressÃ£o foi bloqueada pelo navegador. Permita pop-ups para imprimir a carta.');
-    }
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Carta_Desligamento_${(me.nome_guerra || me.nome || 'Associado').replace(/\s+/g, '_')}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+window.gerarEImprimirCartaDesligamento = gerarEBaixarCartaDesligamento;
 
 function confirmarPedidoDesligamento(e) {
     e.preventDefault();
@@ -3771,13 +3767,20 @@ function confirmarPedidoDesligamento(e) {
     const file = fileInp && fileInp.files ? fileInp.files[0] : null;
     const motivo = (document.getElementById('pedirDesligMotivo')?.value || '').trim();
 
+    if (!motivo) {
+        alert('Por favor, informe obrigatoriamente a justificativa / motivo do pedido de desligamento.');
+        const motEl = document.getElementById('pedirDesligMotivo');
+        if (motEl) motEl.focus();
+        return;
+    }
+
     if (!file) {
         alert('Por favor, anexe a carta de desligamento assinada para prosseguir.');
         return;
     }
 
     const agora = new Date();
-    const dataHoraSolicitacao = agora.toLocaleDateString('pt-BR') + ' Ã s ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const dataHoraSolicitacao = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     const concluirSolicitacao = (fileDataUrl, fileName) => {
         let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
@@ -3786,7 +3789,7 @@ function confirmarPedidoDesligamento(e) {
         if (item) {
             item.status = 'pendente_desligamento';
             item.data_solicitacao_desligamento = dataHoraSolicitacao;
-            item.motivo_desligamento = motivo || 'SolicitaÃ§Ã£o voluntÃ¡ria do associado';
+            item.motivo_desligamento = motivo;
             item.carta_desligamento_url = fileDataUrl;
             item.carta_desligamento_nome = fileName;
 
@@ -3797,7 +3800,7 @@ function confirmarPedidoDesligamento(e) {
             currentUser.data_solicitacao_desligamento = dataHoraSolicitacao;
             sessionStorage.setItem('acbcsj_current_user', JSON.stringify(currentUser));
 
-            alert(`Sua solicitaÃ§Ã£o de desligamento voluntÃ¡rio foi enviada com sucesso em ${dataHoraSolicitacao}!\n\nðŸ“„ A carta assinada (${fileName}) foi registrada no sistema e o pedido foi encaminhado para aprovaÃ§Ã£o e homologaÃ§Ã£o da Diretoria.`);
+            alert(`Sua solicitação de desligamento voluntário foi enviada com sucesso em ${dataHoraSolicitacao}!\n\n📄 A carta assinada (${fileName}) foi registrada no sistema e o pedido foi encaminhado para aprovação e homologação da Diretoria.`);
             closeModal('modalPedirDesligamento');
             renderAssociadoOverview();
             renderDiretoriaOverview();
@@ -3816,9 +3819,9 @@ function homologarDesligamentoDiretoria(cpf) {
     const item = list.find(a => a.cpf === cpf || (a.cpf || '').replace(/\D/g, '') === (cpf || '').replace(/\D/g, ''));
     if (!item) return;
 
-    if (confirm(`Confirma a homologaÃ§Ã£o e aprovaÃ§Ã£o do desligamento do(a) associado(a) ${item.nome_guerra || item.nome}?`)) {
+    if (confirm(`Confirma a homologação e aprovação do desligamento do(a) associado(a) ${item.nome_guerra || item.nome}?`)) {
         const agora = new Date();
-        const dataHoraDesligamento = agora.toLocaleDateString('pt-BR') + ' Ã s ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const dataHoraDesligamento = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
         item.status = 'desligado';
         item.data_desligamento = dataHoraDesligamento;

@@ -11,7 +11,7 @@
     <meta http-equiv="Expires" content="0">
     
     <!-- Folha de Estilos Customizada (Carregamento Prioritário com Cache Buster) -->
-    <link rel="stylesheet" href="styles.css?v=20260824_v5">
+    <link rel="stylesheet" href="styles.css?v=20260824_v6">
 
     <!-- Google Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1245,21 +1245,21 @@
                 <div class="card" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); padding: 12px; margin-bottom: 15px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <h4 style="font-size: 13px; color: var(--accent-gold); margin: 0;">📄 Carta de Termo de Desligamento Voluntário</h4>
-                        <button type="button" class="btn btn-sm btn-gold" onclick="gerarEImprimirCartaDesligamento()" style="font-size: 11px; padding: 3px 8px;">🖨️ Baixar / Imprimir Modelo Preenchido</button>
+                        <button type="button" class="btn btn-sm btn-gold" onclick="gerarEBaixarCartaDesligamento()" style="font-size: 11px; padding: 4px 10px; font-weight: bold;">📥 Baixar Modelo Preenchido</button>
                     </div>
-                    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Você pode baixar ou imprimir a carta oficial preenchida com seus dados para assinar e anexar abaixo.</p>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Você pode baixar o modelo oficial da carta preenchida com seus dados para assinar e anexar abaixo.</p>
                     <textarea id="pedirDesligTextoModelo" class="form-control" rows="6" readonly style="font-size: 11px; font-family: monospace; background: #111; color: #ddd;"></textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-size: 13px; font-weight: bold;">Motivo / Justificativa do Desligamento <span class="req-star">* (Obrigatório)</span></label>
+                    <textarea id="pedirDesligMotivo" class="form-control" rows="3" placeholder="Informe obrigatoriamente a justificativa ou motivo do seu pedido de desligamento..." required></textarea>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 15px;">
                     <label style="font-size: 13px; font-weight: bold;">Anexar Carta de Desligamento Assinada <span class="req-star">* (Obrigatório)</span></label>
                     <input type="file" id="pedirDesligArquivo" class="form-control" accept=".pdf,image/*,.doc,.docx" required>
                     <small style="color: var(--text-muted); font-size: 11px;">Anexe a foto ou arquivo PDF da sua carta de desligamento devidamente assinada.</small>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="font-size: 13px;">Motivo / Observações do Pedido <small style="color: var(--text-muted); font-weight: normal;">(Opcional)</small></label>
-                    <textarea id="pedirDesligMotivo" class="form-control" rows="2" placeholder="Informe brevemente a justificativa ou observações sobre o pedido de desligamento..."></textarea>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 15px;">
@@ -1756,7 +1756,7 @@
     </div>
 
     <!-- SCRIPTS JS (COM CACHE BUSTER PARA FORÇAR ATUALIZAÇÃO NO NAVEGADOR) -->
-    <script src="supabaseClient.js?v=20260824_v5"></script>
-    <script src="app.js?v=20260824_v5"></script>
+    <script src="supabaseClient.js?v=20260824_v6"></script>
+    <script src="app.js?v=20260824_v6"></script>
 </body>
 </html>
