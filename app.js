@@ -253,7 +253,7 @@ const idbStorage = {
 };
 
 // INICIALIZAÇÃO E LIMPEZA DE DADOS
-const ACBCSJ_BUILD_VERSION = "2026-08-25_v12";
+const ACBCSJ_BUILD_VERSION = "2026-08-25_v13";
 
 function forcarAtualizacaoCacheSistema() {
     localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
@@ -3434,16 +3434,40 @@ async function salvarBaixaMensalidade(e) {
     historicoGeral.unshift(itemHistorico);
     localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(historicoGeral));
 
-        if (typeof dbService !== 'undefined' && dbService.addMensalidade) {
-        try { await dbService.addMensalidade(itemHistorico); } catch(e) { console.error('Erro ao enviar para Supabase:', e); }
+    let supabaseStatusStr = '';
+    if (typeof dbService !== 'undefined' && dbService.addMensalidade) {
+        try {
+            await dbService.addMensalidade(itemHistorico);
+            supabaseStatusStr = ' (Enviado e gravado no Supabase Online ✅)';
+        } catch(e) {
+            console.error('Erro ao enviar para Supabase:', e);
+            supabaseStatusStr = ' (Salvo localmente. Clique em ⚡ Sincronizar Online se necessário)';
+        }
     }
     recalcularGridAssociado(cpf, anoRef);
 
-    alert(`Baixa de mensalidade de R$ ${valorTotal.toFixed(2).replace('.', ',')} (${mesesTexto}/${anoRef}) efetuada com sucesso para ${nomeAssociado}!`);
+    alert(`Baixa de mensalidade de R$ ${valorTotal.toFixed(2).replace('.', ',')} (${mesesTexto}/${anoRef}) efetuada com sucesso para ${nomeAssociado}!${supabaseStatusStr}`);
     closeModal('modalDarBaixaMensalidade');
     renderGestaoMensalidades();
     renderGestaoFinanceira();
 }
+
+async function sincronizarAgoraSupabaseManual() {
+    try {
+        if (typeof dbService !== 'undefined' && dbService.syncFromSupabase) {
+            await dbService.syncFromSupabase();
+            if (typeof renderGestaoMensalidades === 'function') renderGestaoMensalidades();
+            if (typeof renderGestaoFinanceira === 'function') renderGestaoFinanceira();
+            alert("✅ Sincronização concluída com sucesso! Todos os dados foram consolidados com o Supabase online.");
+        } else {
+            alert("⚠️ Serviço de banco de dados não disponível.");
+        }
+    } catch(e) {
+        console.error("Erro na sincronização manual:", e);
+        alert("⚠️ Erro ao sincronizar com o Supabase: " + (e.message || e));
+    }
+}
+window.sincronizarAgoraSupabaseManual = sincronizarAgoraSupabaseManual;
 
 // VER EXTRATO DO ASSOCIADO E OPÇÕES DE EDIÇÃO
 function verExtratoAssociado(cpf) {
