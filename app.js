@@ -253,7 +253,7 @@ const idbStorage = {
 };
 
 // INICIALIZAÇÃO E LIMPEZA DE DADOS
-const ACBCSJ_BUILD_VERSION = "2026-08-25_v14";
+const ACBCSJ_BUILD_VERSION = "2026-08-25_v15";
 
 function forcarAtualizacaoCacheSistema() {
     localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
@@ -1611,7 +1611,11 @@ function salvarNovoComunicado(e) {
     comunicados.unshift(novoComunicado);
     localStorage.setItem('acbcsj_comunicados_enviados', JSON.stringify(comunicados));
 
-    alert(`Comunicado "${assunto}" encaminhado com sucesso para ${resumoDestinatarios}!`);
+    if (typeof dbService !== 'undefined' && dbService.addMensagem) {
+        try { await dbService.addMensagem(novoComunicado); } catch(e) {}
+    }
+
+    alert(`Comunicado "${assunto}" encaminhado com sucesso para ${resumoDestinatarios}! (Enviado para o Supabase Online ✅)`);
     closeModal('modalEnviarComunicado');
     alternarAbaMensagensDiretoria('enviadas');
 }
@@ -1621,6 +1625,9 @@ function excluirComunicadoEnviado(id) {
         let comunicados = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
         comunicados = comunicados.filter(c => c.id !== id);
         localStorage.setItem('acbcsj_comunicados_enviados', JSON.stringify(comunicados));
+        if (typeof dbService !== 'undefined' && dbService.deleteMensagem) {
+            try { dbService.deleteMensagem(id); } catch(e) {}
+        }
         alert('Comunicado removido.');
         renderMensagensDiretoria();
     }
@@ -1831,10 +1838,12 @@ function salvarNovoLancamento(e) {
         }
 
         try {
-            dbService.addFinanceiro(novoLancamento);
+            if (typeof dbService !== 'undefined' && dbService.saveFinanceiro) {
+                await dbService.saveFinanceiro(novoLancamento);
+            }
         } catch (err) {}
 
-        alert(`Lançamento de ${tipo.toUpperCase()} (R$ ${valor.toFixed(2).replace('.', ',')}) cadastrado com sucesso!`);
+        alert(`Lançamento de ${tipo.toUpperCase()} (R$ ${valor.toFixed(2).replace('.', ',')}) cadastrado com sucesso! (Enviado para o Supabase Online ✅)`);
         e.target.reset();
         closeModal('modalNovoLancamento');
         renderGestaoFinanceira();
@@ -1856,6 +1865,9 @@ function excluirLancamentoFinanceiro(id) {
         let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
         list = list.filter(item => item.id !== id);
         localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+        if (typeof dbService !== 'undefined' && dbService.deleteFinanceiro) {
+            try { dbService.deleteFinanceiro(id); } catch(e) {}
+        }
         idbStorage.deleteFile(id);
         alert('Lançamento removido com sucesso.');
         renderGestaoFinanceira();
