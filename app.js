@@ -32,7 +32,7 @@ function recalcularTodasGridsMensalidades() {
         localStorage.setItem(storageKey, JSON.stringify(grid));
     });
 
-    if (typeof renderGestaoMensalidades === 'function' && document.getElementById('tableMensalidadesBody')) {
+    if (typeof renderGestaoMensalidades === 'function' && (document.getElementById('tableGestaoMensalidadesBody') || document.getElementById('tableMensalidadesBody'))) {
         renderGestaoMensalidades();
     }
 }
@@ -1772,26 +1772,22 @@ function renderGestaoFinanceira() {
         });
     });
 
-    // 2. PROCESSA DEMONSTRATIVO & LEVANTAMENTO MENSAL (12 MESES DO EXERCÍCIO)
+    // 2. PROCESSA DEMONSTRATIVO & LEVANTAMENTO MENSAL (12 MESES DO EXERCÃCIO)
     const containerLevantamento = document.getElementById('tableLevantamentoMensalBody');
     let demonstrativoMensal = [];
 
     for (let i = 1; i <= 12; i++) {
         const strMes = String(i).padStart(2, '0');
         const nomeMes = mesesNomes[i - 1];
-        const mKey = mesesKeys[i - 1];
 
-        // Sum Receitas Gerais (excluindo mensalidades)
         let recsGerais = combinedList
             .filter(item => item.origem === 'financeiro' && item.tipo === 'receita' && item.ano === anoSelected && item.mes === strMes)
             .reduce((sum, item) => sum + item.valor, 0);
 
-                // Sum Mensalidades PIX (do histÃ³rico real de baixas de mensalidade efetuadas)
         let mensPix = combinedList
             .filter(item => item.origem === 'mensalidade' && item.ano === anoSelected && item.mes === strMes)
             .reduce((sum, item) => sum + item.valor, 0);
 
-        // Sum Despesas Gerais
         let despsGerais = combinedList
             .filter(item => item.tipo === 'despesa' && item.ano === anoSelected && item.mes === strMes)
             .reduce((sum, item) => sum + item.valor, 0);
@@ -1828,13 +1824,13 @@ function renderGestaoFinanceira() {
                     </td>
                     <td>
                         <span class="badge badge-${d.temMovimento ? 'info' : 'secondary'}" style="font-size: 10px;">
-                            ${d.temMovimento ? '🟢 FECHADO' : '⚪ SEM MOV.'}
+                            ${d.temMovimento ? 'ðŸŸ¢ FECHADO' : 'âšª SEM MOV.'}
                         </span>
                     </td>
                     <td>
                         <div style="display: flex; gap: 4px; justify-content: center;">
-                            <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px;" onclick="filtrarExtratoMes('${d.mesNum}')">🔍 Ver Mês</button>
-                            <button class="btn btn-sm btn-gold" style="padding: 2px 6px; font-size: 11px;" onclick="gerarBalanceteMensal(${d.mesIndex}, '${anoSelected}')">📄 Balancete</button>
+                            <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px;" onclick="filtrarExtratoMes('${d.mesNum}')">ðŸ” Ver MÃªs</button>
+                            <button class="btn btn-sm btn-gold" style="padding: 2px 6px; font-size: 11px;" onclick="gerarBalanceteMensal(${d.mesIndex}, '${anoSelected}')">ðŸ“„ Balancete</button>
                         </div>
                     </td>
                 </tr>
@@ -1842,7 +1838,7 @@ function renderGestaoFinanceira() {
         }).join('');
     }
 
-    // 3. CALCULA MÉTRICAS DO PERÍODO SELECIONADO (MÊS OU ANO)
+    // 3. CALCULA MÃ‰TRICAS DO PERÃODO SELECIONADO (MÃŠS OU ANO)
     let totalReceitasPer = 0;
     let totalMensalidadesPer = 0;
     let totalDespesasPer = 0;
@@ -1878,15 +1874,15 @@ function renderGestaoFinanceira() {
         elSaldo.style.color = saldoPer >= 0 ? 'var(--accent-gold)' : '#E74C3C';
     }
 
-    // 4. RENDERIZA A TABELA DE EXTRATO DE LANÇAMENTOS COMBINADOS (FINANCEIRO + MENSALIDADES)
+    // 4. RENDERIZA A TABELA DE EXTRATO DE LANÃ‡AMENTOS COMBINADOS (FINANCEIRO + MENSALIDADES)
     const container = document.getElementById('tableFinanceiroBody');
     if (container) {
         let filtrados = combinedList;
 
-        // Filtra por Exercício / Ano
+        // Filtra por ExercÃ­cio / Ano
         filtrados = filtrados.filter(i => i.ano === anoSelected);
 
-        // Filtra por Período / Mês
+        // Filtra por PerÃ­odo / MÃªs
         if (mesSelected !== 'todos') {
             filtrados = filtrados.filter(i => i.mes === mesSelected);
         }
@@ -1897,38 +1893,12 @@ function renderGestaoFinanceira() {
         }
 
         if (filtrados.length === 0) {
-            container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum lançamento financeiro ou mensalidade encontrada para o período (${strPeriodo}) com os filtros selecionados.</td></tr>`;
+            container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum lanÃ§amento financeiro ou mensalidade encontrada para o perÃ­odo (${strPeriodo}) com os filtros selecionados.</td></tr>`;
         } else {
             container.innerHTML = filtrados.map(item => `
                 <tr style="${item.origem === 'mensalidade' ? 'background: rgba(52, 152, 219, 0.05);' : ''}">
                     <td><b>${item.data || '-'}</b></td>
-                    <td>${item.descricao}</td>
-                    <td><span class="badge badge-${item.origem === 'mensalidade' ? 'primary' : 'info'}">${item.categoria}</span></td>
-                    <td>
-                        <span class="badge badge-${item.tipo === 'receita' ? 'success' : 'danger'}">
-                            ${item.tipo === 'receita' ? '➕ RECEITA' : '➖ DESPESA'}
-                        </span>
-                    </td>
-                    <td style="font-weight: 700; color: ${item.tipo === 'receita' ? '#2ECC71' : '#E74C3C'};">
-                        ${item.tipo === 'receita' ? '+' : '-'} R$ ${item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td>
-                        <div style="display:flex; gap:6px;">
-                            ${item.origem === 'mensalidade' ? `
-                                <span class="badge badge-success" style="font-size:10px;">💳 PIX Confirmado</span>
-                            ` : `
-                                ${item.comprovante_nome ? `<button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:var(--accent-gold); border-color:var(--accent-gold);" onclick="abrirComprovanteLancamento('${item.id}')">📎 Recibo</button>` : ''}
-                                <button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:#E74C3C; border-color:#E74C3C;" onclick="excluirLancamentoFinanceiro('${item.id}')">🗑️ Excluir</button>
-                            `}
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-    }
-}
-
-// FILTRAR EXTRATO PELO BOTÃO DA TABELA DE LEVANTAMENTO MENSAL
+                    <td>${item.de// FILTRAR EXTRATO PELO BOTÃO DA TABELA DE LEVANTAMENTO MENSAL
 function filtrarExtratoMes(strMes) {
     const filtroMesSelect = document.getElementById('finFiltroMes');
     if (filtroMesSelect) {
@@ -2047,164 +2017,33 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
     openModal('modalBalanceteMensal');
 }
 
-function _old_unused_renderAssociadoOverview() {
-    const welcome = document.getElementById('associadoWelcomeName');
-    if (welcome && currentUser) {
-        welcome.textContent = currentUser.nome_guerra || currentUser.nome;
-    }
+// GESTÃO HISTÓRICA DO VALOR BASE DA MENSALIDADE COM DATA DE VIGÊNCIA             <tr>
+                            <td><span class="badge badge-danger">${d.categoria}</span></td>
+                            <td>${d.descricao} (${d.data})</td>
+                            <td style="text-align: right; color: #E74C3C; font-weight: bold;">R$ ${(parseFloat(d.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                    `).join('')}
+                    <tr style="background: rgba(231, 76, 60, 0.1); font-weight: bold;">
+                        <td colspan="2">TOTAL GERAL DAS SAÃDAS</td>
+                        <td style="text-align: right; color: #E74C3C;">R$ ${totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                </tbody>
+            </table>
 
-    // Renderiza resumo dos dados cadastrais pessoais do usuário
-    const profileContainer = document.getElementById('myProfileDetailsDisplay');
-    if (profileContainer && currentUser) {
-        const end = [currentUser.logradouro, currentUser.numero ? `Nº ${currentUser.numero}` : '', currentUser.complemento].filter(Boolean).join(', ');
-        profileContainer.innerHTML = `
-            <div><b>📞 Telefone / WhatsApp:</b> ${currentUser.telefone || 'Não informado'}</div>
-            <div><b>🚒 OBM:</b> ${currentUser.obm || 'São José'}</div>
-            <div><b>💼 Profissão:</b> ${currentUser.profissao || 'Não informada'}</div>
-            <div><b>🏠 Endereço:</b> ${end || 'Não informado'}</div>
-            <div><b>📍 Bairro / Cidade:</b> ${currentUser.bairro || 'São José'} - ${currentUser.cidade || 'SC'} (CEP: ${currentUser.cep || '-'})</div>
-            <div><b>🆔 CPF:</b> ${currentUser.cpf}</div>
+            <!-- RESUMO E SALDO -->
+            <div style="background: rgba(241, 196, 15, 0.1); padding: 15px; border-radius: 6px; border: 1px solid var(--accent-gold); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="margin: 0; color: var(--accent-gold);">RESULTADO DO BALANCETE (${nomeMes}/${anoStr})</h4>
+                    <small style="color: var(--text-muted);">Total de Entradas (-) Total de SaÃ­das</small>
+                </div>
+                <div style="font-size: 20px; font-weight: bold; color: ${saldoFinal >= 0 ? '#2ECC71' : '#E74C3C'};">
+                    ${saldoFinal >= 0 ? '+' : ''} R$ ${saldoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </div>
+            </div>
         `;
     }
 
-    // Renderiza Comunicados da Diretoria destinados ao usuário atual (Todos, Individual ou Seleção)
-    const comunicadosContainer = document.getElementById('containerMeusComunicadosDiretoria');
-    if (comunicadosContainer && currentUser) {
-        const comunicadosAll = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
-        const meusComunicados = comunicadosAll.filter(c => {
-            if (c.destinatario_tipo === 'todos' || (c.destinatarios_cpfs && c.destinatarios_cpfs.includes('TODOS'))) return true;
-            if (c.destinatarios_cpfs && c.destinatarios_cpfs.includes(currentUser.cpf)) return true;
-            return false;
-        });
-
-        if (meusComunicados.length === 0) {
-            comunicadosContainer.innerHTML = `
-                <p style="font-size: 13px; color: var(--text-muted); margin: 0; padding: 10px 0;">Nenhum comunicado ou aviso recente da Diretoria.</p>
-            `;
-        } else {
-            comunicadosContainer.innerHTML = meusComunicados.map(c => {
-                let badgePrio = '<span class="badge badge-info" style="font-size: 10px;">🟢 Informativo</span>';
-                if (c.prioridade === 'Importante') badgePrio = '<span class="badge badge-warning" style="font-size: 10px;">🟡 Importante</span>';
-                if (c.prioridade === 'Urgente') badgePrio = '<span class="badge badge-danger" style="font-size: 10px;">🔴 Urgente</span>';
-
-                return `
-                    <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; margin-bottom: 10px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <div style="display: flex; gap: 8px; align-items: center;">
-                                <b style="color: var(--accent-gold); font-size: 14px;">${c.assunto}</b>
-                                ${badgePrio}
-                            </div>
-                            <small style="color: var(--text-muted); font-size: 11px;">📅 ${c.data}</small>
-                        </div>
-                        <p style="font-size: 13px; color: var(--text-color); margin: 6px 0 0 0; white-space: pre-wrap;">${c.mensagem}</p>
-                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; text-align: right;">
-                            Enviado por: <b>${c.remetente_nome || 'Diretoria ACBCSJ'}</b>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-    }
-
-    const grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || INITIAL_MENSAL_DATA || [];
-    const container = document.getElementById('tableMinhasMensalidadesBody');
-    if (!container || !currentUser) return;
-
-    const socio = grid.find(s => {
-        const ng = (typeof s.nome_guerra === 'string' ? s.nome_guerra : (Array.isArray(s.nome_guerra) ? '' : String(s.nome_guerra || ''))).toLowerCase();
-        const nc = (typeof s.nome_completo === 'string' ? s.nome_completo : (Array.isArray(s.nome_completo) ? '' : String(s.nome_completo || ''))).toLowerCase();
-        const userNg = (typeof currentUser.nome_guerra === 'string' ? currentUser.nome_guerra : (Array.isArray(currentUser.nome_guerra) ? '' : String(currentUser.nome_guerra || ''))).toLowerCase();
-        const userNc = (typeof currentUser.nome === 'string' ? currentUser.nome : (Array.isArray(currentUser.nome) ? '' : String(currentUser.nome || ''))).toLowerCase();
-        return (ng && userNg && ng === userNg) || (nc && userNc && nc === userNc) || (userNc && nc && nc.includes(userNc));
-    }) || grid[0];
-
-    const mesesNomes = [
-        { key: 'jan', nome: 'Janeiro 2026' },
-        { key: 'fev', nome: 'Fevereiro 2026' },
-        { key: 'mar', nome: 'Março 2026' },
-        { key: 'abr', nome: 'Abril 2026' },
-        { key: 'mai', nome: 'Maio 2026' },
-        { key: 'jun', nome: 'Junho 2026' },
-        { key: 'jul', nome: 'Julho 2026' },
-        { key: 'ago', nome: 'Agosto 2026' },
-        { key: 'set', nome: 'Setembro 2026' },
-        { key: 'out', nome: 'Outubro 2026' },
-        { key: 'nov', nome: 'Novembro 2026' },
-        { key: 'dez', nome: 'Dezembro 2026' }
-    ];
-
-    container.innerHTML = mesesNomes.map(m => {
-        const val = socio ? (parseFloat(socio[m.key]) || 0) : 0;
-        const pago = val > 0;
-        return `
-            <tr>
-                <td><b>${m.nome}</b></td>
-                <td style="font-weight: 700; color: ${pago ? '#2ECC71' : 'var(--text-muted)'};">
-                    R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </td>
-                <td>
-                    <span class="badge badge-${pago ? 'success' : 'warning'}">
-                        ${pago ? '✅ PAGO / BAIXADO' : '⏳ EM ABERTO / PENDENTE'}
-                    </span>
-            </tr>
-        `;
-    }).join('');
-}
-
-// EDIÇÃO DOS DADOS CADASTRAIS PELO PRÓPRIO INTEGRANTE
-function abrirModalEditarMeusDados() {
-    if (!currentUser) return;
-    document.getElementById('editMeusTelefone').value = currentUser.telefone || '';
-    document.getElementById('editMeusOBM').value = currentUser.obm || 'São José';
-    document.getElementById('editMeusProfissao').value = currentUser.profissao || '';
-    document.getElementById('editMeusLogradouro').value = currentUser.logradouro || '';
-    document.getElementById('editMeusNumero').value = currentUser.numero || '';
-    document.getElementById('editMeusComplemento').value = currentUser.complemento || '';
-    document.getElementById('editMeusCEP').value = currentUser.cep || '';
-    document.getElementById('editMeusBairro').value = currentUser.bairro || '';
-    document.getElementById('editMeusCidade').value = currentUser.cidade || 'São José / SC';
-
-    openModal('modalEditarMeusDados');
-}
-
-function salvarMeusDados(e) {
-    e.preventDefault();
-    if (!currentUser) return;
-
-    const telefone = document.getElementById('editMeusTelefone').value.trim();
-    const obm = document.getElementById('editMeusOBM').value.trim();
-    const profissao = document.getElementById('editMeusProfissao').value.trim();
-    const logradouro = document.getElementById('editMeusLogradouro').value.trim();
-    const numero = document.getElementById('editMeusNumero').value.trim();
-    const complemento = document.getElementById('editMeusComplemento').value.trim();
-    const cep = document.getElementById('editMeusCEP').value.trim();
-    const bairro = document.getElementById('editMeusBairro').value.trim();
-    const cidade = document.getElementById('editMeusCidade').value.trim();
-
-    currentUser.telefone = telefone;
-    currentUser.obm = obm;
-    currentUser.profissao = profissao;
-    currentUser.logradouro = logradouro;
-    currentUser.numero = numero;
-    currentUser.complemento = complemento;
-    currentUser.cep = cep;
-    currentUser.bairro = bairro;
-    currentUser.cidade = cidade;
-
-    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const index = list.findIndex(a => a.cpf === currentUser.cpf);
-    if (index >= 0) {
-        list[index] = { ...list[index], ...currentUser };
-    }
-    localStorage.setItem('acbcsj_associados', JSON.stringify(list));
-
-    try {
-        dbService.saveAssociado(currentUser);
-    } catch (err) {}
-
-    alert('Seus dados cadastrais foram atualizados com sucesso!');
-    closeModal('modalEditarMeusDados');
-    renderAssociadoOverview();
+    openModal('modalBalanceteMensal');
 }
 
 // GESTÃO HISTÓRICA DO VALOR BASE DA MENSALIDADE COM DATA DE VIGÊNCIA

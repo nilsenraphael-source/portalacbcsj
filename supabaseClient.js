@@ -9,9 +9,9 @@ let supabaseClient = null;
 if (typeof supabase !== 'undefined' && supabase.createClient) {
     try {
         supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-        console.log("âœ… Supabase inicializado com sucesso!");
+        console.log("✅ Supabase inicializado com sucesso!");
     } catch (e) {
-        console.error("âš ï¸ Erro ao inicializar Supabase:", e);
+        console.error("⚠️ Erro ao inicializar Supabase:", e);
     }
 }
 
@@ -20,7 +20,7 @@ function removerAcentos(str) {
     return String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-// HIGIENIZAÃ‡ÃƒO DE DADOS
+// HIGIENIZAÇÃO DE DADOS
 function sanitizeAssociado(item) {
     if (!item) return null;
     return {
@@ -39,7 +39,7 @@ function sanitizeAssociado(item) {
         complemento: item.complemento || '',
         cep: item.cep || '',
         bairro: item.bairro || '',
-        cidade: item.cidade || 'SÃ£o JosÃ© - SC',
+        cidade: item.cidade || 'São José - SC',
         perfil: item.perfil || 'associado',
         status: item.status || 'pendente',
         data_cadastro: item.data_cadastro || new Date().toLocaleString('pt-BR'),
@@ -47,8 +47,8 @@ function sanitizeAssociado(item) {
         motivo_desligamento: item.motivo_desligamento || null,
         carta_desligamento_url: item.carta_desligamento_url || null,
         carta_desligamento_nome: item.carta_desligamento_nome || null,
-        obm: item.obm || 'SÃ£o JosÃ©',
-        profissao: item.profissao || 'Bombeiro ComunitÃ¡rio',
+        obm: item.obm || 'São José',
+        profissao: item.profissao || 'Bombeiro Comunitário',
         senha: item.senha || '1234'
     };
 }
@@ -95,7 +95,7 @@ function sanitizeMensalidade(item) {
         const assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
         if (assoc && assoc.id) assocId = String(assoc.id);
     }
-    if (!assocId) assocId = "3"; // ID fallback vÃ¡lido (Douglas Antunes) para restriÃ§Ã£o de chave estrangeira
+    if (!assocId) assocId = "3"; // ID fallback válido (Douglas Antunes) para restrição de chave estrangeira
 
     let rawMes = String(item.meses_quitados || item.mes_referencia || 'Jan').trim();
     if (rawMes.length > 20) {
@@ -217,13 +217,11 @@ const dbService = {
         const idx = list.findIndex(f => f.id === clean.id);
         if (idx >= 0) list[idx] = clean;
         else list.unshift(clean);
-        localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
-
-        if (supabaseClient) {
+        localStorage.setItem('acbcsj_financeiro', JSON.strin        if (supabaseClient) {
             try {
                 await supabaseClient.from('financeiro_lancamentos').upsert([clean]);
             } catch (e) {
-                console.error("Erro ao salvar lanÃ§amento financeiro no Supabase:", e);
+                console.error("Erro ao salvar lançamento financeiro no Supabase:", e);
             }
         }
         return true;
@@ -238,7 +236,7 @@ const dbService = {
             try {
                 await supabaseClient.from('financeiro_lancamentos').delete().eq('id', id);
             } catch (e) {
-                console.error("Erro ao excluir lanÃ§amento financeiro do Supabase:", e);
+                console.error("Erro ao excluir lançamento financeiro do Supabase:", e);
             }
         }
         return true;
@@ -276,9 +274,9 @@ const dbService = {
             try {
                 const { error } = await supabaseClient.from('mensalidades').upsert([clean]);
                 if (error) {
-                    console.error("âš ï¸ Erro ao salvar mensalidade no Supabase:", error.message);
+                    console.error("⚠️ Erro ao salvar mensalidade no Supabase:", error.message);
                 } else {
-                    console.log("âœ… Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.mes_referencia, clean.valor);
+                    console.log("✅ Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.mes_referencia, clean.valor);
                 }
             } catch (e) {
                 console.error("Erro ao enviar mensalidade para Supabase:", e);
@@ -296,10 +294,12 @@ const dbService = {
         if (supabaseClient) {
             try {
                 const { error } = await supabaseClient.from('mensalidades').delete().neq('id', '0');
-                if (error) console.error("âš ï¸ Erro ao limpar mensalidades no Supabase:", error.message);
-                else console.log("ðŸ—‘ï¸ Todas as mensalidades foram excluÃ­das do Supabase.");
+                if (error) console.error("⚠️ Erro ao limpar mensalidades no Supabase:", error.message);
+                else console.log("🗑️ Todas as mensalidades foram excluídas do Supabase.");
             } catch (e) {
                 console.error("Erro ao limpar mensalidades do Supabase:", e);
+            }
+        }es do Supabase:", e);
             }
         }
         return true;
@@ -399,7 +399,7 @@ const dbService = {
     async syncFromSupabase() {
         if (!supabaseClient) return;
 
-        console.log("ðŸŒ Carregando dados exclusivos do Supabase...");
+        console.log("🌐 Carregando dados exclusivos do Supabase...");
         try {
             const [assocRes, finRes, msgRes, docRes, mensRes] = await Promise.all([
                 supabaseClient.from('associados').select('*'),
@@ -427,9 +427,9 @@ const dbService = {
                     recalcularTodasGridsMensalidades();
                 }
             }
-            console.log("ðŸŽ‰ Dados do Supabase carregados com sucesso!");
+            console.log("🎉 Dados do Supabase carregados com sucesso!");
         } catch (err) {
-            console.error("âš ï¸ Erro ao consultar Supabase:", err);
+            console.error("⚠️ Erro ao consultar Supabase:", err);
         }
     }
 };
