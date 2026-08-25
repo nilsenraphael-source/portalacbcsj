@@ -253,11 +253,13 @@ const idbStorage = {
 };
 
 // INICIALIZAÇÃO E LIMPEZA DE DADOS
-const ACBCSJ_BUILD_VERSION = "2026-08-25_v16";
+const ACBCSJ_BUILD_VERSION = "2026-08-25_v20";
 
 function forcarAtualizacaoCacheSistema() {
     localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
-    recalcularTodasGridsMensalidades(true);
+    if (typeof recalcularTodasGridsMensalidades === 'function') {
+        recalcularTodasGridsMensalidades(true);
+    }
     if (typeof dbService !== 'undefined' && dbService.syncFromSupabase) {
         dbService.syncFromSupabase();
     }
@@ -273,13 +275,18 @@ function checkPersistedSession() {
             const savedUser = JSON.parse(savedUserStr);
             if (savedUser && savedUser.cpf) {
                 currentUser = savedUser;
+                if (!currentUser.perfil) currentUser.perfil = 'diretoria';
                 const authScreen = document.getElementById('authScreen');
                 const appDashboard = document.getElementById('appDashboard');
-                if (authScreen) authScreen.setAttribute('style', 'display: none !important;');
-                if (appDashboard) appDashboard.setAttribute('style', 'display: flex !important; min-height: 100vh; flex-direction: column;');
-                renderUserHeader();
-                renderSidebarMenu();
-                navigateTab(currentUser.perfil === 'diretoria' ? 'overview-diretoria' : 'overview-associado');
+                if (authScreen) authScreen.style.setProperty('display', 'none', 'important');
+                if (appDashboard) authScreen ? appDashboard.style.setProperty('display', 'flex', 'important') : null;
+                try {
+                    renderUserHeader();
+                    renderSidebarMenu();
+                    navigateTab(currentUser.perfil === 'diretoria' ? 'overview-diretoria' : 'overview-associado');
+                } catch (uiErr) {
+                    console.error('Aviso ao carregar telas da sessão salva:', uiErr);
+                }
                 return true;
             }
         }
@@ -288,27 +295,36 @@ function checkPersistedSession() {
     }
     return false;
 }
+window.checkPersistedSession = checkPersistedSession;
 
 document.addEventListener("DOMContentLoaded", () => {
-    const savedVersion = localStorage.getItem("acbcsj_build_version");
-    if (savedVersion !== ACBCSJ_BUILD_VERSION) {
-        localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
-        recalcularTodasGridsMensalidades(false);
-    }
-    initMockData();
-    setupCPFMasks();
-    if (typeof setupNavigation === 'function') setupNavigation();
-
-    // Restaura a sessão do usuário caso ele estivesse logado antes do refresh
-    checkPersistedSession();
-
-    // Sincroniza automaticamente os dados online do Supabase na inicialização
-    if (typeof dbService !== 'undefined' && dbService.syncFromSupabase) {
-        dbService.syncFromSupabase().then(() => {
-            if (currentUser && typeof renderGestaoMensalidades === 'function' && document.getElementById('tableGestaoMensalidadesBody')) {
-                renderGestaoMensalidades();
+    try {
+        const savedVersion = localStorage.getItem("acbcsj_build_version");
+        if (savedVersion !== ACBCSJ_BUILD_VERSION) {
+            localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
+            if (typeof recalcularTodasGridsMensalidades === 'function') {
+                recalcularTodasGridsMensalidades(false);
             }
-        });
+        }
+        if (typeof initMockData === 'function') initMockData();
+        if (typeof setupCPFMasks === 'function') setupCPFMasks();
+        if (typeof setupNavigation === 'function') setupNavigation();
+
+        // Restaura a sessão do usuário caso ele estivesse logado antes do refresh
+        checkPersistedSession();
+
+        // Sincroniza automaticamente os dados online do Supabase na inicialização sem bloquear a interface
+        if (typeof dbService !== 'undefined' && dbService.syncFromSupabase) {
+            dbService.syncFromSupabase().then(() => {
+                if (currentUser && typeof renderGestaoMensalidades === 'function' && document.getElementById('tableGestaoMensalidadesBody')) {
+                    renderGestaoMensalidades();
+                }
+            }).catch(err => {
+                console.warn("⚠️ Aviso na sincronização do Supabase:", err);
+            });
+        }
+    } catch (err) {
+        console.error("⚠️ Erro na inicialização do aplicativo:", err);
     }
 });
 
@@ -427,6 +443,7 @@ async function loginWithCPF(cpf, password, roleHint = null) {
         if (!currentUser) {
             currentUser = { nome: 'Comandante / Diretoria ACBCSJ', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
         }
+        if (!currentUser.perfil) currentUser.perfil = 'diretoria';
 
         // SALVA A SESSÃO DO USUÁRIO LOGADO NO LOCALSTORAGE
         localStorage.setItem('acbcsj_logged_user', JSON.stringify(currentUser));
@@ -435,8 +452,8 @@ async function loginWithCPF(cpf, password, roleHint = null) {
         const authScreen = document.getElementById('authScreen');
         const appDashboard = document.getElementById('appDashboard');
 
-        if (authScreen) authScreen.setAttribute('style', 'display: none !important;');
-        if (appDashboard) appDashboard.setAttribute('style', 'display: flex !important; min-height: 100vh; flex-direction: column;');
+        if (authScreen) authScreen.style.setProperty('display', 'none', 'important');
+        if (appDashboard) appDashboard.style.setProperty('display', 'flex', 'important');
 
         try {
             renderUserHeader();
@@ -449,8 +466,8 @@ async function loginWithCPF(cpf, password, roleHint = null) {
         console.error('Erro ao efetuar login:', err);
         const authScreen = document.getElementById('authScreen');
         const appDashboard = document.getElementById('appDashboard');
-        if (authScreen) authScreen.setAttribute('style', 'display: none !important;');
-        if (appDashboard) appDashboard.setAttribute('style', 'display: flex !important; min-height: 100vh; flex-direction: column;');
+        if (authScreen) authScreen.style.setProperty('display', 'none', 'important');
+        if (appDashboard) appDashboard.style.setProperty('display', 'flex', 'important');
     }
 }
 
