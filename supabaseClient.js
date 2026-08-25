@@ -1,0 +1,556 @@
+// CLIENTE SUPABASE OFICIAL DA ACBCSJ
+const SUPABASE_URL = "https://ucutgspmvbupknjodeit.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_drRsr2KSefHZqctSxlU7qA_b3xOj7RJ";
+const SUPABASE_SECRET_KEY = "sb_secret_9N99Zf3L9d!q4Y3wP";
+const SUPABASE_JWKS_URL = "https://ucutgspmvbupknjodeit.supabase.co/rest/v1/";
+
+let supabaseClient = null;
+
+if (typeof supabase !== 'undefined' && supabase.createClient) {
+    try {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        console.log("✅ Supabase inicializado com sucesso!");
+    } catch (e) {
+        console.error("⚠️ Erro ao inicializar Supabase:", e);
+    }
+}
+
+function removerAcentos(str) {
+    if (!str) return '';
+    return String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+// HIGIENIZAÇÃO DE DADOS
+function sanitizeAssociado(item) {
+    if (!item) return null;
+    return {
+        id: String(item.id || item.cpf || Date.now()),
+        cpf: String(item.cpf || '').substring(0, 20),
+        nome: item.nome || '',
+        nome_guerra: item.nome_guerra || '',
+        email: item.email || '',
+        data_nascimento: item.data_nascimento || '',
+        nome_pai: item.nome_pai || '',
+        nome_mae: item.nome_mae || '',
+        sexo: item.sexo || '',
+        telefone: item.telefone || '',
+        logradouro: item.logradouro || '',
+        numero: item.numero || '',
+        complemento: item.complemento || '',
+        cep: item.cep || '',
+        bairro: item.bairro || '',
+        cidade: item.cidade || 'São José - SC',
+        perfil: item.perfil || 'associado',
+        status: item.status || 'pendente',
+        data_cadastro: item.data_cadastro || new Date().toLocaleString('pt-BR'),
+        data_desligamento: item.data_desligamento || null,
+        motivo_desligamento: item.motivo_desligamento || null,
+        carta_desligamento_url: item.carta_desligamento_url || null,
+        carta_desligamento_nome: item.carta_desligamento_nome || null,
+        obm: item.obm || 'São José',
+        profissao: item.profissao || 'Bombeiro Comunitário',
+        senha: item.senha || '1234'
+    };
+}
+
+function sanitizeFinanceiro(item) {
+    if (!item) return null;
+    return {
+        id: String(item.id || 'lanc_' + Date.now()),
+        tipo: item.tipo || 'despesa',
+        descricao: item.descricao || '',
+        valor: parseFloat(item.valor) || 0,
+        categoria: item.categoria || 'Geral',
+        fornecedor_cliente: item.fornecedor_cliente || '',
+        data: item.data || '',
+        data_iso: item.data_iso || '',
+        mes: item.mes || '',
+        comprovante_nome: item.comprovante_nome || null,
+        comprovante_url: item.comprovante_url || null
+    };
+}
+
+function sanitizeDocumento(item) {
+    if (!item) return null;
+    return {
+        id: String(item.id || 'doc_' + Date.now()),
+        titulo: item.titulo || '',
+        categoria: item.categoria || 'Geral',
+        visibilidade: item.visibilidade || 'todos',
+        data_vencimento: item.data_vencimento || null,
+        descricao: item.descricao || '',
+        arquivo_nome: item.arquivo_nome || null,
+        arquivo_url: item.arquivo_url || null,
+        data_publicacao: item.data_publicacao || new Date().toLocaleDateString('pt-BR')
+    };
+}
+
+function sanitizeMensalidade(item) {
+    if (!item) return null;
+    const cleanCpf = (item.cpf || '').replace(/\D/g, '');
+    let assocId = item.associado_id || null;
+    if (!assocId) {
+        let list = [];
+        try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch(e) {}
+        const assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
+        if (assoc && assoc.id) assocId = String(assoc.id);
+    }
+    if (!assocId) assocId = "3"; // ID fallback válido para integridade
+
+    let rawMes = String(item.meses_quitados || item.mes_referencia || 'Jan').trim();
+    if (rawMes.length > 20) {
+        const parts = rawMes.split(',').map(s => s.trim()).filter(Boolean);
+        if (parts.length > 1) {
+            rawMes = parts[0] + '-' + parts[parts.length - 1] + ' (' + parts.length + 'm)';
+        }
+        if (rawMes.length > 20) {
+            rawMes = rawMes.substring(0, 20);
+        }
+    }
+
+    const cleanObs = removerAcentos(item.obs || item.observacoes || item.comprovante_pix || 'Quitacao de mensalidade PIX');
+
+    return {
+        id: String(item.id || 'mensalidade_' + Date.now()),
+        associado_id: String(assocId),
+        cpf: String(item.cpf || '').substring(0, 20),
+        ano: String(item.ano || '2026').substring(0, 20),
+        mes_referencia: removerAcentos(rawMes).substring(0, 20),
+        valor: parseFloat(item.valor) || 20.00,
+        status: String(item.status || 'pago').substring(0, 20),
+        data_pagamento: String(item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR')).substring(0, 20),
+        observacoes: cleanObs
+    };
+}
+
+function sanitizeMensagem(item) {
+    if (!item) return null;
+    return {
+        id: String(item.id || 'msg_' + Date.now()),
+        associado_id: item.associado_id || item.associado_cpf || null,
+        associado_cpf: item.associado_cpf || null,
+        associado_nome: item.associado_nome || '',
+        destinatario: item.destinatario || 'todos',
+        assunto: item.assunto || '',
+        conteudo: item.conteudo || item.mensagem || '',
+        prioridade: item.prioridade || 'Informativo',
+        resposta_diretoria: item.resposta_diretoria || null,
+        status: item.status || 'pendente',
+        data_envio: item.data_envio || new Date().toLocaleString('pt-BR')
+    };
+}
+
+// BANCO DE DADOS 100% BASEADO NO SUPABASE
+const dbService = {
+    // ASSOCIADOS
+    async getAssociados() {
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from('associados').select('*');
+                if (!error && data && data.length > 0) {
+                    localStorage.setItem('acbcsj_associados', JSON.stringify(data));
+                    return data;
+                }
+            } catch (e) {
+                console.error("Erro no Supabase getAssociados:", e);
+            }
+        }
+        return JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    },
+
+    async saveAssociado(item) {
+        const clean = sanitizeAssociado(item);
+        if (!clean) return false;
+
+        let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+        const idx = list.findIndex(a => a.cpf === clean.cpf || a.id === clean.id);
+        if (idx >= 0) list[idx] = clean;
+        else list.push(clean);
+        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('associados').upsert([clean]);
+                if (error) console.error("Erro ao salvar associado no Supabase:", error.message);
+                else console.log("✅ Associado salvo no Supabase:", clean.nome_guerra || clean.nome);
+            } catch (e) {
+                console.error("Erro ao salvar associado no Supabase:", e);
+            }
+        }
+        return true;
+    },
+
+    async deleteAssociado(cpf) {
+        let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+        list = list.filter(a => a.cpf !== cpf);
+        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('associados').delete().eq('cpf', cpf);
+                if (error) console.error("Erro ao excluir associado do Supabase:", error.message);
+                else console.log("🗑️ Associado excluído do Supabase:", cpf);
+            } catch (e) {
+                console.error("Erro ao excluir associado do Supabase:", e);
+            }
+        }
+        return true;
+    },
+
+    // FINANCEIRO
+    async getFinanceiro() {
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from('financeiro_lancamentos').select('*');
+                if (!error && data && data.length > 0) {
+                    localStorage.setItem('acbcsj_financeiro', JSON.stringify(data));
+                    return data;
+                }
+            } catch (e) {
+                console.error("Erro no Supabase getFinanceiro:", e);
+            }
+        }
+        return JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    },
+
+    async saveFinanceiro(item) {
+        const clean = sanitizeFinanceiro(item);
+        if (!clean) return false;
+
+        let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+        const idx = list.findIndex(f => f.id === clean.id);
+        if (idx >= 0) list[idx] = clean;
+        else list.unshift(clean);
+        localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('financeiro_lancamentos').upsert([clean]);
+                if (error) console.error("Erro ao salvar lançamento no Supabase:", error.message);
+                else console.log("✅ Lançamento financeiro salvo no Supabase:", clean.descricao, clean.valor);
+            } catch (e) {
+                console.error("Erro ao salvar lançamento financeiro no Supabase:", e);
+            }
+        }
+        return true;
+    },
+
+    // Alias para compatibilidade
+    async addFinanceiro(item) {
+        return this.saveFinanceiro(item);
+    },
+
+    async deleteFinanceiro(id) {
+        let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+        list = list.filter(f => f.id !== id);
+        localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('financeiro_lancamentos').delete().eq('id', id);
+                if (error) console.error("Erro ao excluir lançamento do Supabase:", error.message);
+                else console.log("🗑️ Lançamento financeiro excluído do Supabase:", id);
+            } catch (e) {
+                console.error("Erro ao excluir lançamento financeiro do Supabase:", e);
+            }
+        }
+        return true;
+    },
+
+    // MENSALIDADES (BAIXAS)
+    async getMensalidades() {
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from('mensalidades').select('*');
+                if (!error && data && Array.isArray(data)) {
+                    localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(data));
+                    if (typeof recalcularTodasGridsMensalidades === 'function') {
+                        recalcularTodasGridsMensalidades();
+                    }
+                    return data;
+                }
+            } catch (e) {
+                console.error("Erro no Supabase getMensalidades:", e);
+            }
+        }
+        return JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+    },
+
+    async addMensalidade(item) {
+        const clean = sanitizeMensalidade(item);
+        if (!clean) return false;
+
+        let list = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+        list = list.filter(m => m.id !== clean.id);
+        list.unshift(clean);
+        localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(list));
+
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('mensalidades').upsert([clean]);
+                if (error) {
+                    console.error("⚠️ Erro ao salvar mensalidade no Supabase:", error.message);
+                } else {
+                    console.log("✅ Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.mes_referencia, clean.valor);
+                }
+            } catch (e) {
+                console.error("Erro ao enviar mensalidade para Supabase:", e);
+            }
+        }
+        return true;
+    },
+
+    async clearMensalidades() {
+        localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify([]));
+        localStorage.setItem('acbcsj_mensalidades_grid_2026', JSON.stringify([]));
+        if (typeof recalcularTodasGridsMensalidades === 'function') {
+            recalcularTodasGridsMensalidades();
+        }
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('mensalidades').delete().neq('id', '0');
+                if (error) console.error("⚠️ Erro ao limpar mensalidades no Supabase:", error.message);
+                else console.log("🗑️ Todas as mensalidades foram excluídas do Supabase.");
+            } catch (e) {
+                console.error("Erro ao limpar mensalidades do Supabase:", e);
+            }
+        }
+        return true;
+    },
+
+    async deleteMensalidade(id) {
+        let list = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+        list = list.filter(m => m.id !== id);
+        localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(list));
+
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('mensalidades').delete().eq('id', id);
+                if (error) console.error("Erro ao excluir mensalidade do Supabase:", error.message);
+                else console.log("🗑️ Mensalidade excluída do Supabase:", id);
+            } catch (e) {
+                console.error("Erro ao excluir mensalidade do Supabase:", e);
+            }
+        }
+        return true;
+    },
+
+    // MENSAGENS E COMUNICADOS
+    async getMensagens() {
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from('mensagens').select('*');
+                if (!error && data) {
+                    localStorage.setItem('acbcsj_mensagens', JSON.stringify(data));
+                    return data;
+                }
+            } catch (e) {
+                console.error("Erro no Supabase getMensagens:", e);
+            }
+        }
+        return JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+    },
+
+    async addMensagem(msg) {
+        const clean = sanitizeMensagem(msg);
+        if (!clean) return false;
+
+        let list = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+        list.unshift(clean);
+        localStorage.setItem('acbcsj_mensagens', JSON.stringify(list));
+
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('mensagens').upsert([clean]);
+                if (error) console.error("Erro ao salvar mensagem no Supabase:", error.message);
+                else console.log("✅ Mensagem salva no Supabase:", clean.assunto);
+            } catch (e) {
+                console.error("Erro ao enviar mensagem para Supabase:", e);
+            }
+        }
+        return true;
+    },
+
+    async deleteMensagem(id) {
+        let list = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+        list = list.filter(m => m.id !== id);
+        localStorage.setItem('acbcsj_mensagens', JSON.stringify(list));
+
+        if (supabaseClient) {
+            try {
+                await supabaseClient.from('mensagens').delete().eq('id', id);
+            } catch (e) {}
+        }
+        return true;
+    },
+
+    // DOCUMENTOS
+    async getDocumentos() {
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from('documentos').select('*');
+                if (!error && data) {
+                    localStorage.setItem('acbcsj_documentos', JSON.stringify(data));
+                    return data;
+                }
+            } catch (e) {
+                console.error("Erro no Supabase getDocumentos:", e);
+            }
+        }
+        return JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
+    },
+
+    async saveDocumento(doc) {
+        const clean = sanitizeDocumento(doc);
+        if (!clean) return false;
+
+        let list = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
+        const idx = list.findIndex(d => d.id === clean.id);
+        if (idx >= 0) list[idx] = clean;
+        else list.unshift(clean);
+        localStorage.setItem('acbcsj_documentos', JSON.stringify(list));
+
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('documentos').upsert([clean]);
+                if (error) console.error("Erro ao salvar documento no Supabase:", error.message);
+                else console.log("✅ Documento salvo no Supabase:", clean.titulo);
+            } catch (e) {
+                console.error("Erro ao salvar documento no Supabase:", e);
+            }
+        }
+        return true;
+    },
+
+    async deleteDocumento(id) {
+        let list = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
+        list = list.filter(d => d.id !== id);
+        localStorage.setItem('acbcsj_documentos', JSON.stringify(list));
+
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('documentos').delete().eq('id', id);
+                if (error) console.error("Erro ao excluir documento do Supabase:", error.message);
+                else console.log("🗑️ Documento excluído do Supabase:", id);
+            } catch (e) {
+                console.error("Erro ao excluir documento do Supabase:", e);
+            }
+        }
+        return true;
+    },
+
+    // BUSCAR TUDO EXCLUSIVAMENTE DO SUPABASE
+    async syncFromSupabase() {
+        if (!supabaseClient) {
+            this.updateOnlineBadge(false, "Supabase Offline");
+            return false;
+        }
+
+        this.updateOnlineBadge(null, "Sincronizando...");
+        console.log("🌐 Sincronizando dados exclusivos do Supabase...");
+        try {
+            const [assocRes, finRes, msgRes, docRes, mensRes] = await Promise.all([
+                supabaseClient.from('associados').select('*'),
+                supabaseClient.from('financeiro_lancamentos').select('*'),
+                supabaseClient.from('mensagens').select('*'),
+                supabaseClient.from('documentos').select('*'),
+                supabaseClient.from('mensalidades').select('*')
+            ]);
+
+            let count = 0;
+            if (!assocRes.error && assocRes.data) {
+                localStorage.setItem('acbcsj_associados', JSON.stringify(assocRes.data));
+                count += assocRes.data.length;
+            }
+            if (!finRes.error && finRes.data) {
+                localStorage.setItem('acbcsj_financeiro', JSON.stringify(finRes.data));
+                count += finRes.data.length;
+            }
+            if (!msgRes.error && msgRes.data) {
+                localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgRes.data));
+                count += msgRes.data.length;
+            }
+            if (!docRes.error && docRes.data) {
+                localStorage.setItem('acbcsj_documentos', JSON.stringify(docRes.data));
+                count += docRes.data.length;
+            }
+            if (!mensRes.error && mensRes.data && Array.isArray(mensRes.data)) {
+                localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(mensRes.data));
+                count += mensRes.data.length;
+                if (typeof recalcularTodasGridsMensalidades === 'function') {
+                    recalcularTodasGridsMensalidades();
+                }
+            }
+
+            this.updateOnlineBadge(true, "Supabase Online");
+            console.log(`🎉 Dados do Supabase sincronizados com sucesso! (${count} registros no total)`);
+            return true;
+        } catch (err) {
+            console.error("⚠️ Erro ao consultar Supabase:", err);
+            this.updateOnlineBadge(false, "Erro de Conexão");
+            return false;
+        }
+    },
+
+    // INICIALIZAÇÃO DE REALTIME
+    initRealtime() {
+        if (!supabaseClient || typeof supabaseClient.channel !== 'function') return;
+
+        try {
+            const channel = supabaseClient.channel('acbcsj-realtime')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'associados' }, () => {
+                    console.log("⚡ Realtime: Tabela 'associados' alterada.");
+                    dbService.getAssociados().then(() => { if (typeof refreshCurrentView === 'function') refreshCurrentView(); });
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'financeiro_lancamentos' }, () => {
+                    console.log("⚡ Realtime: Tabela 'financeiro_lancamentos' alterada.");
+                    dbService.getFinanceiro().then(() => { if (typeof refreshCurrentView === 'function') refreshCurrentView(); });
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'mensalidades' }, () => {
+                    console.log("⚡ Realtime: Tabela 'mensalidades' alterada.");
+                    dbService.getMensalidades().then(() => { if (typeof refreshCurrentView === 'function') refreshCurrentView(); });
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'documentos' }, () => {
+                    console.log("⚡ Realtime: Tabela 'documentos' alterada.");
+                    dbService.getDocumentos().then(() => { if (typeof refreshCurrentView === 'function') refreshCurrentView(); });
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'mensagens' }, () => {
+                    console.log("⚡ Realtime: Tabela 'mensagens' alterada.");
+                    dbService.getMensagens().then(() => { if (typeof refreshCurrentView === 'function') refreshCurrentView(); });
+                })
+                .subscribe();
+
+            console.log("⚡ Supabase Realtime Ativado com sucesso!");
+        } catch (e) {
+            console.warn("Aviso ao ativar Realtime:", e);
+        }
+    },
+
+    updateOnlineBadge(isOnline, text) {
+        const badges = document.querySelectorAll('.supabase-status-badge');
+        badges.forEach(b => {
+            if (isOnline === true) {
+                b.innerHTML = `🟢 <span>${text || 'Supabase Online'}</span>`;
+                b.style.color = '#2ECC71';
+                b.style.borderColor = 'rgba(46, 204, 113, 0.4)';
+                b.style.backgroundColor = 'rgba(46, 204, 113, 0.1)';
+            } else if (isOnline === false) {
+                b.innerHTML = `🔴 <span>${text || 'Supabase Offline'}</span>`;
+                b.style.color = '#E74C3C';
+                b.style.borderColor = 'rgba(231, 76, 60, 0.4)';
+                b.style.backgroundColor = 'rgba(231, 76, 60, 0.1)';
+            } else {
+                b.innerHTML = `🔄 <span>${text || 'Sincronizando...'}</span>`;
+                b.style.color = '#F39C12';
+                b.style.borderColor = 'rgba(243, 156, 18, 0.4)';
+                b.style.backgroundColor = 'rgba(243, 156, 18, 0.1)';
+            }
+        });
+    }
+};
+
+window.ENV_SUPABASE_URL = SUPABASE_URL;
+window.ENV_SUPABASE_PUBLISHABLE_KEY = SUPABASE_PUBLISHABLE_KEY;
+window.ENV_SUPABASE_SECRET_KEY = SUPABASE_SECRET_KEY;
+window.ENV_SUPABASE_JWKS_URL = SUPABASE_JWKS_URL;
+window.dbService = dbService;
