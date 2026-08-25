@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACBCSJ — Associação Corpo de Bombeiros Comunitários de São José</title>
+    
+    <!-- Folha de Estilos Customizada (Carregamento Prioritário) -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js para Balancetes e Gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Supabase JS Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- 1. TELA DE AUTENTICAÇÃO E LOGIN (INICIAL) -->
+    <div id="authScreen" class="auth-wrapper">
+        <div class="auth-card">
+            <div class="brand-header">
+                <img src="logo.png" alt="Logo ACBCSJ" class="brand-logo-img">
+                <span class="brand-badge" style="display:block;">Portal do Membro & Diretoria</span>
+                <h1 class="brand-title">ACBCSJ</h1>
+                <p class="brand-subtitle">Associação Corpo de Bombeiros Comunitários de São José</p>
+            </div>
+
+            <form onsubmit="event.preventDefault(); loginWithCPF(document.getElementById('loginCPF').value, document.getElementById('loginSenha').value);">
+                <div class="form-group">
+                    <label for="loginCPF">Seu CPF Registrado</label>
+                    <input type="text" id="loginCPF" class="form-control cpf-mask" placeholder="000.000.000-00" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginSenha">Sua Senha de Acesso</label>
+                    <input type="password" id="loginSenha" class="form-control" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                    Entrar no Portal ACBCSJ
+                </button>
+            </form>
+
+            <div style="margin-top: 16px; text-align: center;">
+                <button class="btn btn-outline btn-sm" onclick="openModal('modalPreCadastro')">
+                    Não tem acesso? Solicitar Pré-Cadastro
+                </button>
+            </div>
+
+            <!-- DICA DE TESTE RÁPIDO PARA O CLIENTE -->
+            <div class="demo-shortcut-box">
+                <p>💡 <b>Teste Rápido para Avaliação:</b></p>
+                <div class="demo-buttons">
+                    <button class="btn btn-gold btn-sm" style="flex:1;" onclick="loginWithCPF('000.000.000-00', '123', 'diretoria')">
+                        Entrar como Diretoria
+                    </button>
+                    <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="loginWithCPF('111.111.111-11', '123', 'associado')">
+                        Entrar como Associado
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. DASHBOARD / PORTAL PRINCIPAL (LOGADO) -->
+    <div id="appDashboard" style="display: none; min-height: 100vh; flex-direction: column;">
+        <!-- CABEÇALHO SUPERIOR -->
+        <header class="app-header">
+            <div class="app-brand">
+                <img src="logo.png" alt="Logo ACBCSJ" class="header-logo-img">
+                <div class="app-title-text">
+                    <h1>ACBCSJ</h1>
+                    <span>Portal de Gestão & Transparência</span>
+                </div>
+            </div>
+
+            <div class="user-profile-menu">
+                <div class="user-info">
+                    <div id="headerUserName" class="user-name">Usuário</div>
+                    <span id="headerUserRole" class="user-role-badge">PERFIL</span>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="logout()">Sair</button>
+            </div>
+        </header>
+
+        <div class="app-container">
+            <!-- NAVEGAÇÃO LATERAL -->
+            <nav id="sidebarNav" class="sidebar-nav"></nav>
+
+            <!-- CONTEÚDO PRINCIPAL (MUDANÇA DE ABAS VIA JS) -->
+            <main class="main-content">
+                
+                <!-- ABA 1: PAINEL DA DIRETORIA -->
+                <div id="tab-overview-diretoria" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">Painel de Controle — Diretoria ACBCSJ</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Visão geral da associação, associados e caixa.</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <label style="font-size: 13px; font-weight: 600; color: var(--accent-gold); white-space: nowrap;">📅 Filtrar por Ano:</label>
+                            <select id="diretoriaFiltroAno" class="form-control" style="width: 130px; margin: 0; padding: 4px 8px; font-weight: bold;" onchange="renderDiretoriaOverview()">
+                                <option value="2026" selected>2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                                <option value="todos">Todos os Anos</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                        <div class="metric-card">
+                            <div class="title">ASSOCIADOS ATIVOS TOTAL</div>
+                            <div id="metricTotalAssociados" class="value" style="color: var(--accent-gold);">0</div>
+                            <div class="subtext" style="color: var(--status-success);">Membros regulares ativos</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="title">NOVAS ASSOCIAÇÕES (<span class="lblAnoSelecionado">2026</span>)</div>
+                            <div id="metricNovosAno" class="value" style="color: #2ECC71;">0</div>
+                            <div class="subtext" style="color: var(--text-muted);">Bombeiros associados no ano</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="title">DESLIGAMENTOS (<span class="lblAnoSelecionado">2026</span>)</div>
+                            <div id="metricDesligadosAno" class="value" style="color: #E74C3C;">0</div>
+                            <div class="subtext" style="color: var(--text-muted);">Integrantes desligados no ano</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="title">SOLICITAÇÕES DE CADASTRO</div>
+                            <div id="metricCadastrosPendentes" class="value" style="color: #FF6B6B;">0</div>
+                            <div class="subtext" style="color: var(--text-muted);">Aguardando sua aprovação</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="title">SALDO EM CAIXA</div>
+                            <div id="metricSaldoCaixa" class="value" style="color: var(--status-success);">R$ 0,00</div>
+                            <div class="subtext" style="color: var(--text-muted);">Balancete consolidado</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Solicitações de Pré-Cadastro Pendentes</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome Completo</th>
+                                        <th>CPF</th>
+                                        <th>Telefone</th>
+                                        <th>Ação da Diretoria</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablePendentesBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA 2: GESTÃO DE ASSOCIADOS (DIRETORIA) -->
+                <div id="tab-gestao-associados" class="tab-content" style="display: none;">
+                    <div class="page-header">
+                        <h2 class="page-title">Controle de Associados Ativos</h2>
+                        <button class="btn btn-primary btn-sm" onclick="openModal('modalPreCadastro')">+ Novo Cadastro</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome de Guerra / Completo</th>
+                                        <th>CPF</th>
+                                        <th>Telefone / Contato</th>
+                                        <th>Perfil</th>
+                                        <th>Ficha Cadastral</th>
+                                        <th>Ações da Diretoria</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableTodosAssociadosBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA DE GESTÃO DE MENSALIDADES DOS ASSOCIADOS (DIRETORIA) -->
+                <div id="tab-gestao-mensalidades" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">💳 Controle de Mensalidades dos Associados</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Registro individual de quitações de mensalidade (Vencimento todo dia 15). Registros independentes do livro caixa.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="font-size: 13px; font-weight: 600; color: var(--accent-gold);">Exercício / Ano:</label>
+                            <select id="selAnoMensalidades" class="form-control" style="width: 110px; padding: 6px 10px; font-weight: bold;" onchange="renderGestaoMensalidades()">
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026" selected>2026</option>
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                            </select>
+                            <button class="btn btn-gold" onclick="abrirModalDarBaixa()">💳 + Lançar Pagamento (PIX)</button>
+                        </div>
+                    </div>
+
+                    <!-- MÉTRICAS DE ARRECADAÇÃO DE MENSALIDADES E CONFIGURAÇÃO DE VALOR BASE -->
+                    <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: 20px;">
+                        <div class="metric-card" style="border-left: 4px solid var(--accent-gold);">
+                            <div class="title" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>VALOR VIGENTE MENSALIDADE</span>
+                                <button class="btn btn-sm btn-outline" style="font-size: 10px; padding: 2px 6px; color: var(--accent-gold);" onclick="abrirModalReajustarMensalidade()">⚙️ Reajustar</button>
+                            </div>
+                            <div id="metricValorMensalidadeVigente" class="value" style="color: var(--accent-gold);">R$ 20,00</div>
+                            <div class="subtext" style="color: var(--text-muted);">Base para cálculo de adimplência</div>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #2ECC71;">
+                            <div class="title">ASSOCIADOS EM DIA</div>
+                            <div id="metricAssociadosEmDia" class="value" style="color: #2ECC71;">0</div>
+                            <div class="subtext" style="color: #2ECC71;">🟢 Quitações em dia</div>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #E74C3C;">
+                            <div class="title">ASSOCIADOS INADIMPLENTES</div>
+                            <div id="metricAssociadosPendentes" class="value" style="color: #E74C3C;">0</div>
+                            <div class="subtext" style="color: #E74C3C;">🔴 Mensalidades em atraso (> dia 15)</div>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #3498DB;">
+                            <div class="title">ARRECADADO EM MENSALIDADES (<span class="lblAnoMensalidadeMetrica">2026</span>)</div>
+                            <div id="metricTotalArrecadadoMensalidades" class="value" style="color: #3498DB;">R$ 0,00</div>
+                            <div class="subtext" style="color: var(--text-muted);">Soma de recebimentos no ano</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <h3 class="card-title">Grade Anual de Mensalidades por Associado</h3>
+                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <input type="text" id="searchAssociadoMensalidade" class="form-control" placeholder="🔍 Buscar por nome ou CPF..." style="width: 220px; padding: 6px 12px; font-size: 12px;" oninput="renderGestaoMensalidades()">
+                                <select id="filterStatusMensalidade" class="form-control" style="width: 160px; padding: 6px 12px; font-size: 12px;" onchange="renderGestaoMensalidades()">
+                                    <option value="todos">Todos os Status</option>
+                                    <option value="em_dia">🟢 Apenas Em Dia</option>
+                                    <option value="atrasado">🔴 Inadimplentes</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 12px; text-align: center;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left; min-width: 160px;">Associado</th>
+                                        <th>Jan</th>
+                                        <th>Fev</th>
+                                        <th>Mar</th>
+                                        <th>Abr</th>
+                                        <th>Mai</th>
+                                        <th>Jun</th>
+                                        <th>Jul</th>
+                                        <th>Ago</th>
+                                        <th>Set</th>
+                                        <th>Out</th>
+                                        <th>Nov</th>
+                                        <th>Dez</th>
+                                        <th>Total Pago</th>
+                                        <th>Situação de Adimplência</th>
+                                        <th style="min-width: 140px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableGestaoMensalidadesBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- CARTÃO DE MENSALIDADES DE ASSOCIADOS DESLIGADOS -->
+                    <div class="card" style="margin-top: 25px; border-left: 4px solid #E74C3C;">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title" style="color: #FF6B6B;">📋 Histórico de Mensalidades de Associados Desligados</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Registro permanente dos valores arrecadados dos integrantes desligados para auditagem fiscal.</p>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 12px; text-align: center;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left; min-width: 180px;">Associado Desligado</th>
+                                        <th>Jan</th>
+                                        <th>Fev</th>
+                                        <th>Mar</th>
+                                        <th>Abr</th>
+                                        <th>Mai</th>
+                                        <th>Jun</th>
+                                        <th>Jul</th>
+                                        <th>Ago</th>
+                                        <th>Set</th>
+                                        <th>Out</th>
+                                        <th>Nov</th>
+                                        <th>Dez</th>
+                                        <th>Total Pago</th>
+                                        <th>Status No Desligamento</th>
+                                        <th style="min-width: 140px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableMensalidadesDesligadosBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA DE ASSOCIADOS DESLIGADOS (DIRETORIA) -->
+                <div id="tab-associados-desligados" class="tab-content" style="display: none;">
+                    <div class="page-header">
+                        <h2 class="page-title">Histórico de Associados Desligados</h2>
+                    </div>
+
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome de Guerra / Completo</th>
+                                        <th>CPF</th>
+                                        <th>Data/Hora do Desligamento</th>
+                                        <th>Motivo do Desligamento</th>
+                                        <th>Ficha / Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableAssociadosDesligadosBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA 3: GESTÃO FINANCEIRA (DIRETORIA) -->
+                <div id="tab-gestao-financeira" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">💰 Controle Financeiro & Levantamento Mensal</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Lançamentos de receitas, despesas, balancetes mensais e demonstrativo de resultados da ACBCSJ.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="font-size: 12px; font-weight: 600; color: var(--accent-gold);">Exercício:</label>
+                            <select id="finFiltroAno" class="form-control" style="width: 100px; padding: 5px 8px; font-size: 12px; font-weight: bold;" onchange="renderGestaoFinanceira()">
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026" selected>2026</option>
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                            </select>
+
+                            <label style="font-size: 12px; font-weight: 600; color: var(--accent-gold);">Período:</label>
+                            <select id="finFiltroMes" class="form-control" style="width: 180px; padding: 5px 8px; font-size: 12px;" onchange="renderGestaoFinanceira()">
+                                <option value="todos">Todos os Meses (Anual)</option>
+                                <option value="01">01 - Janeiro</option>
+                                <option value="02">02 - Fevereiro</option>
+                                <option value="03">03 - Março</option>
+                                <option value="04">04 - Abril</option>
+                                <option value="05">05 - Maio</option>
+                                <option value="06">06 - Junho</option>
+                                <option value="07">07 - Julho</option>
+                                <option value="08">08 - Agosto</option>
+                                <option value="09">09 - Setembro</option>
+                                <option value="10">10 - Outubro</option>
+                                <option value="11">11 - Novembro</option>
+                                <option value="12">12 - Dezembro</option>
+                            </select>
+
+                            <button class="btn btn-sm btn-gold" onclick="abrirModalNovoLancamento('receita')">➕ Nova Receita</button>
+                            <button class="btn btn-sm btn-outline" style="color: #E74C3C; border-color: #E74C3C;" onclick="abrirModalNovoLancamento('despesa')">➖ Nova Despesa</button>
+
+                        </div>
+                    </div>
+
+                    <!-- CARDS DE METRICAS FINANCEIRAS -->
+                    <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 20px;">
+                        <div class="metric-card">
+                            <span class="metric-title">Total Receitas Gerais (<span class="lblPeriodoFinanceiro">2026</span>)</span>
+                            <span class="metric-value" id="finTotalReceitas" style="color: #2ECC71;">R$ 0,00</span>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #3498DB;">
+                            <span class="metric-title">💳 Mensalidades PIX (<span class="lblPeriodoFinanceiro">2026</span>)</span>
+                            <span class="metric-value" id="finTotalMensalidadesAno" style="color: #3498DB;">R$ 0,00</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Total de Despesas (<span class="lblPeriodoFinanceiro">2026</span>)</span>
+                            <span class="metric-value" id="finTotalDespesas" style="color: #E74C3C;">R$ 0,00</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Resultado Líquido do Período</span>
+                            <span class="metric-value" id="finSaldoAtual" style="color: var(--accent-gold);">R$ 0,00</span>
+                        </div>
+                    </div>
+
+                    <!-- LEVANTAMENTO MENSAL DO EXERCÍCIO (BALANCETES SINTÉTICOS) -->
+                    <div class="card" style="margin-bottom: 25px; border-top: 3px solid var(--accent-gold);">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 class="card-title" style="color: var(--accent-gold);">📊 Demonstrativo & Levantamento Mensal (<span class="lblAnoFinanceiro">2026</span>)</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Resumo financeiro consolidado mês a mês para prestação de balancetes da ACBCSJ.</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 12px; text-align: center;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left;">Mês / Referência</th>
+                                        <th>Receitas Gerais</th>
+                                        <th>Mensalidades PIX</th>
+                                        <th>Total Despesas</th>
+                                        <th>Resultado Líquido</th>
+                                        <th>Status do Mês</th>
+                                        <th style="min-width: 140px;">Ações / Balancete</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableLevantamentoMensalBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- EXTRATO DE LANÇAMENTOS -->
+                    <div class="card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <h3 class="card-title">Extrato Detalhado de Lançamentos</h3>
+                            <div style="display: flex; gap: 8px;">
+                                <select id="finFiltroTipo" class="form-control" style="width: 150px; padding: 4px 8px; font-size: 12px;" onchange="renderGestaoFinanceira()">
+                                    <option value="todos">Todos os Tipos</option>
+                                    <option value="receita">Apenas Receitas</option>
+                                    <option value="despesa">Apenas Despesas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 12px;">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Descrição / Histórico</th>
+                                        <th>Categoria</th>
+                                        <th>Tipo</th>
+                                        <th>Valor (R$)</th>
+                                        <th>Ações / Recibo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableFinanceiroBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA 4: PAINEL DO ASSOCIADO -->
+                <div id="tab-overview-associado" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">Bem-vindo(a), <span id="associadoWelcomeName">Associado</span></h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Acompanhe suas mensalidades, contribuições e mantenha seus dados atualizados na ACBCSJ.</p>
+                        </div>
+                        <button class="btn btn-gold btn-sm" onclick="abrirModalEditarMeusDados()">✏️ Atualizar Meus Dados Cadastrais</button>
+                    </div>
+
+                    <!-- CARTÃO DE RESUMO DOS DADOS CADASTRAIS DO USUÁRIO -->
+                    <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, #1C2026 0%, #15181C 100%); border-left: 4px solid var(--accent-gold);">
+                        <div class="card-header">
+                            <h3 class="card-title">👤 Meus Dados Cadastrais</h3>
+                            <button class="btn btn-outline btn-sm" onclick="abrirModalEditarMeusDados()">Editar Dados</button>
+                        </div>
+                        <div id="myProfileDetailsDisplay" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; font-size: 13px;">
+                            <!-- Preenchido via JS em renderAssociadoOverview() -->
+                        </div>
+                    </div>
+
+                    <!-- CARD DE COMUNICADOS & MENSAGENS DA DIRETORIA PARA O ASSOCIADO -->
+                    <div class="card" style="margin-bottom: 20px; border-left: 4px solid #3498DB;">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 class="card-title">📢 Comunicados & Avisos Pendentes</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Mensagens oficiais pendentes de leitura direcionadas a você.</p>
+                            </div>
+                            <button type="button" class="btn btn-outline btn-sm" style="font-size: 11px;" onclick="navigateTab('comunicados-associado')">📋 Ver Histórico Completo</button>
+                        </div>
+                        <div id="containerMeusComunicadosDiretoria" style="padding: 15px;">
+                            <!-- Preenchido via JS em renderAssociadoOverview() -->
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 class="card-title">💳 Minhas Mensalidades & Contribuições (Ano <span class="lblAnoMeuPainel">2026</span>)</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Acompanhe seus pagamentos confirmados e os vencimentos mês a mês.</p>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label style="font-size: 12px; color: var(--text-muted); font-weight: bold;">Exercício:</label>
+                                <select id="selAnoMeuPainel" class="form-control" style="width: 100px; padding: 4px 8px; font-weight: bold; color: var(--accent-gold);" onchange="renderAssociadoOverview()">
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026" selected>2026</option>
+                                    <option value="2027">2027</option>
+                                    <option value="2028">2028</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- CARDS DE RESUMO DE ADIMPLÊNCIA DO ASSOCIADO -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 0 15px 15px 15px;">
+                            <div id="bannerStatusAdimplenciaAssociado" style="padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
+                                <!-- Preenchido via JS -->
+                            </div>
+                            <div style="background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.3); padding: 12px; border-radius: 6px;">
+                                <div style="font-size: 11px; color: var(--text-muted);">TOTAL QUITADO NO ANO</div>
+                                <div id="metricMeuTotalPago" style="font-size: 18px; font-weight: bold; color: #2ECC71;">R$ 0,00</div>
+                            </div>
+                            <div style="background: rgba(231, 76, 60, 0.08); border: 1px solid rgba(231, 76, 60, 0.3); padding: 12px; border-radius: 6px;">
+                                <div style="font-size: 11px; color: var(--text-muted);">DÉBITOS EM ATRASO</div>
+                                <div id="metricMeuTotalPendente" style="font-size: 18px; font-weight: bold; color: #E74C3C;">R$ 0,00</div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 12px;">
+                                <thead>
+                                    <tr>
+                                        <th>Mês de Referência</th>
+                                        <th>Data Vencimento</th>
+                                        <th>Tarifa Vigente (R$)</th>
+                                        <th>Valor Quitado (R$)</th>
+                                        <th>Status do Pagamento</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableMinhasMensalidadesBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA DE COMUNICADOS & AVISOS (HISTÓRICO COMPLETO DO ASSOCIADO) -->
+                <div id="tab-comunicados-associado" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">📢 Histórico de Comunicados & Avisos</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Todas as mensagens, comunicados e avisos oficiais encaminhados pela Diretoria da ACBCSJ para você.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <h3 class="card-title">📨 Todas as Mensagens Recebidas</h3>
+                            <input type="text" id="filtroTextoComunicadosAssociado" class="form-control" style="max-width: 250px; font-size: 12px;" placeholder="🔍 Buscar comunicado..." onkeyup="renderComunicadosHistoricoAssociado()">
+                        </div>
+                        <div id="containerHistoricoComunicadosAssociado" style="padding: 15px;">
+                            <!-- Preenchido via JS em renderComunicadosHistoricoAssociado() -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA 5: BALANCETES E CONTAS (TRANSPARÊNCIA ASSOCIADO) -->
+                <div id="tab-balancetes-associado" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">Transparência & Prestação de Contas</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Acompanhe o balanço financeiro detalhado, gráficos de arrecadação de mensalidades e balancetes da ACBCSJ.</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label style="font-size: 13px; font-weight: bold; color: var(--text-muted);">Exercício:</label>
+                            <select id="selAnoTransparencia" class="form-control" style="width: 110px; font-weight: bold; color: var(--accent-gold);" onchange="renderBalancetesAssociado()">
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026" selected>2026</option>
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- CARDS DE MÉTRICAS CONSOLIDADAS DO ANO -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                        <div class="card" style="margin: 0; background: linear-gradient(135deg, rgba(46,204,113,0.1) 0%, rgba(46,204,113,0.02) 100%); border: 1px solid rgba(46,204,113,0.3);">
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">TOTAL RECEITAS (ENTRADAS)</div>
+                            <div id="transpMetricReceitas" style="font-size: 20px; font-weight: bold; color: #2ECC71; margin-top: 4px;">R$ 0,00</div>
+                        </div>
+                        <div class="card" style="margin: 0; background: linear-gradient(135deg, rgba(231,76,60,0.1) 0%, rgba(231,76,60,0.02) 100%); border: 1px solid rgba(231,76,60,0.3);">
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">TOTAL DESPESAS (SAÍDAS)</div>
+                            <div id="transpMetricDespesas" style="font-size: 20px; font-weight: bold; color: #E74C3C; margin-top: 4px;">R$ 0,00</div>
+                        </div>
+                        <div class="card" style="margin: 0; background: linear-gradient(135deg, rgba(241,196,15,0.1) 0%, rgba(241,196,15,0.02) 100%); border: 1px solid rgba(241,196,15,0.3);">
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">SALDO OPERACIONAL</div>
+                            <div id="transpMetricSaldo" style="font-size: 20px; font-weight: bold; color: var(--accent-gold); margin-top: 4px;">R$ 0,00</div>
+                        </div>
+                        <div class="card" style="margin: 0; background: linear-gradient(135deg, rgba(52,152,219,0.1) 0%, rgba(52,152,219,0.02) 100%); border: 1px solid rgba(52,152,219,0.3);">
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">EFICIÊNCIA DAS MENSALIDADES</div>
+                            <div id="transpMetricEficiencia" style="font-size: 20px; font-weight: bold; color: #3498DB; margin-top: 4px;">0%</div>
+                        </div>
+                    </div>
+
+                    <!-- PAINEL DE GRÁFICOS DETALHADOS -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                        <!-- GRÁFICO 1: ENTRADAS VS SAÍDAS MÊS A MÊS -->
+                        <div class="card" style="margin: 0;">
+                            <div class="card-header">
+                                <h3 class="card-title">📊 Receitas vs Despesas Mês a Mês</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Comparativo entre totais arrecadados e despesas pagas por mês.</p>
+                            </div>
+                            <div style="padding: 15px;">
+                                <canvas id="chartBalanceteMensalComparativo" style="max-height: 260px;"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- GRÁFICO 2: MENSALIDADES - PREVISTO VS REALIZADO -->
+                        <div class="card" style="margin: 0;">
+                            <div class="card-header">
+                                <h3 class="card-title">💳 Arrecadação de Mensalidades (Previsto vs Recebido)</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Estimativa de mensalidades dos associados ativos vs valor efetivamente arrecadado.</p>
+                            </div>
+                            <div style="padding: 15px;">
+                                <canvas id="chartMensalidadesPrevistoVsArrecadado" style="max-height: 260px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GRÁFICO 3: VISÃO GLOBAL PROPORCIONAL E TABELA DE BALANCETES -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                        <div class="card" style="margin: 0;">
+                            <div class="card-header">
+                                <h3 class="card-title">🍩 Distribuição Anual</h3>
+                            </div>
+                            <div style="padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 260px;">
+                                <canvas id="chartBalancete" style="max-width: 250px; max-height: 250px;"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="card" style="margin: 0;">
+                            <div class="card-header">
+                                <h3 class="card-title">📑 Balancetes Mensais Oficiais — Exercício <span class="lblAnoTransparencia">2026</span></h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Demonstrativos mensais consolidados com suporte para emissão de relatório oficial em PDF.</p>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="custom-table" style="font-size: 12px;">
+                                    <thead>
+                                        <tr>
+                                            <th>Mês</th>
+                                            <th>Receitas (Entradas)</th>
+                                            <th>Mensalidades (Recebido / Previsto)</th>
+                                            <th>Despesas (Saídas)</th>
+                                            <th>Saldo Mês</th>
+                                            <th>Balancete Oficial</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBalancetesMensaisTransparencia"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA 6: DOCUMENTOS E CONVITES -->
+                <div id="tab-documentos-associado" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">Documentos, Atas & Convites</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Repositório oficial de documentos, atas e formulários da ACBCSJ.</p>
+                        </div>
+                        <div id="headerDocsAction"></div>
+                    </div>
+                    <div class="card" id="listDocsAssociado"></div>
+                </div>
+
+                <!-- ABA 7: ENVIAR MENSAGEM / IDEIAS -->
+                <div id="tab-enviar-mensagem" class="tab-content" style="display: none;">
+                    <div class="page-header">
+                        <h2 class="page-title">Canal Direto com a Diretoria</h2>
+                    </div>
+                    <div class="card" style="max-width: 600px;">
+                        <form onsubmit="event.preventDefault(); alert('Sua ideia/mensagem foi enviada para a Diretoria com sucesso!');">
+                            <div class="form-group">
+                                <label>Assunto</label>
+                                <input type="text" class="form-control" placeholder="Ex: Sugestão para novo projeto" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Sua Mensagem ou Ideia</label>
+                                <textarea class="form-control" rows="5" placeholder="Escreva aqui detalhadamente..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-gold">Enviar para a Diretoria</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ABA 8: MENSAGENS E COMUNICADOS (DIRETORIA) -->
+                <div id="tab-mensagens-diretoria" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">📬 Central de Mensagens & Comunicados</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Gerencie sugestões de associados e envie mensagens para 1 pessoa, várias ou todos os integrantes.</p>
+                        </div>
+                        <button class="btn btn-gold" onclick="abrirModalEnviarComunicado()">✉️ + Novo Comunicado / Mensagem</button>
+                    </div>
+
+                    <!-- ABAS DA CENTRAL DE MENSAGENS -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                        <button id="btnTabMsgsRecebidas" class="btn btn-sm btn-gold" onclick="alternarAbaMensagensDiretoria('recebidas')">📥 Mensagens Recebidas dos Associados</button>
+                        <button id="btnTabMsgsEnviadas" class="btn btn-sm btn-outline" onclick="alternarAbaMensagensDiretoria('enviadas')">📤 Comunicados Enviados pela Diretoria</button>
+                    </div>
+
+                    <div id="listMensagensDiretoria"></div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL DE PRÉ-CADASTRO -->
+    <div id="modalPreCadastro" class="modal-backdrop">
+        <div class="modal-content modal-content-lg">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title">Solicitar Cadastro na ACBCSJ</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Preencha seus dados para avaliação da Diretoria. Os itens marcados com <span class="req-star">*</span> são obrigatórios.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalPreCadastro')">&times;</button>
+            </div>
+            
+            <form onsubmit="submitPreCadastro(event)">
+                <div class="form-grid">
+                    <!-- 1. Nome de Guerra* -->
+                    <div class="form-group">
+                        <label>Nome de Guerra <span class="req-star">*</span></label>
+                        <input type="text" id="regNomeGuerra" class="form-control" placeholder="Ex: Sd. Silva / GBC Santos" required>
+                    </div>
+
+                    <!-- 2. Nome Completo* -->
+                    <div class="form-group">
+                        <label>Nome Completo <span class="req-star">*</span></label>
+                        <input type="text" id="regNomeCompleto" class="form-control" placeholder="Seu nome completo" required>
+                    </div>
+
+                    <!-- 3. Data Nascimento* -->
+                    <div class="form-group">
+                        <label>Data de Nascimento <span class="req-star">*</span></label>
+                        <input type="date" id="regDataNascimento" class="form-control" required>
+                    </div>
+
+                    <!-- 4. CPF* -->
+                    <div class="form-group">
+                        <label>CPF <span class="req-star">*</span></label>
+                        <input type="text" id="regCPF" class="form-control cpf-mask" placeholder="000.000.000-00" required>
+                    </div>
+
+                    <!-- 5. Nome da Mãe* -->
+                    <div class="form-group form-group-full">
+                        <label>Nome da Mãe <span class="req-star">*</span></label>
+                        <input type="text" id="regNomeMae" class="form-control" placeholder="Nome completo da mãe" required>
+                    </div>
+
+                    <!-- 6. Nome do Pai (com opção de sem pai) -->
+                    <div class="form-group form-group-full">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                            <label style="margin-bottom:0;">Nome do Pai</label>
+                            <label style="font-size:12px; font-weight:normal; cursor:pointer; color:var(--text-muted);">
+                                <input type="checkbox" id="regSemPai" onchange="toggleSemPai(this)"> Sem pai registrado / Não declarado
+                            </label>
+                        </div>
+                        <input type="text" id="regNomePai" class="form-control" placeholder="Nome completo do pai (opcional)">
+                    </div>
+
+                    <!-- 7. Sexo* -->
+                    <div class="form-group">
+                        <label>Sexo <span class="req-star">*</span></label>
+                        <select id="regSexo" class="form-control" required>
+                            <option value="">Selecione...</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Feminino">Feminino</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+
+                    <!-- 8. Telefone* -->
+                    <div class="form-group form-group-full">
+                        <label>Telefone / WhatsApp <span class="req-star">*</span></label>
+                        <input type="text" id="regTelefone" class="form-control" placeholder="(48) 99999-9999" required>
+                    </div>
+
+                    <!-- 9. OBM de Lotação* -->
+                    <div class="form-group">
+                        <label>OBM de Lotação <span class="req-star">*</span></label>
+                        <select id="regOBM" class="form-control" required>
+                            <option value="">Selecione a OBM...</option>
+                            <option value="São José">São José</option>
+                            <option value="Palhoça">Palhoça</option>
+                            <option value="Pinheira">Pinheira</option>
+                            <option value="Santo Amaro">Santo Amaro</option>
+                            <option value="Biguaçu">Biguaçu</option>
+                            <option value="G. Celso Ramos">G. Celso Ramos</option>
+                            <option value="Rancho Queimado">Rancho Queimado</option>
+                        </select>
+                    </div>
+
+                    <!-- 10. Profissão* -->
+                    <div class="form-group">
+                        <label>Profissão <span class="req-star">*</span></label>
+                        <input type="text" id="regProfissao" class="form-control" placeholder="Ex: Bombeiro Comunitário, Contador..." required>
+                    </div>
+
+                    <!-- Informativo sobre Senha de Acesso -->
+                    <div class="form-group form-group-full" style="background-color: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); padding: 10px 14px; border-radius: 6px;">
+                        <span style="font-size: 13px; color: var(--accent-gold); font-weight: 600; display: block; margin-bottom: 2px;">🔑 Senha de Acesso Automática:</span>
+                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Sua senha inicial de acesso será automaticamente os <b>4 primeiros dígitos do seu CPF</b>. O acesso ao portal será liberado assim que a Diretoria aprovar o seu pré-cadastro.</p>
+                    </div>
+
+                    <!-- 9. Logradouro* -->
+                    <div class="form-group form-group-full">
+                        <label>Logradouro (Rua, Avenida...) <span class="req-star">*</span></label>
+                        <input type="text" id="regLogradouro" class="form-control" placeholder="Ex: Rua Luiz Fagundes" required>
+                    </div>
+
+                    <!-- 10. Número* -->
+                    <div class="form-group">
+                        <label>Número <span class="req-star">*</span></label>
+                        <input type="text" id="regNumero" class="form-control" placeholder="Ex: 123" required>
+                    </div>
+
+                    <!-- 11. Complemento -->
+                    <div class="form-group">
+                        <label>Complemento</label>
+                        <input type="text" id="regComplemento" class="form-control" placeholder="Ex: Apto 302 / Bloco B">
+                    </div>
+
+                    <!-- 12. CEP -->
+                    <div class="form-group">
+                        <label>CEP</label>
+                        <input type="text" id="regCEP" class="form-control" placeholder="88100-000">
+                    </div>
+
+                    <!-- 13. Bairro* -->
+                    <div class="form-group">
+                        <label>Bairro <span class="req-star">*</span></label>
+                        <input type="text" id="regBairro" class="form-control" placeholder="Ex: Praia Comprida" required>
+                    </div>
+
+                    <!-- 14. Cidade* -->
+                    <div class="form-group form-group-full">
+                        <label>Cidade <span class="req-star">*</span></label>
+                        <input type="text" id="regCidade" class="form-control" placeholder="Ex: São José / Florianópolis" required>
+                    </div>
+
+                    <!-- Termo de Responsabilidade -->
+                    <div class="form-group form-group-full" style="margin-top: 10px;">
+                        <label>Termo de Responsabilidade <span class="req-star">*</span></label>
+                        <div class="termo-box">
+                            <p><b>DECLARAÇÃO E TERMO DE RESPONSABILIDADE — ACBCSJ</b></p>
+                            <p style="margin-top: 6px;">Ao enviar esta solicitação, declaro que as informações prestadas são verdadeiras e exatas. Comprometo-me a respeitar o Estatuto Social, os regulamentos internos e os valores da Associação Corpo de Bombeiros Comunitários de São José (ACBCSJ).</p>
+                            <p style="margin-top: 4px; font-style: italic; color: var(--accent-gold);">[Texto complementar do termo de responsabilidade a ser acrescentado futuramente pela diretoria].</p>
+                        </div>
+                        <label style="font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="regTermoAceito" required>
+                            Li e aceito os termos de responsabilidade e regras da ACBCSJ <span class="req-star">*</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalPreCadastro')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width: auto;">Enviar Solicitação para a Diretoria</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE FICHA CADASTRAL COMPLETA DO ASSOCIADO -->
+    <div id="modalFichaAssociado" class="modal-backdrop">
+        <div class="modal-content modal-content-lg">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" id="fichaNomeTitle">Ficha Cadastral do Associado</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Dados completos inseridos no cadastro da ACBCSJ.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalFichaAssociado')">&times;</button>
+            </div>
+            
+            <div id="fichaContentBody" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 13px;">
+                <!-- Preenchido dinamicamente via JS -->
+            </div>
+
+            <div style="margin-top: 24px; text-align: right;">
+                <button class="btn btn-outline" onclick="closeModal('modalFichaAssociado')">Fechar Ficha</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DESLIGAMENTO DE ASSOCIADO -->
+    <div id="modalDesligarAssociado" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: #FF4D4D;">Desligar Associado</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">O cadastro será transferido para a página de "Associados Desligados".</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalDesligarAssociado')">&times;</button>
+            </div>
+
+            <form onsubmit="confirmarDesligamento(event)">
+                <input type="hidden" id="desligarCPF">
+                <div class="form-group">
+                    <label>Associado a ser desligado:</label>
+                    <input type="text" id="desligarNomeDisplay" class="form-control" disabled style="font-weight: bold; color: var(--accent-gold);">
+                </div>
+
+                <div class="form-group">
+                    <label>Motivo do Desligamento <span class="req-star">*</span></label>
+                    <textarea id="desligarMotivo" class="form-control" rows="3" placeholder="Digite detalhadamente o motivo do desligamento deste membro..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Carta de Desligamento (Arquivo / PDF / Imagem) <small style="color: var(--text-muted); font-weight: normal;">(Opcional)</small></label>
+                    <input type="file" id="desligarCartaArquivo" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+                    <small style="color: var(--text-muted); display: block; margin-top: 4px;">Caso possua, anexe a carta ou termo assinado de desligamento (opcional).</small>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalDesligarAssociado')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: #E74C3C; border-color: #E74C3C;">Confirmar Desligamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE NOVO DOCUMENTO (DIRETORIA) -->
+    <div id="modalNovoDocumento" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: var(--accent-gold);">Publicar Novo Documento / Ata</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Adicione novos arquivos com categoria, vencimento e nível de permissão.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalNovoDocumento')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarNovoDocumento(event)">
+                <div class="form-group">
+                    <label>Título / Nome do Documento <span class="req-star">*</span></label>
+                    <input type="text" id="docTitulo" class="form-control" placeholder="Ex: Ata da Assembleia Geral de Eleição" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Categoria do Documento <span class="req-star">*</span></label>
+                        <select id="docCategoria" class="form-control" required>
+                            <option value="">Selecione uma Categoria...</option>
+                            <option value="Atas">Atas</option>
+                            <option value="Documentos Oficiais">Documentos Oficiais</option>
+                            <option value="Documentos Operacionais">Documentos Operacionais</option>
+                            <option value="Documentos Administrativos">Documentos Administrativos</option>
+                            <option value="Jurídico">Jurídico</option>
+                            <option value="Formulários">Formulários</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Visibilidade / Acesso <span class="req-star">*</span></label>
+                        <select id="docVisibilidade" class="form-control" required>
+                            <option value="todos" selected>Todos os Integrantes (Público)</option>
+                            <option value="diretoria">Apenas Diretoria (Restrito)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Data de Vencimento do Documento <small style="color: var(--text-muted); font-weight: normal;">(Opcional)</small></label>
+                    <input type="date" id="docDataVencimento" class="form-control">
+                    <small style="color: var(--text-muted); display: block; margin-top: 4px;">Deixe em branco se o documento não possui prazo de validade/vencimento.</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Arquivo do Documento (PDF, Imagem, Word, etc.) <span class="req-star">*</span></label>
+                    <input type="file" id="docArquivo" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx" required>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalNovoDocumento')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">Publicar Documento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDITAR DOCUMENTO (DIRETORIA) -->
+    <div id="modalEditarDocumento" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: var(--accent-gold);">Editar Documento / Categoria / Acesso</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Altere a categoria, visibilidade ou atualize o arquivo do documento.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalEditarDocumento')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarEdicaoDocumento(event)">
+                <input type="hidden" id="editDocId">
+
+                <div class="form-group">
+                    <label>Título / Nome do Documento <span class="req-star">*</span></label>
+                    <input type="text" id="editDocTitulo" class="form-control" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Categoria do Documento <span class="req-star">*</span></label>
+                        <select id="editDocCategoria" class="form-control" required>
+                            <option value="Atas">Atas</option>
+                            <option value="Documentos Oficiais">Documentos Oficiais</option>
+                            <option value="Documentos Operacionais">Documentos Operacionais</option>
+                            <option value="Documentos Administrativos">Documentos Administrativos</option>
+                            <option value="Jurídico">Jurídico</option>
+                            <option value="Formulários">Formulários</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Visibilidade / Acesso <span class="req-star">*</span></label>
+                        <select id="editDocVisibilidade" class="form-control" required>
+                            <option value="todos">Todos os Integrantes (Público)</option>
+                            <option value="diretoria">Apenas Diretoria (Restrito)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Data de Vencimento <small style="color: var(--text-muted); font-weight: normal;">(Opcional)</small></label>
+                    <input type="date" id="editDocDataVencimento" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>Substituir Arquivo <small style="color: var(--text-muted); font-weight: normal;">(Opcional - selecione apenas se quiser trocar o arquivo atual)</small></label>
+                    <input type="file" id="editDocArquivo" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx">
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarDocumento')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE NOVO LANÇAMENTO FINANCEIRO (RECEITA / DESPESA) -->
+    <div id="modalNovoLancamento" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" id="modalLancamentoTitle" style="color: var(--accent-gold);">Inserir Lançamento Financeiro</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Cadastre uma receita (entrada) ou despesa (saída) com transparência e comprovante.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalNovoLancamento')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarNovoLancamento(event)">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Tipo de Lançamento <span class="req-star">*</span></label>
+                        <select id="finTipo" class="form-control" required onchange="atualizarCategoriasLancamento(this.value)">
+                            <option value="receita">➕ Receita (Entrada)</option>
+                            <option value="despesa">➖ Despesa (Saída)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Valor (R$) <span class="req-star">*</span></label>
+                        <input type="number" step="0.01" min="0.01" id="finValor" class="form-control" placeholder="0,00" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Descrição / Histórico <span class="req-star">*</span></label>
+                    <input type="text" id="finDescricao" class="form-control" placeholder="Ex: Mensalidades do Mês / Compra de Materiais Operacionais" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Categoria <span class="req-star">*</span></label>
+                        <select id="finCategoria" class="form-control" required>
+                            <option value="Mensalidade / Contribuição">Mensalidade / Contribuição</option>
+                            <option value="Doação / Convênio">Doação / Convênio</option>
+                            <option value="Despesa Operacional">Despesa Operacional</option>
+                            <option value="Manutenção de Viatura">Manutenção de Viatura</option>
+                            <option value="Administrativo / Consumo">Administrativo / Consumo</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data do Lançamento <span class="req-star">*</span></label>
+                        <input type="date" id="finData" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Comprovante / Nota Fiscal / Recibo <small style="color: var(--text-muted); font-weight: normal;">(Opcional - PDF ou Imagem)</small></label>
+                    <input type="file" id="finComprovante" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalNovoLancamento')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold" id="btnSalvarLancamento">Salvar Lançamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE DADOS CADASTRAIS PELO PRÓPRIO USUÁRIO -->
+    <div id="modalEditarMeusDados" class="modal-backdrop">
+        <div class="modal-content modal-content-lg">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title">✏️ Atualizar Meus Dados Cadastrais</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Altere seu telefone, OBM, profissão e endereço residencial sempre que necessário.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalEditarMeusDados')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarMeusDados(event)">
+                <div class="form-grid">
+                    <!-- Telefone / WhatsApp -->
+                    <div class="form-group">
+                        <label>Telefone / WhatsApp <span class="req-star">*</span></label>
+                        <input type="text" id="editMeusTelefone" class="form-control" placeholder="(48) 99999-9999" required>
+                    </div>
+
+                    <!-- OBM -->
+                    <div class="form-group">
+                        <label>OBM (Organização de Bombeiro Militar)</label>
+                        <input type="text" id="editMeusOBM" class="form-control" placeholder="Ex: São José, Florianópolis, Palhoça">
+                    </div>
+
+                    <!-- Profissão -->
+                    <div class="form-group form-group-full">
+                        <label>Profissão / Ocupação</label>
+                        <input type="text" id="editMeusProfissao" class="form-control" placeholder="Ex: Bombeiro Comunitário, Autônomo, Engenheiro">
+                    </div>
+
+                    <div class="form-group-full" style="border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 5px;">
+                        <h4 style="font-size: 13px; color: var(--accent-gold); margin-bottom: 10px;">🏠 Endereço Residencial Completo:</h4>
+                    </div>
+
+                    <!-- Logradouro -->
+                    <div class="form-group form-group-full">
+                        <label>Logradouro (Rua, Avenida...) <span class="req-star">*</span></label>
+                        <input type="text" id="editMeusLogradouro" class="form-control" placeholder="Ex: Rua Luiz Fagundes" required>
+                    </div>
+
+                    <!-- Número -->
+                    <div class="form-group">
+                        <label>Número <span class="req-star">*</span></label>
+                        <input type="text" id="editMeusNumero" class="form-control" placeholder="Ex: 123" required>
+                    </div>
+
+                    <!-- Complemento -->
+                    <div class="form-group">
+                        <label>Complemento</label>
+                        <input type="text" id="editMeusComplemento" class="form-control" placeholder="Ex: Apto 302 / Bloco B">
+                    </div>
+
+                    <!-- CEP -->
+                    <div class="form-group">
+                        <label>CEP</label>
+                        <input type="text" id="editMeusCEP" class="form-control" placeholder="88100-000">
+                    </div>
+
+                    <!-- Bairro -->
+                    <div class="form-group">
+                        <label>Bairro <span class="req-star">*</span></label>
+                        <input type="text" id="editMeusBairro" class="form-control" placeholder="Ex: Praia Comprida" required>
+                    </div>
+
+                    <!-- Cidade -->
+                    <div class="form-group form-group-full">
+                        <label>Cidade <span class="req-star">*</span></label>
+                        <input type="text" id="editMeusCidade" class="form-control" placeholder="Ex: São José / Florianópolis" required>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarMeusDados')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold" style="width: auto;">Salvar Minhas Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE REAJUSTE DO VALOR BASE DA MENSALIDADE (SOMENTE DIRETORIA) -->
+    <div id="modalReajustarMensalidade" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title">⚙️ Reajustar Valor Base da Mensalidade</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Defina o novo valor mensal e a data (mês/ano) a partir da qual ele entra em vigor.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalReajustarMensalidade')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarNovoValorMensalidade(event)">
+                <div class="form-group">
+                    <label>Novo Valor Mensal da Mensalidade (R$) <span class="req-star">*</span></label>
+                    <input type="number" step="0.01" id="inputNovoValorMensalidade" class="form-control" placeholder="25.00" required style="font-size: 16px; font-weight: bold; color: var(--accent-gold);">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Mês de Início (Vigência) <span class="req-star">*</span></label>
+                        <select id="inputMesVigenciaReajuste" class="form-control" required>
+                            <option value="01">01 - Janeiro</option>
+                            <option value="02">02 - Fevereiro</option>
+                            <option value="03">03 - Março</option>
+                            <option value="04">04 - Abril</option>
+                            <option value="05">05 - Maio</option>
+                            <option value="06">06 - Junho</option>
+                            <option value="07">07 - Julho</option>
+                            <option value="08">08 - Agosto</option>
+                            <option value="09">09 - Setembro</option>
+                            <option value="10">10 - Outubro</option>
+                            <option value="11">11 - Novembro</option>
+                            <option value="12">12 - Dezembro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ano de Início (Vigência) <span class="req-star">*</span></label>
+                        <select id="inputAnoVigenciaReajuste" class="form-control" required>
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Justificativa do Reajuste / Ata da Diretoria</label>
+                    <input type="text" id="inputJustificativaReajuste" class="form-control" placeholder="Ex: Reajuste aprovado em Assembleia">
+                </div>
+
+                <!-- HISTÓRICO DE REAJUSTES -->
+                <div style="margin-top: 15px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px;">
+                    <span style="font-size: 11px; color: var(--accent-gold); font-weight: bold; display: block; margin-bottom: 6px;">📋 Histórico de Tarifas & Vigências Cadastradas:</span>
+                    <div id="listaHistoricoReajustesDisplay" style="max-height: 120px; overflow-y: auto; font-size: 11px; color: var(--text-muted);">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalReajustarMensalidade')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">Aplicar Novo Valor Base</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE DAR BAIXA EM MENSALIDADE (PIX / RETROATIVO) -->
+    <div id="modalDarBaixaMensalidade" class="modal-backdrop">
+        <div class="modal-content modal-content-lg">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title">💳 Registrar Quitação de Mensalidade (PIX)</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Lance pagamentos individuais ou retroativos de múltiplos meses.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalDarBaixaMensalidade')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarBaixaMensalidade(event)">
+                <div class="form-grid">
+                    <div class="form-group form-group-full">
+                        <label>Associado <span class="req-star">*</span></label>
+                        <select id="baixaAssociadoCPF" class="form-control" required onchange="atualizarCheckboxesBaixa()"></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Exercício / Ano da Mensalidade <span class="req-star">*</span></label>
+                        <select id="baixaAnoRef" class="form-control" required onchange="atualizarCheckboxesBaixa()">
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data do Pagamento / PIX <span class="req-star">*</span></label>
+                        <input type="date" id="baixaData" class="form-control" required>
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label>Selecione os Meses Quitados neste Pagamento <span class="req-star">*</span></label>
+                        <div id="baixaMesesCheckboxes" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="jan" onchange="atualizarValoresBaixa()"> Jan</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="fev" onchange="atualizarValoresBaixa()"> Fev</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="mar" onchange="atualizarValoresBaixa()"> Mar</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="abr" onchange="atualizarValoresBaixa()"> Abr</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="mai" onchange="atualizarValoresBaixa()"> Mai</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="jun" onchange="atualizarValoresBaixa()"> Jun</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="jul" onchange="atualizarValoresBaixa()"> Jul</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="ago" onchange="atualizarValoresBaixa()"> Ago</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="set" onchange="atualizarValoresBaixa()"> Set</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="out" onchange="atualizarValoresBaixa()"> Out</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="nov" onchange="atualizarValoresBaixa()"> Nov</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="dez" onchange="atualizarValoresBaixa()"> Dez</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Valor Total do Pagamento (R$) <span class="req-star">*</span></label>
+                        <input type="number" step="0.01" id="baixaValorTotal" class="form-control" placeholder="0.00" required style="background: rgba(46, 204, 113, 0.1); color: #2ECC71; font-weight: bold; font-size: 16px;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Identificador / Comprovante PIX</label>
+                        <input type="text" id="baixaComprovantePix" class="form-control" placeholder="Ex: PIX-E283948293 ou Código">
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label>Observações / Histórico de Baixa</label>
+                        <input type="text" id="baixaObs" class="form-control" placeholder="Ex: Pago valor retroativo referente a meses acumulados via PIX">
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalDarBaixaMensalidade')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">Confirmar Quitação PIX</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EXTRATO COMPLETO DO ASSOCIADO -->
+    <div id="modalExtratoAssociado" class="modal-backdrop">
+        <div class="modal-content modal-content-lg">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title">📋 Extrato de Mensalidades do Associado</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Levantamento histórico de mensalidades efetuadas e opções de edição.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalExtratoAssociado')">&times;</button>
+            </div>
+
+            <div id="extratoAssociadoConteudo"></div>
+
+            <div style="margin-top: 20px; display: flex; justify-content: space-between;">
+                <button class="btn btn-outline" onclick="window.print()">🖨️ Imprimir Extrato</button>
+                <button class="btn btn-gold" onclick="closeModal('modalExtratoAssociado')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE BAIXA DE MENSALIDADE -->
+    <div id="modalEditarBaixaMensalidade" class="modal-backdrop">
+        <div class="modal-content modal-content-lg">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title">✏️ Editar Lançamento de Mensalidade PIX</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Corrija valores, datas ou meses quitados neste lançamento de mensalidade.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalEditarBaixaMensalidade')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarEdicaoBaixaMensalidade(event)">
+                <input type="hidden" id="editBaixaId">
+                <div class="form-grid">
+                    <div class="form-group form-group-full">
+                        <label>Associado</label>
+                        <input type="text" id="editBaixaAssociadoNome" class="form-control" readonly style="background: rgba(255,255,255,0.05); font-weight: bold;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Exercício / Ano</label>
+                        <input type="text" id="editBaixaAnoRef" class="form-control" readonly style="background: rgba(255,255,255,0.05); font-weight: bold;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data do Pagamento <span class="req-star">*</span></label>
+                        <input type="date" id="editBaixaData" class="form-control" required>
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label>Meses Quitados <span class="req-star">*</span></label>
+                        <div id="editBaixaMesesCheckboxes" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="jan"> Jan</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="fev"> Fev</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="mar"> Mar</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="abr"> Abr</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="mai"> Mai</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="jun"> Jun</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="jul"> Jul</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="ago"> Ago</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="set"> Set</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="out"> Out</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="nov"> Nov</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="dez"> Dez</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Valor Total (R$) <span class="req-star">*</span></label>
+                        <input type="number" step="0.01" id="editBaixaValor" class="form-control" required style="font-weight: bold; color: #2ECC71;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Comprovante PIX</label>
+                        <input type="text" id="editBaixaComprovantePix" class="form-control">
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label>Observações</label>
+                        <input type="text" id="editBaixaObs" class="form-control">
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarBaixaMensalidade')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE IMPRESSÃO / VISUALIZAÇÃO DE BALANCETE MENSAL -->
+    <div id="modalBalanceteMensal" class="modal-backdrop">
+        <div class="modal-content modal-content-lg" style="max-width: 850px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: var(--accent-gold);">📄 Balancete Mensal Oficial — ACBCSJ</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Demonstrativo mensal de entradas, mensalidades e despesas da Associação Corpo de Bombeiros Comunitários de São José.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalBalanceteMensal')">&times;</button>
+            </div>
+
+            <div id="conteudoBalanceteMensal" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px;">
+                <!-- Preenchido via JS -->
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalBalanceteMensal')">Fechar</button>
+                <button type="button" class="btn btn-gold" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE ENVIAR COMUNICADO / MENSAGEM (DIRETORIA) -->
+    <div id="modalEnviarComunicado" class="modal-backdrop">
+        <div class="modal-content modal-content-lg" style="max-width: 650px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: var(--accent-gold);">✉️ Encaminhar Mensagem / Comunicado</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Envie um comunicado oficial para 1 associado específico, vários selecionados ou para TODOS.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalEnviarComunicado')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarNovoComunicado(event)">
+                <div class="form-group">
+                    <label>Destinatário(s) <span class="req-star">*</span></label>
+                    <select id="comunicadoTipoDestinatario" class="form-control" required onchange="toggleTipoDestinatario(this.value)">
+                        <option value="todos" selected>📢 Para TODOS os Associados Ativos</option>
+                        <option value="individual">👤 Para 1 Associado Específico</option>
+                        <option value="selecao">👥 Para VÁRIOS Associados (Seleção Personalizada)</option>
+                    </select>
+                </div>
+
+                <!-- PAINEL PARA DESTINATÁRIO ÚNICO (INDIVIDUAL) -->
+                <div id="divDestinatarioIndividual" class="form-group" style="display: none;">
+                    <label>Selecione o Associado <span class="req-star">*</span></label>
+                    <select id="comunicadoAssociadoUnico" class="form-control"></select>
+                </div>
+
+                <!-- PAINEL PARA MÚLTIPLOS DESTINATÁRIOS (SELEÇÃO) -->
+                <div id="divDestinatariosMultiplos" class="form-group" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="margin: 0;">Selecione os Associados Destinatários <span class="req-star">*</span></label>
+                        <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 6px;" onclick="marcarDesmarcarTodosComunicado()">☑️ Marcar / Desmarcar Todos</button>
+                    </div>
+                    <div id="checkboxesAssociadosComunicado" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Assunto / Título do Comunicado <span class="req-star">*</span></label>
+                        <input type="text" id="comunicadoAssunto" class="form-control" placeholder="Ex: Convocação para Reunião Extraordinária" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Prioridade <span class="req-star">*</span></label>
+                        <select id="comunicadoPrioridade" class="form-control" required>
+                            <option value="Informativo" selected>🟢 Informativo</option>
+                            <option value="Importante">🟡 Importante</option>
+                            <option value="Urgente">🔴 Urgente</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Conteúdo da Mensagem / Comunicado <span class="req-star">*</span></label>
+                    <textarea id="comunicadoMensagem" class="form-control" rows="5" placeholder="Escreva aqui a mensagem que os associados selecionados irão receber no portal..." required></textarea>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEnviarComunicado')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">✉️ Encaminhar Mensagem</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPTS JS -->
+    <script src="supabaseClient.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
