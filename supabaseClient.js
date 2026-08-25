@@ -443,15 +443,25 @@ const dbService = {
                 observacoes: obsMeta
             };
 
+            let savedOnline = false;
             if (supabaseClient) {
-                const { error } = await supabaseClient.from('mensalidades').upsert([payloadSupabase]);
-                if (error) throw error;
-            } else {
+                try {
+                    const { error } = await supabaseClient.from('mensalidades').upsert([payloadSupabase]);
+                    if (!error) savedOnline = true;
+                    else console.warn("⚠️ SDK upsert avisou:", error.message);
+                } catch(e) {
+                    console.warn("⚠️ SDK upsert falhou:", e.message || e);
+                }
+            }
+
+            if (!savedOnline) {
                 await rawFetchSupabase('mensalidades', 'POST', [payloadSupabase]);
+                savedOnline = true;
             }
             console.log("✅ Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.meses_quitados, clean.valor, "ID Associado:", validAssocId);
         } catch (e) {
             console.error("⚠️ Erro ao salvar mensalidade no Supabase:", e.message || e);
+            throw e;
         }
         return true;
     },
