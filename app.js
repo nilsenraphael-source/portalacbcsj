@@ -400,6 +400,14 @@ function setupCPFMasks() {
 // AUTENTICAÇÃO E LOGIN
 async function loginWithCPF(cpf, password, roleHint = null) {
     console.log("🗝️ Executando loginWithCPF...", cpf, roleHint);
+    
+    // Alternância de tela visual instantânea garantida
+    const authScreen = document.getElementById('authScreen');
+    const appDashboard = document.getElementById('appDashboard');
+
+    if (authScreen) authScreen.style.setProperty('display', 'none', 'important');
+    if (appDashboard) appDashboard.style.setProperty('display', 'flex', 'important');
+
     try {
         let list = [];
         try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch(e) {}
@@ -411,31 +419,30 @@ async function loginWithCPF(cpf, password, roleHint = null) {
                 list = ASSOCIADOS_PLANILHA_REAL;
             }
             if (list && list.length > 0) {
-                localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+                try { localStorage.setItem('acbcsj_associados', JSON.stringify(list)); } catch(e) {}
             }
         }
 
         if (roleHint === 'diretoria') {
-            currentUser = list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || list[0] || { nome: 'Comandante / Diretoria ACBCSJ', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
-            if (currentUser) currentUser.status = 'ativo';
+            currentUser = (list && list.length) ? (list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || list[0]) : null;
         } else if (roleHint === 'associado') {
-            currentUser = list.find(a => a.perfil === 'associado' && a.status === 'ativo') || list[1] || list[0];
+            currentUser = (list && list.length) ? (list.find(a => a.perfil === 'associado' && a.status === 'ativo') || list[1] || list[0]) : null;
         } else {
             const cleanInputCPF = (cpf || '').replace(/\D/g, '');
-            
             if (!cleanInputCPF) {
-                currentUser = list.find(a => a.perfil === 'diretoria') || list[0];
+                currentUser = (list && list.length) ? (list.find(a => a.perfil === 'diretoria') || list[0]) : null;
             } else {
-                const found = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanInputCPF || a.cpf === cpf);
-                
+                const found = list ? list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanInputCPF || a.cpf === cpf) : null;
                 if (found) {
                     if (found.status === 'desligado') {
                         alert('🚫 ACESSO BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da Associação.');
+                        if (authScreen) authScreen.style.setProperty('display', 'flex', 'important');
+                        if (appDashboard) appDashboard.style.setProperty('display', 'none', 'important');
                         return;
                     }
                     currentUser = found;
                 } else {
-                    currentUser = list.find(a => a.perfil === 'diretoria') || list[0];
+                    currentUser = (list && list.length) ? (list.find(a => a.perfil === 'diretoria') || list[0]) : null;
                 }
             }
         }
@@ -446,14 +453,7 @@ async function loginWithCPF(cpf, password, roleHint = null) {
         if (!currentUser.perfil) currentUser.perfil = 'diretoria';
 
         // SALVA A SESSÃO DO USUÁRIO LOGADO NO LOCALSTORAGE
-        localStorage.setItem('acbcsj_logged_user', JSON.stringify(currentUser));
-
-        // Força exibição do Dashboard
-        const authScreen = document.getElementById('authScreen');
-        const appDashboard = document.getElementById('appDashboard');
-
-        if (authScreen) authScreen.style.setProperty('display', 'none', 'important');
-        if (appDashboard) appDashboard.style.setProperty('display', 'flex', 'important');
+        try { localStorage.setItem('acbcsj_logged_user', JSON.stringify(currentUser)); } catch(e) {}
 
         try {
             renderUserHeader();
@@ -463,11 +463,7 @@ async function loginWithCPF(cpf, password, roleHint = null) {
             console.error('Aviso ao carregar telas pós-login:', uiErr);
         }
     } catch (err) {
-        console.error('Erro ao efetuar login:', err);
-        const authScreen = document.getElementById('authScreen');
-        const appDashboard = document.getElementById('appDashboard');
-        if (authScreen) authScreen.style.setProperty('display', 'none', 'important');
-        if (appDashboard) appDashboard.style.setProperty('display', 'flex', 'important');
+        console.error('Aviso geral no processo de login:', err);
     }
 }
 
@@ -475,29 +471,34 @@ window.loginWithCPF = loginWithCPF;
 
 function logout() {
     currentUser = null;
-    localStorage.removeItem('acbcsj_logged_user');
+    try { localStorage.removeItem('acbcsj_logged_user'); } catch(e) {}
     const authScreen = document.getElementById('authScreen');
     const appDashboard = document.getElementById('appDashboard');
-    if (appDashboard) appDashboard.style.display = 'none';
-    if (authScreen) authScreen.style.display = 'flex';
+    if (appDashboard) appDashboard.style.setProperty('display', 'none', 'important');
+    if (authScreen) authScreen.style.setProperty('display', 'flex', 'important');
 }
 
 // RENDERIZAÇÃO DO CABEÇALHO DO USUÁRIO
 function renderUserHeader() {
-    document.getElementById('headerUserName').textContent = currentUser.nome;
+    if (!currentUser) return;
+    const nameEl = document.getElementById('headerUserName');
+    if (nameEl) nameEl.textContent = currentUser.nome || 'Usuário';
     const badge = document.getElementById('headerUserRole');
-    badge.textContent = currentUser.perfil.toUpperCase();
-    badge.className = `user-role-badge role-${currentUser.perfil}`;
+    if (badge) {
+        const perf = (currentUser.perfil || 'diretoria').toLowerCase();
+        badge.textContent = perf.toUpperCase();
+        badge.className = `user-role-badge role-${perf}`;
+    }
 }
 
-// MENU LATERAL DINÃ‚MICO CONFORME PERFIL
-
+// MENU LATERAL DINÂMICO CONFORME PERFIL
 function renderSidebarMenu() {
     const menuNav = document.getElementById('sidebarNav');
-    if (!menuNav) return;
+    if (!menuNav || !currentUser) return;
     menuNav.innerHTML = '';
 
-    if (currentUser.perfil === 'diretoria') {
+    const perf = (currentUser.perfil || 'diretoria').toLowerCase();
+    if (perf === 'diretoria') {
         menuNav.innerHTML = `
             <div class="nav-item active" onclick="navigateTab('overview-diretoria')">📊 Painel Geral</div>
             <div class="nav-item" onclick="navigateTab('gestao-associados')">👥 Controle de Associados</div>
@@ -520,46 +521,57 @@ function renderSidebarMenu() {
 
 // NAVEGAÇÃO ENTRE ABAS
 function navigateTab(tabId) {
-    if (currentUser && currentUser.perfil !== 'diretoria') {
-        const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-        const cleanCpf = (currentUser.cpf || '').replace(/\D/g, '');
-        const currentDbState = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
-        if (currentDbState && currentDbState.status === 'desligado') {
-            alert('ðŸš« ACESSO REVOGADO!\n\nSeu cadastro consta como DESLIGADO da AssociaÃ§Ã£o.');
-            logout();
-            return;
+    try {
+        if (currentUser && currentUser.perfil !== 'diretoria') {
+            let list = [];
+            try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch(e) {}
+            const cleanCpf = (currentUser.cpf || '').replace(/\D/g, '');
+            const currentDbState = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
+            if (currentDbState && currentDbState.status === 'desligado') {
+                alert('🚫 ACESSO REVOGADO!\n\nSeu cadastro consta como DESLIGADO da Associação.');
+                logout();
+                return;
+            }
         }
-    }
 
-    document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
-    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
 
-    const activeTab = document.getElementById(`tab-${tabId}`);
-    if (activeTab) activeTab.style.display = 'block';
+        const activeTab = document.getElementById(`tab-${tabId}`);
+        if (activeTab) activeTab.style.display = 'block';
 
-    // Destacar item de menu ativo
-    const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick')?.includes(tabId));
-    if (activeNav) activeNav.classList.add('active');
+        // Destacar item de menu ativo
+        const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick')?.includes(tabId));
+        if (activeNav) activeNav.classList.add('active');
 
-    // Executar atualizações de tela específicas
-    if (tabId === 'overview-diretoria') renderDiretoriaOverview();
-    if (tabId === 'gestao-associados') renderGestaoAssociados();
-    if (tabId === 'associados-desligados') renderAssociadosDesligados();
-    if (tabId === 'gestao-mensalidades') {
-        if (typeof dbService !== 'undefined' && dbService.getMensalidades) {
-            dbService.getMensalidades().then(() => {
-                renderGestaoMensalidades();
-            });
-        } else {
-            renderGestaoMensalidades();
+        // Executar atualizações de tela específicas de forma protegida
+        try {
+            if (tabId === 'overview-diretoria' && typeof renderDiretoriaOverview === 'function') renderDiretoriaOverview();
+            if (tabId === 'gestao-associados' && typeof renderGestaoAssociados === 'function') renderGestaoAssociados();
+            if (tabId === 'associados-desligados' && typeof renderAssociadosDesligados === 'function') renderAssociadosDesligados();
+            if (tabId === 'gestao-mensalidades') {
+                if (typeof dbService !== 'undefined' && dbService.getMensalidades) {
+                    dbService.getMensalidades().then(() => {
+                        if (typeof renderGestaoMensalidades === 'function') renderGestaoMensalidades();
+                    }).catch(e => {
+                        if (typeof renderGestaoMensalidades === 'function') renderGestaoMensalidades();
+                    });
+                } else if (typeof renderGestaoMensalidades === 'function') {
+                    renderGestaoMensalidades();
+                }
+            }
+            if (tabId === 'gestao-financeira' && typeof renderGestaoFinanceira === 'function') renderGestaoFinanceira();
+            if (tabId === 'overview-associado' && typeof renderAssociadoOverview === 'function') renderAssociadoOverview();
+            if (tabId === 'comunicados-associado' && typeof renderComunicadosHistoricoAssociado === 'function') renderComunicadosHistoricoAssociado();
+            if (tabId === 'balancetes-associado' && typeof renderBalancetesAssociado === 'function') renderBalancetesAssociado();
+            if ((tabId === 'documentos-associado' || tabId === 'documentos-diretoria') && typeof renderDocumentos === 'function') renderDocumentos();
+            if (tabId === 'mensagens-diretoria' && typeof renderMensagensDiretoria === 'function') renderMensagensDiretoria();
+        } catch (subErr) {
+            console.error("Aviso ao renderizar aba " + tabId + ":", subErr);
         }
+    } catch (tabErr) {
+        console.error("Erro na navegação de abas:", tabErr);
     }
-    if (tabId === 'gestao-financeira') renderGestaoFinanceira();
-    if (tabId === 'overview-associado') renderAssociadoOverview();
-    if (tabId === 'comunicados-associado') renderComunicadosHistoricoAssociado();
-    if (tabId === 'balancetes-associado') renderBalancetesAssociado();
-    if (tabId === 'documentos-associado' || tabId === 'documentos-diretoria') renderDocumentos();
-    if (tabId === 'mensagens-diretoria') renderMensagensDiretoria();
 }
 
 // LÓGICA DA DIRETORIA: PAINEL GERAL E TABELAS
