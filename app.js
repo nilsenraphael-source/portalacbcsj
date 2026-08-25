@@ -253,7 +253,7 @@ const idbStorage = {
 };
 
 // INICIALIZAÇÃO E LIMPEZA DE DADOS
-const ACBCSJ_BUILD_VERSION = "2026-08-24_v11";
+const ACBCSJ_BUILD_VERSION = "2026-08-25_v12";
 
 function forcarAtualizacaoCacheSistema() {
     localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
@@ -3609,7 +3609,7 @@ function abrirModalEditarBaixa(id) {
     openModal('modalEditarBaixaMensalidade');
 }
 
-function salvarEdicaoBaixaMensalidade(e) {
+async function salvarEdicaoBaixaMensalidade(e) {
     e.preventDefault();
     const id = document.getElementById('editBaixaId').value;
     const valorTotal = parseFloat(document.getElementById('editBaixaValor').value) || 0;
