@@ -253,7 +253,7 @@ const idbStorage = {
 };
 
 // INICIALIZAÇÃO E LIMPEZA DE DADOS
-const ACBCSJ_BUILD_VERSION = "2026-08-25_v20";
+const ACBCSJ_BUILD_VERSION = "2026-08-25_v21";
 
 function forcarAtualizacaoCacheSistema() {
     localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
@@ -279,7 +279,7 @@ function checkPersistedSession() {
                 const authScreen = document.getElementById('authScreen');
                 const appDashboard = document.getElementById('appDashboard');
                 if (authScreen) authScreen.style.setProperty('display', 'none', 'important');
-                if (appDashboard) authScreen ? appDashboard.style.setProperty('display', 'flex', 'important') : null;
+                if (appDashboard) appDashboard.style.setProperty('display', 'flex', 'important');
                 try {
                     renderUserHeader();
                     renderSidebarMenu();
@@ -293,6 +293,12 @@ function checkPersistedSession() {
     } catch (e) {
         console.warn("⚠️ Aviso ao checar sessão salva:", e);
     }
+    
+    // Se não há usuário válido na sessão, garante exibição da tela de login
+    const authScreen = document.getElementById('authScreen');
+    const appDashboard = document.getElementById('appDashboard');
+    if (authScreen) authScreen.style.setProperty('display', 'flex', 'important');
+    if (appDashboard) appDashboard.style.setProperty('display', 'none', 'important');
     return false;
 }
 window.checkPersistedSession = checkPersistedSession;
@@ -401,12 +407,8 @@ function setupCPFMasks() {
 async function loginWithCPF(cpf, password, roleHint = null) {
     console.log("🗝️ Executando loginWithCPF...", cpf, roleHint);
     
-    // Alternância de tela visual instantânea garantida
     const authScreen = document.getElementById('authScreen');
     const appDashboard = document.getElementById('appDashboard');
-
-    if (authScreen) authScreen.style.setProperty('display', 'none', 'important');
-    if (appDashboard) appDashboard.style.setProperty('display', 'flex', 'important');
 
     try {
         let list = [];
@@ -454,6 +456,10 @@ async function loginWithCPF(cpf, password, roleHint = null) {
 
         // SALVA A SESSÃO DO USUÁRIO LOGADO NO LOCALSTORAGE
         try { localStorage.setItem('acbcsj_logged_user', JSON.stringify(currentUser)); } catch(e) {}
+
+        // Alternância visual após validação do usuário
+        if (authScreen) authScreen.style.setProperty('display', 'none', 'important');
+        if (appDashboard) appDashboard.style.setProperty('display', 'flex', 'important');
 
         try {
             renderUserHeader();
