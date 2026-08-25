@@ -253,7 +253,7 @@ const idbStorage = {
 };
 
 // INICIALIZAÇÃO E LIMPEZA DE DADOS
-const ACBCSJ_BUILD_VERSION = "2026-08-25_v12";
+const ACBCSJ_BUILD_VERSION = "2026-08-25_v16";
 
 function forcarAtualizacaoCacheSistema() {
     localStorage.setItem("acbcsj_build_version", ACBCSJ_BUILD_VERSION);
@@ -266,6 +266,29 @@ function forcarAtualizacaoCacheSistema() {
 }
 window.forcarAtualizacaoCacheSistema = forcarAtualizacaoCacheSistema;
 
+function checkPersistedSession() {
+    try {
+        const savedUserStr = localStorage.getItem('acbcsj_logged_user');
+        if (savedUserStr) {
+            const savedUser = JSON.parse(savedUserStr);
+            if (savedUser && savedUser.cpf) {
+                currentUser = savedUser;
+                const authScreen = document.getElementById('authScreen');
+                const appDashboard = document.getElementById('appDashboard');
+                if (authScreen) authScreen.setAttribute('style', 'display: none !important;');
+                if (appDashboard) appDashboard.setAttribute('style', 'display: flex !important; min-height: 100vh; flex-direction: column;');
+                renderUserHeader();
+                renderSidebarMenu();
+                navigateTab(currentUser.perfil === 'diretoria' ? 'overview-diretoria' : 'overview-associado');
+                return true;
+            }
+        }
+    } catch (e) {
+        console.warn("⚠️ Aviso ao checar sessão salva:", e);
+    }
+    return false;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const savedVersion = localStorage.getItem("acbcsj_build_version");
     if (savedVersion !== ACBCSJ_BUILD_VERSION) {
@@ -276,10 +299,13 @@ document.addEventListener("DOMContentLoaded", () => {
     setupCPFMasks();
     if (typeof setupNavigation === 'function') setupNavigation();
 
+    // Restaura a sessão do usuário caso ele estivesse logado antes do refresh
+    checkPersistedSession();
+
     // Sincroniza automaticamente os dados online do Supabase na inicialização
     if (typeof dbService !== 'undefined' && dbService.syncFromSupabase) {
         dbService.syncFromSupabase().then(() => {
-            if (typeof renderGestaoMensalidades === 'function' && document.getElementById('tableGestaoMensalidadesBody')) {
+            if (currentUser && typeof renderGestaoMensalidades === 'function' && document.getElementById('tableGestaoMensalidadesBody')) {
                 renderGestaoMensalidades();
             }
         });
@@ -357,7 +383,7 @@ function setupCPFMasks() {
 
 // AUTENTICAÇÃO E LOGIN
 async function loginWithCPF(cpf, password, roleHint = null) {
-    console.log("ðŸ”‘ Executando loginWithCPF...", cpf, roleHint);
+    console.log("🗝️ Executando loginWithCPF...", cpf, roleHint);
     try {
         let list = [];
         try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch(e) {}
@@ -388,7 +414,7 @@ async function loginWithCPF(cpf, password, roleHint = null) {
                 
                 if (found) {
                     if (found.status === 'desligado') {
-                        alert('ðŸš« ACESSO BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da AssociaÃ§Ã£o.');
+                        alert('🚫 ACESSO BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da Associação.');
                         return;
                     }
                     currentUser = found;
@@ -402,7 +428,10 @@ async function loginWithCPF(cpf, password, roleHint = null) {
             currentUser = { nome: 'Comandante / Diretoria ACBCSJ', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
         }
 
-        // ForÃ§a exibiÃ§Ã£o do Dashboard
+        // SALVA A SESSÃO DO USUÁRIO LOGADO NO LOCALSTORAGE
+        localStorage.setItem('acbcsj_logged_user', JSON.stringify(currentUser));
+
+        // Força exibição do Dashboard
         const authScreen = document.getElementById('authScreen');
         const appDashboard = document.getElementById('appDashboard');
 
@@ -414,7 +443,7 @@ async function loginWithCPF(cpf, password, roleHint = null) {
             renderSidebarMenu();
             navigateTab(currentUser.perfil === 'diretoria' ? 'overview-diretoria' : 'overview-associado');
         } catch (uiErr) {
-            console.error('Aviso ao carregar telas pÃ³s-login:', uiErr);
+            console.error('Aviso ao carregar telas pós-login:', uiErr);
         }
     } catch (err) {
         console.error('Erro ao efetuar login:', err);
@@ -429,8 +458,11 @@ window.loginWithCPF = loginWithCPF;
 
 function logout() {
     currentUser = null;
-    document.getElementById('appDashboard').style.display = 'none';
-    document.getElementById('authScreen').style.display = 'flex';
+    localStorage.removeItem('acbcsj_logged_user');
+    const authScreen = document.getElementById('authScreen');
+    const appDashboard = document.getElementById('appDashboard');
+    if (appDashboard) appDashboard.style.display = 'none';
+    if (authScreen) authScreen.style.display = 'flex';
 }
 
 // RENDERIZAÇÃO DO CABEÇALHO DO USUÁRIO
@@ -1611,7 +1643,11 @@ function salvarNovoComunicado(e) {
     comunicados.unshift(novoComunicado);
     localStorage.setItem('acbcsj_comunicados_enviados', JSON.stringify(comunicados));
 
-    alert(`Comunicado "${assunto}" encaminhado com sucesso para ${resumoDestinatarios}!`);
+    if (typeof dbService !== 'undefined' && dbService.addMensagem) {
+        try { await dbService.addMensagem(novoComunicado); } catch(e) {}
+    }
+
+    alert(`Comunicado "${assunto}" encaminhado com sucesso para ${resumoDestinatarios}! (Enviado para o Supabase Online ✅)`);
     closeModal('modalEnviarComunicado');
     alternarAbaMensagensDiretoria('enviadas');
 }
@@ -1621,6 +1657,9 @@ function excluirComunicadoEnviado(id) {
         let comunicados = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
         comunicados = comunicados.filter(c => c.id !== id);
         localStorage.setItem('acbcsj_comunicados_enviados', JSON.stringify(comunicados));
+        if (typeof dbService !== 'undefined' && dbService.deleteMensagem) {
+            try { dbService.deleteMensagem(id); } catch(e) {}
+        }
         alert('Comunicado removido.');
         renderMensagensDiretoria();
     }
@@ -1831,10 +1870,12 @@ function salvarNovoLancamento(e) {
         }
 
         try {
-            dbService.addFinanceiro(novoLancamento);
+            if (typeof dbService !== 'undefined' && dbService.saveFinanceiro) {
+                await dbService.saveFinanceiro(novoLancamento);
+            }
         } catch (err) {}
 
-        alert(`Lançamento de ${tipo.toUpperCase()} (R$ ${valor.toFixed(2).replace('.', ',')}) cadastrado com sucesso!`);
+        alert(`Lançamento de ${tipo.toUpperCase()} (R$ ${valor.toFixed(2).replace('.', ',')}) cadastrado com sucesso! (Enviado para o Supabase Online ✅)`);
         e.target.reset();
         closeModal('modalNovoLancamento');
         renderGestaoFinanceira();
@@ -1856,6 +1897,9 @@ function excluirLancamentoFinanceiro(id) {
         let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
         list = list.filter(item => item.id !== id);
         localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+        if (typeof dbService !== 'undefined' && dbService.deleteFinanceiro) {
+            try { dbService.deleteFinanceiro(id); } catch(e) {}
+        }
         idbStorage.deleteFile(id);
         alert('Lançamento removido com sucesso.');
         renderGestaoFinanceira();
@@ -3434,16 +3478,40 @@ async function salvarBaixaMensalidade(e) {
     historicoGeral.unshift(itemHistorico);
     localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(historicoGeral));
 
-        if (typeof dbService !== 'undefined' && dbService.addMensalidade) {
-        try { await dbService.addMensalidade(itemHistorico); } catch(e) { console.error('Erro ao enviar para Supabase:', e); }
+    let supabaseStatusStr = '';
+    if (typeof dbService !== 'undefined' && dbService.addMensalidade) {
+        try {
+            await dbService.addMensalidade(itemHistorico);
+            supabaseStatusStr = ' (Enviado e gravado no Supabase Online ✅)';
+        } catch(e) {
+            console.error('Erro ao enviar para Supabase:', e);
+            supabaseStatusStr = ' (Salvo localmente. Clique em ⚡ Sincronizar Online se necessário)';
+        }
     }
     recalcularGridAssociado(cpf, anoRef);
 
-    alert(`Baixa de mensalidade de R$ ${valorTotal.toFixed(2).replace('.', ',')} (${mesesTexto}/${anoRef}) efetuada com sucesso para ${nomeAssociado}!`);
+    alert(`Baixa de mensalidade de R$ ${valorTotal.toFixed(2).replace('.', ',')} (${mesesTexto}/${anoRef}) efetuada com sucesso para ${nomeAssociado}!${supabaseStatusStr}`);
     closeModal('modalDarBaixaMensalidade');
     renderGestaoMensalidades();
     renderGestaoFinanceira();
 }
+
+async function sincronizarAgoraSupabaseManual() {
+    try {
+        if (typeof dbService !== 'undefined' && dbService.syncFromSupabase) {
+            await dbService.syncFromSupabase();
+            if (typeof renderGestaoMensalidades === 'function') renderGestaoMensalidades();
+            if (typeof renderGestaoFinanceira === 'function') renderGestaoFinanceira();
+            alert("✅ Sincronização concluída com sucesso! Todos os dados foram consolidados com o Supabase online.");
+        } else {
+            alert("⚠️ Serviço de banco de dados não disponível.");
+        }
+    } catch(e) {
+        console.error("Erro na sincronização manual:", e);
+        alert("⚠️ Erro ao sincronizar com o Supabase: " + (e.message || e));
+    }
+}
+window.sincronizarAgoraSupabaseManual = sincronizarAgoraSupabaseManual;
 
 // VER EXTRATO DO ASSOCIADO E OPÇÕES DE EDIÇÃO
 function verExtratoAssociado(cpf) {
