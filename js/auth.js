@@ -1,10 +1,10 @@
-﻿// ==========================================
-// PORTAL ACBCSJ - MÃ“DULO DE AUTENTICAÃ‡ÃƒO
+// ==========================================
+// PORTAL ACBCSJ - MÓDULO DE AUTENTICAÇÃO
 // ==========================================
 
 // AUTENTICAÇÃO E LOGIN
 async function loginWithCPF(cpf, password, roleHint = null) {
-    console.log("ðŸ”‘ Executando loginWithCPF...", cpf, roleHint);
+    console.log("🔑 Executando loginWithCPF...", cpf, roleHint);
     try {
         if (typeof dbService !== 'undefined') {
             try {
@@ -20,27 +20,49 @@ async function loginWithCPF(cpf, password, roleHint = null) {
             } else if (typeof ASSOCIADOS_PLANILHA_REAL !== 'undefined' && ASSOCIADOS_PLANILHA_REAL.length > 0) {
                 list = ASSOCIADOS_PLANILHA_REAL;
             }
-            if (list && list.length > 0) {
-                localStorage.setItem('acbcsj_associados', JSON.stringify(list));
-            }
         }
 
-        if (roleHint === 'diretoria') {
-            currentUser = list.find(a => a.perfil === 'diretoria' && a.status === 'ativo') || list[0] || { nome: 'Comandante / Diretoria ACBCSJ', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
-            if (currentUser) currentUser.status = 'ativo';
+        // Garante que o Comandante exista na lista
+        if (!list.some(a => a.cpf === '000.000.000-00' || a.perfil === 'diretoria')) {
+            list.unshift({
+                id: "1",
+                cpf: "000.000.000-00",
+                senha: "123",
+                nome: "Comandante / Diretoria ACBCSJ",
+                nome_guerra: "Comandante",
+                email: "diretoria@acbcsj.org.br",
+                perfil: "diretoria",
+                status: "ativo",
+                data_cadastro: "01/01/2022"
+            });
+        }
+        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+
+        if (roleHint === 'diretoria' || (cpf && cpf.replace(/\D/g, '') === '00000000000')) {
+            currentUser = list.find(a => a.perfil === 'diretoria') || list[0] || {
+                id: "1",
+                nome: 'Comandante / Diretoria ACBCSJ',
+                nome_guerra: 'Comandante',
+                cpf: '000.000.000-00',
+                perfil: 'diretoria',
+                status: 'ativo'
+            };
+            currentUser.perfil = 'diretoria';
+            currentUser.status = 'ativo';
         } else if (roleHint === 'associado') {
             currentUser = list.find(a => a.perfil === 'associado' && a.status === 'ativo') || list[1] || list[0];
+            if (currentUser) currentUser.perfil = 'associado';
         } else {
             const cleanInputCPF = (cpf || '').replace(/\D/g, '');
             
-            if (!cleanInputCPF) {
+            if (!cleanInputCPF || cleanInputCPF === '00000000000') {
                 currentUser = list.find(a => a.perfil === 'diretoria') || list[0];
             } else {
                 const found = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanInputCPF || a.cpf === cpf);
                 
                 if (found) {
                     if (found.status === 'desligado') {
-                        alert('ðŸš« ACESSO BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da AssociaÃ§Ã£o.');
+                        alert('🚫 ACESSO BLOQUEADO!\n\nEste cadastro consta como DESLIGADO da Associação.');
                         return;
                     }
                     currentUser = found;
@@ -51,10 +73,10 @@ async function loginWithCPF(cpf, password, roleHint = null) {
         }
 
         if (!currentUser) {
-            currentUser = { nome: 'Comandante / Diretoria ACBCSJ', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
+            currentUser = { id: "1", nome: 'Comandante / Diretoria ACBCSJ', cpf: '000.000.000-00', perfil: 'diretoria', status: 'ativo' };
         }
 
-        // ForÃ§a exibiÃ§Ã£o do Dashboard
+        // Força exibição do Dashboard
         const authScreen = document.getElementById('authScreen');
         const appDashboard = document.getElementById('appDashboard');
 
@@ -66,7 +88,7 @@ async function loginWithCPF(cpf, password, roleHint = null) {
             renderSidebarMenu();
             navigateTab(currentUser.perfil === 'diretoria' ? 'overview-diretoria' : 'overview-associado');
         } catch (uiErr) {
-            console.error('Aviso ao carregar telas pÃ³s-login:', uiErr);
+            console.error('Aviso ao carregar telas pós-login:', uiErr);
         }
     } catch (err) {
         console.error('Erro ao efetuar login:', err);

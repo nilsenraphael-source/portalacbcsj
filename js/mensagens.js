@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // PORTAL ACBCSJ - MENSAGENS E COMUNICADOS
 // ==========================================
 
@@ -268,7 +268,7 @@ function salvarNovoComunicado(e) {
         } catch(e) {}
     }
 
-    alert(Comunicado "${assunto}" encaminhado com sucesso para ${resumoDestinatarios}!`);
+    alert(`Comunicado "${assunto}" encaminhado com sucesso para ${resumoDestinatarios}!`);
     closeModal('modalEnviarComunicado');
     alternarAbaMensagensDiretoria('enviadas');
 }
