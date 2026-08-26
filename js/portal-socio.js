@@ -434,18 +434,10 @@ function renderAssociadoOverview() {
     // 3. Comunicados & Avisos da Diretoria destinados ao usuário atual
     const comunicadosContainer = document.getElementById('containerMeusComunicadosDiretoria');
     if (comunicadosContainer) {
-        const comunicadosAll = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
         const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
         const lidos = getComunicadosLidosUsuario();
 
-        const meusComunicados = comunicadosAll.filter(c => {
-            if (c.destinatario_tipo === 'todos') return true;
-            if (c.destinatarios_cpfs && Array.isArray(c.destinatarios_cpfs)) {
-                if (c.destinatarios_cpfs.includes('TODOS')) return true;
-                return c.destinatarios_cpfs.some(cpfItem => (cpfItem || '').replace(/\D/g, '') === cleanUserCpf);
-            }
-            return false;
-        });
+        const meusComunicados = obterTodosComunicadosEMensagensAssociado(cleanUserCpf);
 
         // Somente comunicados PENDENTES DE LEITURA (!lidos.includes(c.id))
         const pendentesLeitura = meusComunicados.filter(c => !lidos.includes(c.id));
@@ -631,25 +623,93 @@ function marcarComunicadoLido(comunicadoId) {
     renderComunicadosHistoricoAssociado();
 }
 
+function obterTodosComunicadosEMensagensAssociado(cleanUserCpf) {
+    const comunicadosAll = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+    const mensagensAll = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+
+    const itens = [];
+
+    // 1. Comunicados gerais ou individuais enviados pela diretoria
+    comunicadosAll.forEach(c => {
+        let match = false;
+        if (c.destinatario_tipo === 'todos') match = true;
+        else if (c.destinatarios_cpfs && Array.isArray(c.destinatarios_cpfs)) {
+            if (c.destinatarios_cpfs.includes('TODOS')) match = true;
+            else if (c.destinatarios_cpfs.some(cpfItem => (cpfItem || '').replace(/\D/g, '') === cleanUserCpf)) match = true;
+        }
+        if (match) {
+            itens.push({
+                id: c.id,
+                assunto: c.assunto,
+                mensagem: c.mensagem,
+                prioridade: c.prioridade || 'Informativo',
+                data: c.data,
+                remetente_nome: c.remetente_nome || 'Diretoria ACBCSJ',
+                destinatarios_resumo: c.destinatarios_resumo || 'Associados'
+            });
+        }
+    });
+
+    // 2. Mensagens diretas ou respostas de solicitações (ex: indeferimento/homologação de desligamento ou resposta de ideia)
+    mensagensAll.forEach(m => {
+        const cleanDest = (m.destinatario || '').replace(/\D/g, '');
+        const cleanAssoc = (m.associado_cpf || '').replace(/\D/g, '');
+
+        if (cleanDest === cleanUserCpf || (cleanAssoc === cleanUserCpf && (m.status === 'indeferida' || m.status === 'respondida' || m.status === 'homologada' || m.resposta))) {
+            let msgFormatada = m.conteudo || m.mensagem || '';
+            if (m.resposta && !msgFormatada.includes(m.resposta)) {
+                msgFormatada += `\n\n📌 RESPOSTA OFICIAL DA DIRETORIA:\n"${m.resposta}"\n\n(Respondido por: ${m.respondido_por || 'Diretoria'} em ${m.data_resposta || m.data_envio || ''})`;
+            }
+
+            itens.push({
+                id: m.id,
+                assunto: m.assunto || '📢 Notificação da Diretoria',
+                mensagem: msgFormatada,
+                prioridade: m.prioridade || (m.status === 'indeferida' ? 'Urgente' : 'Importante'),
+                data: m.data_resposta || m.data_envio || m.data || 'Recente',
+                remetente_nome: m.respondido_por ? `${m.respondido_por} (Diretoria)` : 'Diretoria ACBCSJ',
+                destinatarios_resumo: '👤 Você'
+            });
+        }
+    });
+
+    // Se o usuário tem resposta direta de desligamento gravada em seu perfil
+    if (currentUser && currentUser.solicitacao_desligamento_resposta && (!currentUser.solicitacao_desligamento || currentUser.solicitacao_desligamento.status !== 'pendente')) {
+        const resp = currentUser.solicitacao_desligamento_resposta;
+        const respId = 'resp_deslig_' + (resp.data || '').replace(/\D/g, '');
+        if (!itens.some(it => it.id === respId || (it.assunto && it.assunto.includes('Desligamento')))) {
+            itens.unshift({
+                id: respId,
+                assunto: '📢 Resposta à Solicitação de Desligamento (Indeferida)',
+                mensagem: `Sua solicitação voluntária de desligamento foi analisada pela Diretoria da ACBCSJ e foi INDEFERIDA / NÃO HOMOLOGADA em ${resp.data}.\n\nJustificativa da Diretoria: "${resp.justificativa}"\n\nRespondido por: ${resp.respondido_por || 'Diretoria ACBCSJ'}.\nSeu cadastro permanece ativo.`,
+                prioridade: 'Urgente',
+                data: resp.data,
+                remetente_nome: `${resp.respondido_por || 'Diretoria'} (Diretoria)`,
+                destinatarios_resumo: '👤 Você'
+            });
+        }
+    }
+
+    // Deduplica por id
+    const mapa = new Map();
+    itens.forEach(it => {
+        if (!mapa.has(it.id)) mapa.set(it.id, it);
+    });
+
+    return Array.from(mapa.values());
+}
+
 function renderComunicadosHistoricoAssociado() {
     if (!currentUser) return;
     const container = document.getElementById('containerHistoricoComunicadosAssociado');
     if (!container) return;
 
-    const comunicadosAll = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
     const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
     const lidos = getComunicadosLidosUsuario();
 
     const termoBusca = (document.getElementById('filtroTextoComunicadosAssociado')?.value || '').toLowerCase().trim();
 
-    let meusComunicados = comunicadosAll.filter(c => {
-        if (c.destinatario_tipo === 'todos') return true;
-        if (c.destinatarios_cpfs && Array.isArray(c.destinatarios_cpfs)) {
-            if (c.destinatarios_cpfs.includes('TODOS')) return true;
-            return c.destinatarios_cpfs.some(cpfItem => (cpfItem || '').replace(/\D/g, '') === cleanUserCpf);
-        }
-        return false;
-    });
+    let meusComunicados = obterTodosComunicadosEMensagensAssociado(cleanUserCpf);
 
     if (termoBusca) {
         meusComunicados = meusComunicados.filter(c => 

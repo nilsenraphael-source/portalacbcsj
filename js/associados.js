@@ -324,6 +324,7 @@ function aprovarSolicitacaoDesligamento(cpf) {
 
     const agora = new Date();
     const dataHoraDesligamento = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const nomeDiretor = currentUser ? (currentUser.nome_guerra || currentUser.nome) : 'Diretoria ACBCSJ';
 
     a.status = 'desligado';
     a.data_desligamento = dataHoraDesligamento;
@@ -339,6 +340,7 @@ function aprovarSolicitacaoDesligamento(cpf) {
     if (a.solicitacao_desligamento) {
         a.solicitacao_desligamento.status = 'aprovada';
         a.solicitacao_desligamento.data_homologacao = dataHoraDesligamento;
+        a.solicitacao_desligamento.respondido_por = nomeDiretor;
     }
 
     localStorage.setItem('acbcsj_associados', JSON.stringify(list));
@@ -350,6 +352,10 @@ function aprovarSolicitacaoDesligamento(cpf) {
         msgs.forEach(m => {
             if (m.assunto && m.assunto.includes('Solicitação de Desligamento') && (m.associado_cpf || '').replace(/\D/g, '') === cleanCpf) {
                 m.status = 'homologada';
+                m.respondido_por = nomeDiretor;
+                m.respondido_por_cpf = currentUser ? currentUser.cpf : '';
+                m.data_resposta = dataHoraDesligamento;
+                m.resposta = 'Desligamento homologado com sucesso pela Diretoria.';
                 if (typeof dbService !== 'undefined') dbService.addMensagem(m);
             }
         });
@@ -362,7 +368,7 @@ function aprovarSolicitacaoDesligamento(cpf) {
         }
     } catch(err) {}
 
-    alert(`Desligamento do associado ${a.nome_guerra || a.nome} homologado com sucesso em ${dataHoraDesligamento}!`);
+    alert(`Desligamento do associado ${a.nome_guerra || a.nome} homologado com sucesso por ${nomeDiretor} em ${dataHoraDesligamento}!`);
     renderGestaoAssociados();
     renderAssociadosDesligados();
     renderDiretoriaOverview();
@@ -396,9 +402,19 @@ function confirmarRecusarSolicitacao(e) {
 
     const agora = new Date();
     const dataHora = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const nomeDiretor = currentUser ? (currentUser.nome_guerra || currentUser.nome) : 'Diretoria ACBCSJ';
 
     a.solicitacao_desligamento = null; // Libera o associado
+    a.solicitacao_desligamento_resposta = {
+        status: 'indeferida',
+        justificativa: justificativa,
+        data: dataHora,
+        respondido_por: nomeDiretor
+    };
     localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+
+    const msgId = 'msg_recusa_deslig_' + Date.now();
+    const conteudoMsg = `Olá ${a.nome_guerra || a.nome},\n\nSua solicitação de desligamento voluntário foi analisada pela Diretoria da ACBCSJ e foi INDEFERIDA / NÃO HOMOLOGADA em ${dataHora}.\n\nJustificativa da Diretoria: "${justificativa}"\n\nRespondido por: ${nomeDiretor}\n\nSeu cadastro permanece ativo no quadro de associados.`;
 
     // Atualiza status das mensagens pendentes
     try {
@@ -407,32 +423,59 @@ function confirmarRecusarSolicitacao(e) {
         msgs.forEach(m => {
             if (m.assunto && m.assunto.includes('Solicitação de Desligamento') && (m.associado_cpf || '').replace(/\D/g, '') === cleanCpf) {
                 m.status = 'indeferida';
+                m.respondido_por = nomeDiretor;
+                m.respondido_por_cpf = currentUser ? currentUser.cpf : '';
+                m.data_resposta = dataHora;
+                m.resposta = justificativa;
                 if (typeof dbService !== 'undefined') dbService.addMensagem(m);
             }
         });
-        localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgs));
-    } catch(e) {}
 
-    try {
+        // Adiciona a nova mensagem direta para o associado
+        const msgDireta = {
+            id: msgId,
+            associado_id: a.id || null,
+            associado_cpf: a.cpf,
+            associado_nome: a.nome_guerra || a.nome,
+            destinatario: a.cpf,
+            assunto: '📢 Resposta à Solicitação de Desligamento (Indeferida)',
+            conteudo: conteudoMsg,
+            prioridade: 'Importante',
+            status: 'enviada',
+            respondido_por: nomeDiretor,
+            respondido_por_cpf: currentUser ? currentUser.cpf : '',
+            data_resposta: dataHora,
+            resposta: justificativa,
+            data_envio: dataHora
+        };
+        msgs.unshift(msgDireta);
+        localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgs));
+
+        // Também salva como comunicado direcionado para aparecer em Comunicados & Avisos
+        let comunicados = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+        comunicados.unshift({
+            id: msgId,
+            remetente_cpf: currentUser ? currentUser.cpf : '',
+            remetente_nome: `${nomeDiretor} (Diretoria)`,
+            destinatario_tipo: 'individual',
+            destinatarios_cpfs: [a.cpf],
+            destinatarios_resumo: `👤 ${a.nome_guerra || a.nome}`,
+            assunto: '📢 Resposta à Solicitação de Desligamento (Indeferida)',
+            prioridade: 'Importante',
+            mensagem: conteudoMsg,
+            data: dataHora
+        });
+        localStorage.setItem('acbcsj_comunicados_enviados', JSON.stringify(comunicados));
+
         if (typeof dbService !== 'undefined') {
             dbService.saveAssociado(a);
-            // Envia mensagem ao associado
-            dbService.addMensagem({
-                id: 'msg_recusa_deslig_' + Date.now(),
-                associado_id: a.id || null,
-                associado_cpf: a.cpf,
-                associado_nome: a.nome_guerra || a.nome,
-                destinatario: a.cpf,
-                assunto: '📢 Resposta à Solicitação de Desligamento',
-                conteudo: `Olá ${a.nome_guerra || a.nome},\n\nSua solicitação de desligamento voluntário foi analisada pela Diretoria da ACBCSJ e foi INDEFERIDA / NÃO HOMOLOGADA em ${dataHora}.\n\nJustificativa da Diretoria: ${justificativa}\n\nSeu cadastro permanece ativo no quadro de associados.`,
-                prioridade: 'Importante',
-                status: 'enviada',
-                data_envio: dataHora
-            });
+            dbService.addMensagem(msgDireta);
         }
-    } catch(err) {}
+    } catch(e) {
+        console.error("Erro ao registrar resposta de indeferimento:", e);
+    }
 
-    alert(`Solicitação de desligamento indeferida com sucesso. O associado ${a.nome_guerra || a.nome} foi notificado.`);
+    alert(`Solicitação de desligamento indeferida com sucesso por ${nomeDiretor}. O associado ${a.nome_guerra || a.nome} foi notificado.`);
     closeModal('modalRecusarSolicitacaoDesligamento');
     renderGestaoAssociados();
     renderDiretoriaOverview();

@@ -5,7 +5,7 @@
 async function enviarMensagemAssociado(e) {
     e.preventDefault();
     if (!currentUser) {
-        alert('Por favor, faÃ§a login para enviar mensagens.');
+        alert('Por favor, faça login para enviar mensagens.');
         return;
     }
     const assunto = document.getElementById('msgAssuntoAssociado').value.trim();
@@ -16,7 +16,7 @@ async function enviarMensagemAssociado(e) {
     }
 
     const agora = new Date();
-    const dataFormatada = agora.toLocaleDateString('pt-BR') + ' Ã s ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const dataFormatada = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     const msgObj = {
         id: 'msg_' + Date.now(),
@@ -70,31 +70,130 @@ function alternarAbaMensagensDiretoria(aba) {
     renderMensagensDiretoria();
 }
 
+// RENDERIZAR MENSAGENS NO PAINEL GERAL DA DIRETORIA (VISÃO GERAL)
+function renderMensagensDiretoriaOverview() {
+    const container = document.getElementById('tableMensagensDiretoriaOverviewBody');
+    if (!container) return;
+
+    const msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+    const recebidas = msgs.filter(m => m.destinatario === 'diretoria' || (m.associado_cpf && !m.id.startsWith('comunicado_')));
+
+    const elBadge = document.getElementById('badgeContadorMensagensRecebidas');
+    if (elBadge) {
+        const pendentes = recebidas.filter(m => m.status === 'pendente').length;
+        elBadge.textContent = `${pendentes} pendente(s) / ${recebidas.length} total`;
+    }
+
+    if (recebidas.length === 0) {
+        container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 16px;">Nenhuma mensagem recebida de associados até o momento.</td></tr>`;
+        return;
+    }
+
+    container.innerHTML = recebidas.map(m => {
+        let statusBadge = '<span class="badge badge-info" style="font-size: 11px;">🟡 Pendente</span>';
+        let infoResp = '';
+
+        if (m.status === 'respondida') {
+            statusBadge = '<span class="badge badge-success" style="font-size: 11px;">✅ Respondida</span>';
+            if (m.respondido_por) {
+                infoResp = `<br><small style="color:var(--text-muted); font-size: 11px;">Respondido por: <b style="color:var(--accent-gold);">${m.respondido_por}</b> em ${m.data_resposta || m.data_envio || ''}</small>`;
+            }
+        } else if (m.status === 'homologada') {
+            statusBadge = '<span class="badge badge-warning" style="font-size: 11px; background:#E67E22;">📜 Homologada</span>';
+            if (m.respondido_por) {
+                infoResp = `<br><small style="color:var(--text-muted); font-size: 11px;">Por: <b>${m.respondido_por}</b></small>`;
+            }
+        } else if (m.status === 'indeferida') {
+            statusBadge = '<span class="badge badge-danger" style="font-size: 11px;">❌ Indeferida</span>';
+            if (m.respondido_por) {
+                infoResp = `<br><small style="color:var(--text-muted); font-size: 11px;">Por: <b>${m.respondido_por}</b></small>`;
+            }
+        }
+
+        const msgPreview = (m.conteudo || m.mensagem || '').substring(0, 140) + ((m.conteudo || m.mensagem || '').length > 140 ? '...' : '');
+
+        return `
+            <tr>
+                <td><b>${m.associado_nome || 'Associado'}</b><br><small style="color:var(--text-muted)">${m.associado_cpf || '-'}</small></td>
+                <td><small style="color:var(--accent-gold); font-weight:600;">${m.data_envio || m.data || '-'}</small></td>
+                <td><b>${m.assunto || 'Sem assunto'}</b></td>
+                <td><div style="max-width: 280px; font-size: 12px; white-space: pre-wrap;">${msgPreview}</div></td>
+                <td>${statusBadge}${infoResp}</td>
+                <td>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        ${m.status === 'pendente' ? `
+                            <button class="btn btn-sm btn-primary" style="font-size: 11px; padding: 4px 8px;" onclick="abrirModalResponderMensagem('${m.id}')">
+                                ✉️ Responder
+                            </button>
+                        ` : `
+                            <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 4px 8px;" onclick="verDetalhesMensagem('${m.id}')">
+                                👁️ Ver Resposta
+                            </button>
+                        `}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
 function renderMensagensDiretoria() {
     const container = document.getElementById('listMensagensDiretoria');
     if (!container) return;
 
     if (abaMensagensAtiva === 'recebidas') {
         const msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
-        if (msgs.length === 0) {
+        const recebidas = msgs.filter(m => m.destinatario === 'diretoria' || (m.associado_cpf && !m.id.startsWith('comunicado_')));
+
+        if (recebidas.length === 0) {
             container.innerHTML = `
                 <div class="card" style="text-align: center; padding: 30px; color: var(--text-muted);">
                     <p style="font-size: 14px;">📥 Nenhuma mensagem recebida de associados até o momento.</p>
                 </div>
             `;
         } else {
-            container.innerHTML = msgs.map(m => `
-                <div class="card" style="margin-bottom: 12px; border-left: 4px solid var(--accent-gold);">
-                    <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 6px;">
-                        <b style="font-size: 15px; color: var(--accent-gold);">${m.assunto || 'Sem assunto'}</b>
-                        <small style="color:var(--text-muted); font-size: 11px;">📅 ${m.data || '-'}</small>
+            container.innerHTML = recebidas.map(m => {
+                let statusBadge = '<span class="badge badge-info">🟡 Aguardando Resposta</span>';
+                if (m.status === 'respondida') statusBadge = '<span class="badge badge-success">✅ Respondida</span>';
+                if (m.status === 'homologada') statusBadge = '<span class="badge badge-warning" style="background:#E67E22;">📜 Homologada</span>';
+                if (m.status === 'indeferida') statusBadge = '<span class="badge badge-danger">❌ Indeferida</span>';
+
+                let respostaHtml = '';
+                if (m.resposta) {
+                    respostaHtml = `
+                        <div style="background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.25); border-radius: 6px; padding: 10px; margin-top: 10px;">
+                            <div style="font-size: 11px; color: var(--status-success); font-weight: bold; margin-bottom: 4px;">
+                                💬 Resposta da Diretoria registrada por: ${m.respondido_por || 'Diretor(a)'} em ${m.data_resposta || m.data_envio || ''}
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-color); white-space: pre-wrap;">${m.resposta}</div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="card" style="margin-bottom: 14px; border-left: 4px solid ${m.status === 'pendente' ? 'var(--accent-gold)' : '#2ECC71'};">
+                        <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <b style="font-size: 15px; color: var(--accent-gold);">${m.assunto || 'Sem assunto'}</b>
+                                ${statusBadge}
+                            </div>
+                            <small style="color:var(--text-muted); font-size: 11px;">📅 ${m.data_envio || m.data || '-'}</small>
+                        </div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+                            👤 Remetente: <b style="color: #fff;">${m.associado_nome || 'Associado'}</b> (CPF: ${m.associado_cpf || '-'})
+                        </div>
+                        <p style="font-size:13px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; white-space: pre-wrap; margin: 0;">${m.conteudo || m.mensagem || ''}</p>
+                        ${respostaHtml}
+                        <div style="display: flex; justify-content: flex-end; margin-top: 10px; gap: 8px;">
+                            ${m.status === 'pendente' ? `
+                                <button class="btn btn-sm btn-primary" onclick="abrirModalResponderMensagem('${m.id}')">✉️ Responder Mensagem</button>
+                            ` : `
+                                <button class="btn btn-sm btn-outline" onclick="abrirModalResponderMensagem('${m.id}')">✏️ Atualizar Resposta</button>
+                            `}
+                        </div>
                     </div>
-                    <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
-                        👤 Enviado por: <b style="color: #fff;">${m.associado_nome || 'Associado'}</b>
-                    </div>
-                    <p style="font-size:13px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; white-space: pre-wrap; margin: 0;">${m.conteudo || m.mensagem || ''}</p>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
     } else {
         const comunicados = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
@@ -121,7 +220,7 @@ function renderMensagensDiretoria() {
                             <small style="color:var(--text-muted); font-size: 11px;">📅 ${c.data}</small>
                         </div>
                         <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
-                            👥 Destinatários: <b style="color: #3498DB;">${c.destinatarios_resumo}</b>
+                            👥 Destinatários: <b style="color: #3498DB;">${c.destinatarios_resumo}</b> | Enviado por: <b style="color: #fff;">${c.remetente_nome || 'Diretoria'}</b>
                         </div>
                         <p style="font-size:13px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; white-space: pre-wrap; margin: 0 0 10px 0;">${c.mensagem}</p>
                         <div style="display: flex; justify-content: flex-end;">
@@ -134,8 +233,128 @@ function renderMensagensDiretoria() {
     }
 }
 
+function abrirModalResponderMensagem(msgId) {
+    const msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+    const m = msgs.find(item => item.id === msgId);
+    if (!m) {
+        alert('Mensagem não localizada.');
+        return;
+    }
+
+    document.getElementById('respMsgId').value = m.id;
+    document.getElementById('respMsgAssociadoCpf').value = m.associado_cpf || '';
+    document.getElementById('respMsgAssociadoNome').value = m.associado_nome || 'Associado';
+    document.getElementById('respMsgAssuntoOriginal').value = m.assunto || 'Mensagem';
+
+    document.getElementById('respMsgAssociadoDisplay').value = `${m.associado_nome || 'Associado'} (CPF: ${m.associado_cpf || '-'})`;
+    document.getElementById('respMsgAssuntoDisplay').value = m.assunto || 'Sem assunto';
+    document.getElementById('respMsgConteudoOriginalDisplay').textContent = m.conteudo || m.mensagem || '';
+    document.getElementById('respMsgTexto').value = m.resposta || '';
+
+    openModal('modalResponderMensagemDiretoria');
+}
+
+function confirmarRespostaMensagemDiretoria(e) {
+    e.preventDefault();
+    const id = document.getElementById('respMsgId').value;
+    const assocCpf = document.getElementById('respMsgAssociadoCpf').value;
+    const assocNome = document.getElementById('respMsgAssociadoNome').value;
+    const assuntoOrig = document.getElementById('respMsgAssuntoOriginal').value;
+    const textoResp = document.getElementById('respMsgTexto').value.trim();
+
+    if (!textoResp) {
+        alert('Por favor, informe o texto da resposta.');
+        return;
+    }
+
+    const agora = new Date();
+    const dataHora = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const nomeDiretor = currentUser ? (currentUser.nome_guerra || currentUser.nome) : 'Diretoria ACBCSJ';
+
+    let msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+    const idx = msgs.findIndex(item => item.id === id);
+
+    if (idx >= 0) {
+        msgs[idx].status = 'respondida';
+        msgs[idx].resposta = textoResp;
+        msgs[idx].respondido_por = nomeDiretor;
+        msgs[idx].respondido_por_cpf = currentUser ? currentUser.cpf : '';
+        msgs[idx].data_resposta = dataHora;
+    }
+
+    // Cria também uma notificação direta no histórico de comunicados para o associado
+    const novoAviso = {
+        id: 'resp_msg_' + Date.now(),
+        remetente_cpf: currentUser ? currentUser.cpf : '',
+        remetente_nome: `${nomeDiretor} (Diretoria)`,
+        destinatario_tipo: 'individual',
+        destinatarios_cpfs: [assocCpf],
+        destinatarios_resumo: `👤 ${assocNome}`,
+        assunto: `📢 Resposta: ${assuntoOrig}`,
+        prioridade: 'Importante',
+        mensagem: `Olá ${assocNome},\n\nSua mensagem sobre "${assuntoOrig}" foi respondida pela Diretoria:\n\n"${textoResp}"\n\nRespondido por: ${nomeDiretor} em ${dataHora}.`,
+        data: dataHora
+    };
+
+    let comunicados = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+    comunicados.unshift(novoAviso);
+    localStorage.setItem('acbcsj_comunicados_enviados', JSON.stringify(comunicados));
+    localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgs));
+
+    if (typeof dbService !== 'undefined') {
+        if (idx >= 0) dbService.addMensagem(msgs[idx]);
+        dbService.addMensagem({
+            id: novoAviso.id,
+            associado_id: null,
+            associado_cpf: assocCpf,
+            associado_nome: assocNome,
+            destinatario: assocCpf,
+            assunto: novoAviso.assunto,
+            conteudo: novoAviso.mensagem,
+            prioridade: 'Importante',
+            status: 'enviada',
+            data_envio: dataHora
+        });
+    }
+
+    alert(`Resposta enviada com sucesso para ${assocNome}! O registro com seu nome (${nomeDiretor}) foi gravado.`);
+    closeModal('modalResponderMensagemDiretoria');
+    renderMensagensDiretoriaOverview();
+    renderMensagensDiretoria();
+}
+
+function verDetalhesMensagem(msgId) {
+    const msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+    const m = msgs.find(item => item.id === msgId);
+    if (!m) return;
+
+    document.getElementById('detMsgTitulo').textContent = `📄 ${m.assunto || 'Detalhes da Mensagem'}`;
+    document.getElementById('detMsgConteudoCompleto').innerHTML = `
+        <div style="margin-bottom: 12px;">
+            <b>👤 Remetente:</b> ${m.associado_nome || 'Associado'} (CPF: ${m.associado_cpf || '-'})<br>
+            <b>📅 Data do Envio:</b> ${m.data_envio || m.data || '-'}<br>
+            <b>📌 Status:</b> <span class="badge badge-success">${(m.status || 'recebida').toUpperCase()}</span>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; margin-bottom: 14px;">
+            <b>Mensagem do Associado:</b><br>
+            <div style="white-space: pre-wrap; margin-top: 6px;">${m.conteudo || m.mensagem || ''}</div>
+        </div>
+        ${m.resposta ? `
+            <div style="background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); border-radius: 6px; padding: 12px;">
+                <b style="color: var(--status-success);">✅ Resposta da Diretoria:</b><br>
+                <div style="white-space: pre-wrap; margin: 6px 0;">${m.resposta}</div>
+                <div style="font-size: 11px; color: var(--text-muted); border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px; margin-top: 6px;">
+                    Registrado por: <b>${m.respondido_por || 'Diretoria'}</b> em ${m.data_resposta || m.data_envio || ''}
+                </div>
+            </div>
+        ` : '<p style="color: var(--text-muted); font-style: italic;">Esta mensagem ainda não foi respondida.</p>'}
+    `;
+
+    openModal('modalDetalhesMensagemDiretoria');
+}
+
 function abrirModalEnviarComunicado() {
-        const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     let ativos = list.filter(a => a.status === 'ativo' || !a.status);
     ativos.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
 

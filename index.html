@@ -203,6 +203,35 @@
                             </table>
                         </div>
                     </div>
+
+                    <!-- CARD DE MENSAGENS & COMUNICAÇÕES RECEBIDAS DOS ASSOCIADOS (DIRETORIA) -->
+                    <div id="cardMensagensDiretoriaOverview" class="card" style="margin-bottom: 20px; border-left: 4px solid #3498DB;">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 class="card-title">📬 Mensagens & Ideias Recebidas dos Associados</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Mensagens, sugestões e comunicações enviadas por associados com registro de quem as respondeu.</p>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <span id="badgeContadorMensagensRecebidas" class="badge" style="background: rgba(52, 152, 219, 0.15); color: #3498DB; border: 1px solid rgba(52, 152, 219, 0.4); font-weight: bold;">0 mensagem(ns)</span>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="navigateTab('mensagens-diretoria')">Central Completa</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Associado</th>
+                                        <th>Data/Hora</th>
+                                        <th>Assunto</th>
+                                        <th>Mensagem</th>
+                                        <th>Status / Resposta</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableMensagensDiretoriaOverviewBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ABA 2: GESTÃO DE ASSOCIADOS (DIRETORIA) -->
@@ -1457,6 +1486,68 @@
                     <button type="submit" class="btn btn-gold" style="width: auto; padding: 8px 24px;">💾 Salvar Alterações</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE RESPOSTA A MENSAGEM DO ASSOCIADO (DIRETORIA) -->
+    <div id="modalResponderMensagemDiretoria" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title">✉️ Responder Mensagem do Associado</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Sua resposta será enviada diretamente ao painel do associado e ficará registrada com o seu nome.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalResponderMensagemDiretoria')">&times;</button>
+            </div>
+
+            <form onsubmit="confirmarRespostaMensagemDiretoria(event)">
+                <input type="hidden" id="respMsgId">
+                <input type="hidden" id="respMsgAssociadoCpf">
+                <input type="hidden" id="respMsgAssociadoNome">
+                <input type="hidden" id="respMsgAssuntoOriginal">
+
+                <div class="form-group">
+                    <label>Associado Remetente</label>
+                    <input type="text" id="respMsgAssociadoDisplay" class="form-control" readonly style="background: rgba(255,255,255,0.05); font-weight: bold;">
+                </div>
+
+                <div class="form-group">
+                    <label>Assunto</label>
+                    <input type="text" id="respMsgAssuntoDisplay" class="form-control" readonly style="background: rgba(255,255,255,0.05); color: var(--accent-gold); font-weight: bold;">
+                </div>
+
+                <div class="form-group">
+                    <label>Mensagem Enviada pelo Associado</label>
+                    <div id="respMsgConteudoOriginalDisplay" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; font-size: 13px; max-height: 120px; overflow-y: auto; white-space: pre-wrap; color: var(--text-color);"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Resposta Oficial da Diretoria <span class="req-star">*</span></label>
+                    <textarea id="respMsgTexto" class="form-control" rows="4" placeholder="Escreva aqui a resposta oficial da Diretoria..." required></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalResponderMensagemDiretoria')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">✉️ Enviar Resposta ao Associado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE DETALHES DA MENSAGEM / RESPOSTA REGISTRADA -->
+    <div id="modalDetalhesMensagemDiretoria" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" id="detMsgTitulo">📄 Detalhes da Mensagem</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Histórico de envio, conteúdo e registro de quem respondeu.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalDetalhesMensagemDiretoria')">&times;</button>
+            </div>
+            <div id="detMsgConteudoCompleto" style="font-size: 13px; line-height: 1.6;"></div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalDetalhesMensagemDiretoria')">Fechar</button>
+            </div>
         </div>
     </div>
 

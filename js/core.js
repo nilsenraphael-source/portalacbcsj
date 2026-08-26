@@ -348,6 +348,10 @@ function renderDiretoriaOverview() {
     if (typeof renderSolicitacoesDesligamentoDiretoria === 'function') {
         renderSolicitacoesDesligamentoDiretoria();
     }
+
+    if (typeof renderMensagensDiretoriaOverview === 'function') {
+        renderMensagensDiretoriaOverview();
+    }
 }
 
 
