@@ -578,49 +578,15 @@ const dbService = {
         this.updateOnlineBadge(null, "Sincronizando...");
         console.log("🌐 Sincronizando dados exclusivos do Supabase...");
 
-        const client = getSupabaseClient();
-        let assocData = null, finData = null, msgData = null, docData = null, mensData = null;
+        try {
+            const [assocData, finData, msgData, docData, mensData] = await Promise.all([
+                supabaseRest('associados?select=*'),
+                supabaseRest('financeiro_lancamentos?select=*'),
+                supabaseRest('mensagens?select=*'),
+                supabaseRest('documentos?select=*'),
+                supabaseRest('mensalidades?select=*')
+            ]);
 
-        if (client) {
-            try {
-                const [assocRes, finRes, msgRes, docRes, mensRes] = await Promise.all([
-                    client.from('associados').select('*'),
-                    client.from('financeiro_lancamentos').select('*'),
-                    client.from('mensagens').select('*'),
-                    client.from('documentos').select('*'),
-                    client.from('mensalidades').select('*')
-                ]);
-                if (assocRes && !assocRes.error && assocRes.data) assocData = assocRes.data;
-                if (finRes && !finRes.error && finRes.data) finData = finRes.data;
-                if (msgRes && !msgRes.error && msgRes.data) msgData = msgRes.data;
-                if (docRes && !docRes.error && docRes.data) docData = docRes.data;
-                if (mensRes && !mensRes.error && mensRes.data) mensData = mensRes.data;
-            } catch (e) {
-                console.warn("⚠️ Client SDK falhou, tentando fallback REST:", e);
-            }
-        }
-
-        // Se o client SDK não retornou os dados, usa a REST API direta (100% nativa)
-        if (!assocData) {
-            try {
-                const [a, f, m, d, ms] = await Promise.all([
-                    supabaseRest('associados?select=*'),
-                    supabaseRest('financeiro_lancamentos?select=*'),
-                    supabaseRest('mensagens?select=*'),
-                    supabaseRest('documentos?select=*'),
-                    supabaseRest('mensalidades?select=*')
-                ]);
-                if (Array.isArray(a)) assocData = a;
-                if (Array.isArray(f)) finData = f;
-                if (Array.isArray(m)) msgData = m;
-                if (Array.isArray(d)) docData = d;
-                if (Array.isArray(ms)) mensData = ms;
-            } catch (errRest) {
-                console.error("⚠️ Erro na consulta REST ao Supabase:", errRest);
-            }
-        }
-
-        if (assocData || finData || msgData || docData || mensData) {
             let count = 0;
             if (assocData && Array.isArray(assocData)) {
                 localStorage.setItem('acbcsj_associados', JSON.stringify(assocData));
@@ -641,16 +607,22 @@ const dbService = {
             if (mensData && Array.isArray(mensData)) {
                 localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(mensData));
                 count += mensData.length;
-                if (typeof recalcularTodasGridsMensalidades === 'function') {
-                    recalcularTodasGridsMensalidades();
-                }
+            }
+
+            if (typeof recalcularTodasGridsMensalidades === 'function') {
+                recalcularTodasGridsMensalidades();
             }
 
             this.updateOnlineBadge(true, "Supabase Online");
             console.log(`🎉 Dados do Supabase sincronizados com sucesso! (${count} registros no total)`);
+
+            if (typeof refreshCurrentView === 'function') {
+                refreshCurrentView();
+            }
+
             return true;
-        } else {
-            console.warn("⚠️ Não foi possível conectar ao Supabase.");
+        } catch (err) {
+            console.error("⚠️ Erro ao consultar Supabase:", err);
             this.updateOnlineBadge(false, "Erro de Conexão");
             return false;
         }
