@@ -71,16 +71,17 @@ function renderBalancetesAssociado() {
         }
     });
 
-    // Totais Consolidados do Ano
-    const totalReceitasAno = receitasPorMes.reduce((a, b) => a + b, 0);
+    // Totais Consolidados do Ano (incluindo mensalidades arrecadadas)
+    const totalArrecadadoMensalidadesAno = mensalidadesArrecadadasPorMes.reduce((a, b) => a + b, 0);
+    const totalReceitasGeraisAno = receitasPorMes.reduce((a, b) => a + b, 0);
+    const totalReceitasAno = totalReceitasGeraisAno + totalArrecadadoMensalidadesAno;
     const totalDespesasAno = despesasPorMes.reduce((a, b) => a + b, 0);
     const saldoAno = totalReceitasAno - totalDespesasAno;
 
     const totalPrevistoMensalidadesAno = mensalidadesPrevistasPorMes.reduce((a, b) => a + b, 0);
-    const totalArrecadadoMensalidadesAno = mensalidadesArrecadadasPorMes.reduce((a, b) => a + b, 0);
     const percEficiencia = totalPrevistoMensalidadesAno > 0 ? ((totalArrecadadoMensalidadesAno / totalPrevistoMensalidadesAno) * 100).toFixed(1) : '100.0';
 
-    // Atualiza elementos de métricas
+    // Atualiza elementos de metricas
     const elRec = document.getElementById('transpMetricReceitas');
     const elDes = document.getElementById('transpMetricDespesas');
     const elSal = document.getElementById('transpMetricSaldo');
@@ -488,10 +489,11 @@ function renderGestaoFinanceira() {
             .filter(item => item.origem === 'financeiro' && item.tipo === 'receita' && item.ano === anoSelected && item.mes === strMes)
             .reduce((sum, item) => sum + item.valor, 0);
 
-                // Sum Mensalidades PIX (do histÃ³rico real de baixas de mensalidade efetuadas)
-        let mensPix = combinedList
-            .filter(item => item.origem === 'mensalidade' && item.ano === anoSelected && item.mes === strMes)
-            .reduce((sum, item) => sum + item.valor, 0);
+        // Sum Mensalidades PIX (diretamente da grade anual de mensalidades para o mes correspondente)
+        let mensPix = 0;
+        gridMensalidades.forEach(socio => {
+            mensPix += (parseFloat(socio[mKey]) || 0);
+        });
 
         // Sum Despesas Gerais
         let despsGerais = combinedList

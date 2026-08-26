@@ -313,8 +313,35 @@ function renderDiretoriaOverview() {
     if (elBadgePreCadastros) elBadgePreCadastros.textContent = `${pendentes.length} pendente(s)`;
 
     // 5. Saldo em Caixa (Vermelho quando negativo, verde quando positivo/zerado)
-    const totalReceitas = financeiro.filter(f => f.tipo === 'receita').reduce((sum, item) => sum + Number(item.valor), 0);
-    const totalDespesas = financeiro.filter(f => f.tipo === 'despesa').reduce((sum, item) => sum + Number(item.valor), 0);
+    const gridKey = anoFiltro === 'todos' ? 'acbcsj_mensalidades_grid_2026' : `acbcsj_mensalidades_grid_${anoFiltro}`;
+    const gridMensalidades = JSON.parse(localStorage.getItem(gridKey)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
+    const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    
+    let totalMensalidadesArrecadadas = 0;
+    gridMensalidades.forEach(socio => {
+        mesesKeys.forEach(k => {
+            totalMensalidadesArrecadadas += (parseFloat(socio[k]) || 0);
+        });
+    });
+
+    const totalReceitasGerais = financeiro.filter(f => {
+        if (f.tipo !== 'receita') return false;
+        if (anoFiltro === 'todos') return true;
+        const parsed = typeof extrairMesEAno === 'function' ? extrairMesEAno(f.data, f.data_iso) : { ano: '' };
+        const fAno = parsed.ano || (f.data_iso ? f.data_iso.substring(0, 4) : (f.data ? f.data.split('/')[2] : '2026'));
+        return fAno === anoFiltro;
+    }).reduce((sum, item) => sum + (parseFloat(item.valor) || 0), 0);
+
+    const totalReceitas = totalReceitasGerais + totalMensalidadesArrecadadas;
+
+    const totalDespesas = financeiro.filter(f => {
+        if (f.tipo !== 'despesa') return false;
+        if (anoFiltro === 'todos') return true;
+        const parsed = typeof extrairMesEAno === 'function' ? extrairMesEAno(f.data, f.data_iso) : { ano: '' };
+        const fAno = parsed.ano || (f.data_iso ? f.data_iso.substring(0, 4) : (f.data ? f.data.split('/')[2] : '2026'));
+        return fAno === anoFiltro;
+    }).reduce((sum, item) => sum + (parseFloat(item.valor) || 0), 0);
+
     const saldo = totalReceitas - totalDespesas;
     
     const elSaldoCaixa = document.getElementById('metricSaldoCaixa');
