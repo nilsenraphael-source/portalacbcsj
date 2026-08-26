@@ -329,7 +329,7 @@ function enviarSolicitacaoDesligamento(e) {
         try {
             if (typeof dbService !== 'undefined') {
                 dbService.saveAssociado(currentUser);
-                // Notifica a Diretoria
+                // Notifica a Diretoria via Mensagens (sincronizada via Supabase)
                 dbService.addMensagem({
                     id: 'msg_deslig_' + Date.now(),
                     associado_id: currentUser.id || null,
@@ -340,7 +340,9 @@ function enviarSolicitacaoDesligamento(e) {
                     conteudo: `O associado ${currentUser.nome} (CPF: ${currentUser.cpf}) enviou uma solicitação de desligamento voluntário em ${dataHora}.\n\nMotivo: ${motivo}`,
                     prioridade: 'Urgente',
                     status: 'pendente',
-                    data_envio: dataHora
+                    data_envio: dataHora,
+                    arquivo_url: cartaDataUrl,
+                    arquivo_nome: cartaNome
                 });
             }
         } catch(err) {}

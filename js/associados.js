@@ -51,7 +51,32 @@ function renderGestaoAssociados() {
 
 // GESTÃO DE SOLICITAÇÕES DE DESLIGAMENTO PELA DIRETORIA
 function renderSolicitacoesDesligamentoDiretoria() {
-    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const mensagens = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+
+    // Reconciliação automática: Se houver mensagem de solicitação de desligamento pendente vinda do Supabase ou local
+    mensagens.forEach(msg => {
+        if (msg.assunto && msg.assunto.includes('Solicitação de Desligamento') && msg.status === 'pendente') {
+            const cleanCpf = (msg.associado_cpf || '').replace(/\D/g, '');
+            const assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf || a.id === msg.associado_id);
+            if (assoc && assoc.status !== 'desligado') {
+                if (!assoc.solicitacao_desligamento || assoc.solicitacao_desligamento.status !== 'pendente') {
+                    let motivoExtraido = msg.conteudo || msg.mensagem || 'Solicitação enviada pelo portal';
+                    if (motivoExtraido.includes('Motivo:')) {
+                        motivoExtraido = motivoExtraido.split('Motivo:')[1].trim();
+                    }
+                    assoc.solicitacao_desligamento = {
+                        data: msg.data_envio || msg.data || 'Recente',
+                        motivo: motivoExtraido,
+                        status: 'pendente',
+                        carta_url: msg.arquivo_url || null,
+                        carta_nome: msg.arquivo_nome || null
+                    };
+                }
+            }
+        }
+    });
+
     const pendentes = list.filter(a => a.solicitacao_desligamento && a.solicitacao_desligamento.status === 'pendente' && a.status !== 'desligado');
 
     // Atualiza contadores
@@ -166,6 +191,19 @@ function aprovarSolicitacaoDesligamento(cpf) {
 
     localStorage.setItem('acbcsj_associados', JSON.stringify(list));
 
+    // Atualiza mensagens pendentes no Supabase
+    try {
+        let msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+        const cleanCpf = cpf.replace(/\D/g, '');
+        msgs.forEach(m => {
+            if (m.assunto && m.assunto.includes('Solicitação de Desligamento') && (m.associado_cpf || '').replace(/\D/g, '') === cleanCpf) {
+                m.status = 'homologada';
+                if (typeof dbService !== 'undefined') dbService.addMensagem(m);
+            }
+        });
+        localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgs));
+    } catch(e) {}
+
     try {
         if (typeof dbService !== 'undefined') {
             dbService.saveAssociado(a);
@@ -209,6 +247,19 @@ function confirmarRecusarSolicitacao(e) {
 
     a.solicitacao_desligamento = null; // Libera o associado
     localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+
+    // Atualiza status das mensagens pendentes
+    try {
+        let msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+        const cleanCpf = cpf.replace(/\D/g, '');
+        msgs.forEach(m => {
+            if (m.assunto && m.assunto.includes('Solicitação de Desligamento') && (m.associado_cpf || '').replace(/\D/g, '') === cleanCpf) {
+                m.status = 'indeferida';
+                if (typeof dbService !== 'undefined') dbService.addMensagem(m);
+            }
+        });
+        localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgs));
+    } catch(e) {}
 
     try {
         if (typeof dbService !== 'undefined') {

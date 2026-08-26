@@ -47,6 +47,7 @@ function sanitizeAssociado(item) {
         motivo_desligamento: item.motivo_desligamento || null,
         carta_desligamento_url: item.carta_desligamento_url || null,
         carta_desligamento_nome: item.carta_desligamento_nome || null,
+        solicitacao_desligamento: item.solicitacao_desligamento || null,
         obm: item.obm || 'São José',
         profissao: item.profissao || 'Bombeiro Comunitário',
         senha: item.senha || '1234'
@@ -170,9 +171,17 @@ const dbService = {
 
         if (supabaseClient) {
             try {
-                const { error } = await supabaseClient.from('associados').upsert([clean]);
-                if (error) console.error("Erro ao salvar associado no Supabase:", error.message);
-                else console.log("✅ Associado salvo no Supabase:", clean.nome_guerra || clean.nome);
+                let payload = { ...clean };
+                let { error } = await supabaseClient.from('associados').upsert([payload]);
+                if (error && error.message && error.message.includes('solicitacao_desligamento')) {
+                    delete payload.solicitacao_desligamento;
+                    const resRetry = await supabaseClient.from('associados').upsert([payload]);
+                    if (resRetry.error) console.error("Erro retry salvar associado:", resRetry.error.message);
+                } else if (error) {
+                    console.error("Erro ao salvar associado no Supabase:", error.message);
+                } else {
+                    console.log("✅ Associado salvo no Supabase:", clean.nome_guerra || clean.nome);
+                }
             } catch (e) {
                 console.error("Erro ao salvar associado no Supabase:", e);
             }
