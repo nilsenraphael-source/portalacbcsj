@@ -142,9 +142,40 @@
                             <div class="subtext" style="color: var(--text-muted);">Aguardando sua aprovação</div>
                         </div>
                         <div class="metric-card">
+                            <div class="title">PEDIDOS DE DESLIGAMENTO</div>
+                            <div id="metricDesligamentosPendentes" class="value" style="color: #E67E22;">0</div>
+                            <div class="subtext" style="color: var(--text-muted);">Aguardando sua decisão</div>
+                        </div>
+                        <div class="metric-card">
                             <div class="title">SALDO EM CAIXA</div>
                             <div id="metricSaldoCaixa" class="value" style="color: var(--status-success);">R$ 0,00</div>
                             <div class="subtext" style="color: var(--text-muted);">Balancete consolidado</div>
+                        </div>
+                    </div>
+
+                    <!-- CARD DE SOLICITAÇÕES DE DESLIGAMENTO PENDENTES (DIRETORIA) -->
+                    <div id="cardSolicitacoesDesligamentoDiretoria" class="card" style="margin-bottom: 20px; border-left: 4px solid #E67E22;">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 class="card-title">⚠️ Solicitações de Desligamento Pendentes</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Pedidos voluntários de desligamento enviados por associados para análise da Diretoria.</p>
+                            </div>
+                            <span id="badgeContadorDesligamentos" class="badge" style="background: rgba(230, 126, 34, 0.2); color: #E67E22; border: 1px solid rgba(230, 126, 34, 0.4); font-weight: bold;">0 pendente(s)</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Associado</th>
+                                        <th>CPF</th>
+                                        <th>Data do Pedido</th>
+                                        <th>Motivo Informado</th>
+                                        <th>Carta / Anexo</th>
+                                        <th>Ações da Diretoria</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableSolicitacoesDesligamentoBody"></tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -173,6 +204,31 @@
                     <div class="page-header">
                         <h2 class="page-title">Controle de Associados Ativos</h2>
                         <button class="btn btn-primary btn-sm" onclick="openModal('modalPreCadastro')">+ Novo Cadastro</button>
+                    </div>
+
+                    <!-- SEÇÃO DE DESLIGAMENTOS PENDENTES NA ABA DE ASSOCIADOS -->
+                    <div id="secaoDesligamentosGestaoAssociados" class="card" style="margin-bottom: 20px; border-left: 4px solid #E67E22; display: none;">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 class="card-title">⚠️ Solicitações de Desligamento Aguardando Homologação</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Analise os pedidos de saída e aprove ou indefira as solicitações.</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Associado</th>
+                                        <th>CPF</th>
+                                        <th>Data do Pedido</th>
+                                        <th>Motivo Informado</th>
+                                        <th>Carta / Anexo</th>
+                                        <th>Ações da Diretoria</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableSolicitacoesDesligamentoGestaoBody"></tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <div class="card">
@@ -465,7 +521,26 @@
                             <h2 class="page-title">Bem-vindo(a), <span id="associadoWelcomeName">Associado</span></h2>
                             <p style="font-size: 13px; color: var(--text-muted);">Acompanhe suas mensalidades, contribuições e mantenha seus dados atualizados na ACBCSJ.</p>
                         </div>
-                        <button class="btn btn-gold btn-sm" onclick="abrirModalEditarMeusDados()">✏️ Atualizar Meus Dados Cadastrais</button>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn btn-gold btn-sm" onclick="abrirModalEditarMeusDados()">✏️ Atualizar Meus Dados Cadastrais</button>
+                            <button id="btnSolicitarDesligamento" class="btn btn-outline btn-sm" style="color: #FF6B6B; border-color: rgba(231, 76, 60, 0.4);" onclick="abrirModalSolicitarDesligamento()">⚠️ Solicitar Desligamento</button>
+                        </div>
+                    </div>
+
+                    <!-- BANNER DINÂMICO DE SOLICITAÇÃO DE DESLIGAMENTO PENDENTE -->
+                    <div id="bannerSolicitacaoDesligamento" style="display: none; margin-bottom: 20px; background: rgba(231, 76, 60, 0.12); border: 1px solid #E74C3C; border-radius: 8px; padding: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h4 style="color: #FF6B6B; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                                    ⏳ <span>Solicitação de Desligamento em Análise</span>
+                                </h4>
+                                <p id="lblBannerSolicitacaoInfo" style="font-size: 13px; color: var(--text-main); margin-bottom: 4px;">
+                                    Seu pedido de desligamento foi registrado e está aguardando homologação da Diretoria.
+                                </p>
+                                <div id="lblBannerSolicitacaoMotivo" style="font-size: 12px; color: var(--text-muted); font-style: italic;"></div>
+                            </div>
+                            <button class="btn btn-outline btn-sm" style="color: #FFF; border-color: var(--border-color); font-size: 11px;" onclick="cancelarSolicitacaoDesligamento()">Desistir e Cancelar Pedido</button>
+                        </div>
                     </div>
 
                     <!-- CARTÃO DE RESUMO DOS DADOS CADASTRAIS DO USUÁRIO -->
@@ -928,6 +1003,72 @@
                 <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('modalDesligarAssociado')">Cancelar</button>
                     <button type="submit" class="btn btn-primary" style="background-color: #E74C3C; border-color: #E74C3C;">Confirmar Desligamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE SOLICITAÇÃO DE DESLIGAMENTO (ASSOCIADO) -->
+    <div id="modalSolicitarDesligamento" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: #FF6B6B;">⚠️ Solicitação de Desligamento da Associação</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Pedido formal de saída voluntária do quadro de membros da ACBCSJ.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalSolicitarDesligamento')">&times;</button>
+            </div>
+
+            <form onsubmit="enviarSolicitacaoDesligamento(event)">
+                <div style="background: rgba(231, 76, 60, 0.1); border: 1px solid rgba(231, 76, 60, 0.3); border-radius: 6px; padding: 12px; margin-bottom: 16px; font-size: 13px; color: var(--text-main);">
+                    ℹ️ <b>Atenção:</b> Ao preencher este formulário, sua solicitação será enviada para avaliação e homologação formal pela Diretoria da ACBCSJ.
+                </div>
+
+                <div class="form-group">
+                    <label for="solicitacaoDesligamentoMotivo">Motivo do Desligamento <span class="req-star">*</span></label>
+                    <textarea id="solicitacaoDesligamentoMotivo" class="form-control" rows="4" placeholder="Descreva com clareza a justificativa para o seu pedido de desligamento..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="solicitacaoDesligamentoArquivo">Carta de Desligamento Assinada (Anexo) <small style="color: var(--text-muted); font-weight: normal;">(Opcional)</small></label>
+                    <input type="file" id="solicitacaoDesligamentoArquivo" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+                    <small style="color: var(--text-muted); display: block; margin-top: 4px;">Anexe sua carta assinada ou documento comprobatório em PDF ou imagem.</small>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalSolicitarDesligamento')">Voltar</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: #E74C3C; border-color: #E74C3C;">Confirmar e Enviar Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE RECUSA / INDEFERIMENTO DE SOLICITAÇÃO DE DESLIGAMENTO (DIRETORIA) -->
+    <div id="modalRecusarSolicitacaoDesligamento" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: var(--accent-gold);">Indeferir Solicitação de Desligamento</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Informe a justificativa da diretoria para a recusa do pedido.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalRecusarSolicitacaoDesligamento')">&times;</button>
+            </div>
+
+            <form onsubmit="confirmarRecusarSolicitacao(event)">
+                <input type="hidden" id="recusarDesligamentoCPF">
+                <div class="form-group">
+                    <label>Associado solicitante:</label>
+                    <input type="text" id="recusarDesligamentoNomeDisplay" class="form-control" disabled style="font-weight: bold; color: var(--text-main);">
+                </div>
+
+                <div class="form-group">
+                    <label for="recusarDesligamentoJustificativa">Justificativa da Diretoria <span class="req-star">*</span></label>
+                    <textarea id="recusarDesligamentoJustificativa" class="form-control" rows="3" placeholder="Informe o motivo da não homologação ou orientações ao associado..." required></textarea>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalRecusarSolicitacaoDesligamento')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: var(--accent-gold); color: #000; font-weight: bold;">Confirmar Indeferimento</button>
                 </div>
             </form>
         </div>

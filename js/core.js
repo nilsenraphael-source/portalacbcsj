@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // PORTAL ACBCSJ - MÃ“DULO CORE & ESTADO GLOBAL
 // ==========================================
 
@@ -334,6 +334,10 @@ function renderDiretoriaOverview() {
                 </tr>
             `).join('');
         }
+    }
+
+    if (typeof renderSolicitacoesDesligamentoDiretoria === 'function') {
+        renderSolicitacoesDesligamentoDiretoria();
     }
 }
 

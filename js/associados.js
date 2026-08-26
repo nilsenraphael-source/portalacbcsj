@@ -1,9 +1,11 @@
-﻿// ==========================================
-// PORTAL ACBCSJ - MÃ“DULO DE ASSOCIADOS & PRÃ‰-CADASTRO
+// ==========================================
+// PORTAL ACBCSJ - MÓDULO DE ASSOCIADOS & PRÉ-CADASTRO
 // ==========================================
 
 // EXIBIR APENAS ASSOCIADOS ATIVOS COM CONTROLE DE PERFIL PELA DIRETORIA
 function renderGestaoAssociados() {
+    renderSolicitacoesDesligamentoDiretoria();
+
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     let ativos = list.filter(a => a.status === 'ativo');
     ativos.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
@@ -45,6 +47,192 @@ function renderGestaoAssociados() {
             }).join('');
         }
     }
+}
+
+// GESTÃO DE SOLICITAÇÕES DE DESLIGAMENTO PELA DIRETORIA
+function renderSolicitacoesDesligamentoDiretoria() {
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const pendentes = list.filter(a => a.solicitacao_desligamento && a.solicitacao_desligamento.status === 'pendente' && a.status !== 'desligado');
+
+    // Atualiza contadores
+    const elBadge = document.getElementById('badgeContadorDesligamentos');
+    if (elBadge) elBadge.textContent = `${pendentes.length} pendente(s)`;
+
+    const elMetric = document.getElementById('metricDesligamentosPendentes');
+    if (elMetric) elMetric.textContent = pendentes.length;
+
+    const secaoGestao = document.getElementById('secaoDesligamentosGestaoAssociados');
+    if (secaoGestao) {
+        secaoGestao.style.display = pendentes.length > 0 ? 'block' : 'none';
+    }
+
+    const htmlRows = pendentes.length === 0 
+        ? `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 16px;">Nenhuma solicitação de desligamento pendente.</td></tr>`
+        : pendentes.map(p => {
+            const sol = p.solicitacao_desligamento;
+            let anexoHtml = '<span style="color: var(--text-muted); font-size: 11px;">Sem carta anexa</span>';
+            if (sol && sol.carta_url) {
+                anexoHtml = `
+                    <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 8px; color: var(--accent-gold); border-color: var(--accent-gold);" onclick="abrirCartaSolicitacaoDesligamento('${p.cpf}')">
+                        📄 Ver Carta (${sol.carta_nome || 'Arquivo'})
+                    </button>
+                `;
+            }
+
+            return `
+                <tr>
+                    <td><b>${p.nome_guerra || p.nome}</b><br><small style="color:var(--text-muted)">${p.nome}</small></td>
+                    <td>${p.cpf}</td>
+                    <td><small style="color:var(--accent-gold); font-weight: 600;">${sol ? sol.data : '-'}</small></td>
+                    <td><div style="max-width: 260px; font-size: 12px; color: var(--text-color);">${sol ? sol.motivo : '-'}</div></td>
+                    <td>${anexoHtml}</td>
+                    <td>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button class="btn btn-sm btn-primary" style="background-color: #E74C3C; border-color: #E74C3C; font-size: 11px; padding: 4px 8px;" onclick="aprovarSolicitacaoDesligamento('${p.cpf}')">
+                                ✅ Homologar Saída
+                            </button>
+                            <button class="btn btn-sm btn-outline" style="color: var(--accent-gold); border-color: var(--accent-gold); font-size: 11px; padding: 4px 8px;" onclick="abrirModalRecusarSolicitacao('${p.cpf}')">
+                                ❌ Indeferir
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    const tbodyOverview = document.getElementById('tableSolicitacoesDesligamentoBody');
+    if (tbodyOverview) tbodyOverview.innerHTML = htmlRows;
+
+    const tbodyGestao = document.getElementById('tableSolicitacoesDesligamentoGestaoBody');
+    if (tbodyGestao) tbodyGestao.innerHTML = htmlRows;
+}
+
+function abrirCartaSolicitacaoDesligamento(cpf) {
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const a = list.find(item => item.cpf === cpf);
+    if (!a || !a.solicitacao_desligamento || !a.solicitacao_desligamento.carta_url) {
+        alert('Carta de desligamento não encontrada.');
+        return;
+    }
+
+    const url = a.solicitacao_desligamento.carta_url;
+    const nome = a.solicitacao_desligamento.carta_nome || `Carta_${a.cpf}.pdf`;
+
+    const win = window.open();
+    if (win) {
+        win.document.write(`
+            <html>
+                <head><title>Carta de Desligamento - ${a.nome_guerra || a.nome}</title></head>
+                <body style="margin:0; background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh;">
+                    <iframe src="${url}" style="width:100%; height:100vh; border:none;"></iframe>
+                </body>
+            </html>
+        `);
+    } else {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = nome;
+        link.click();
+    }
+}
+
+function aprovarSolicitacaoDesligamento(cpf) {
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const a = list.find(item => item.cpf === cpf);
+    if (!a) return;
+
+    if (!confirm(`Confirma a HOMOLOGAÇÃO do desligamento do associado ${a.nome_guerra || a.nome} (${a.nome})?\n\nO integrante será movido para o quadro de associados desligados.`)) {
+        return;
+    }
+
+    const agora = new Date();
+    const dataHoraDesligamento = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    a.status = 'desligado';
+    a.data_desligamento = dataHoraDesligamento;
+    a.motivo_desligamento = (a.solicitacao_desligamento && a.solicitacao_desligamento.motivo) 
+        ? `[Pedido do Associado em ${a.solicitacao_desligamento.data}]: ${a.solicitacao_desligamento.motivo}`
+        : 'Desligamento voluntário solicitado pelo associado';
+
+    if (a.solicitacao_desligamento && a.solicitacao_desligamento.carta_url) {
+        a.carta_desligamento_url = a.solicitacao_desligamento.carta_url;
+        a.carta_desligamento_nome = a.solicitacao_desligamento.carta_nome || `Carta_${a.cpf}.pdf`;
+    }
+
+    if (a.solicitacao_desligamento) {
+        a.solicitacao_desligamento.status = 'aprovada';
+        a.solicitacao_desligamento.data_homologacao = dataHoraDesligamento;
+    }
+
+    localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+
+    try {
+        if (typeof dbService !== 'undefined') {
+            dbService.saveAssociado(a);
+        }
+    } catch(err) {}
+
+    alert(`Desligamento do associado ${a.nome_guerra || a.nome} homologado com sucesso em ${dataHoraDesligamento}!`);
+    renderGestaoAssociados();
+    renderAssociadosDesligados();
+    renderDiretoriaOverview();
+}
+
+function abrirModalRecusarSolicitacao(cpf) {
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const a = list.find(item => item.cpf === cpf);
+    if (!a) return;
+
+    document.getElementById('recusarDesligamentoCPF').value = a.cpf;
+    document.getElementById('recusarDesligamentoNomeDisplay').value = `${a.nome_guerra || a.nome} (${a.nome}) - CPF: ${a.cpf}`;
+    document.getElementById('recusarDesligamentoJustificativa').value = '';
+
+    openModal('modalRecusarSolicitacaoDesligamento');
+}
+
+function confirmarRecusarSolicitacao(e) {
+    e.preventDefault();
+    const cpf = document.getElementById('recusarDesligamentoCPF').value;
+    const justificativa = document.getElementById('recusarDesligamentoJustificativa').value.trim();
+
+    if (!justificativa) {
+        alert('Por favor, informe a justificativa da Diretoria para indeferir o pedido.');
+        return;
+    }
+
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const a = list.find(item => item.cpf === cpf);
+    if (!a) return;
+
+    const agora = new Date();
+    const dataHora = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    a.solicitacao_desligamento = null; // Libera o associado
+    localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+
+    try {
+        if (typeof dbService !== 'undefined') {
+            dbService.saveAssociado(a);
+            // Envia mensagem ao associado
+            dbService.addMensagem({
+                id: 'msg_recusa_deslig_' + Date.now(),
+                associado_id: a.id || null,
+                associado_cpf: a.cpf,
+                associado_nome: a.nome_guerra || a.nome,
+                destinatario: a.cpf,
+                assunto: '📢 Resposta à Solicitação de Desligamento',
+                conteudo: `Olá ${a.nome_guerra || a.nome},\n\nSua solicitação de desligamento voluntário foi analisada pela Diretoria da ACBCSJ e foi INDEFERIDA / NÃO HOMOLOGADA em ${dataHora}.\n\nJustificativa da Diretoria: ${justificativa}\n\nSeu cadastro permanece ativo no quadro de associados.`,
+                prioridade: 'Importante',
+                status: 'enviada',
+                data_envio: dataHora
+            });
+        }
+    } catch(err) {}
+
+    alert(`Solicitação de desligamento indeferida com sucesso. O associado ${a.nome_guerra || a.nome} foi notificado.`);
+    closeModal('modalRecusarSolicitacaoDesligamento');
+    renderGestaoAssociados();
+    renderDiretoriaOverview();
 }
 
 // FUNÇÃO PARA ALTERAR O PERFIL DO INTEGRANTE (APENAS DIRETORIA)
@@ -163,7 +351,7 @@ function verFichaAssociado(cpf) {
     openModal('modalFichaAssociado');
 }
 
-// DESLIGAMENTO COM REGISTRO DE MOTIVO, CARTA DE DESLIGAMENTO (OPCIONAL) E DATA/HORA
+// DESLIGAMENTO MANUAL DIRETO PELA DIRETORIA
 function abrirModalDesligar(cpf) {
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const a = list.find(item => item.cpf === cpf);
@@ -236,7 +424,6 @@ function abrirCartaDesligamento(cpf) {
         return;
     }
 
-    // Criar um link temporário para download ou visualização em nova aba
     const win = window.open();
     if (win) {
         win.document.write(`
@@ -280,6 +467,7 @@ function aprovarAssociado(cpf) {
         dbService.saveAssociado(item);
         alert(`Associado ${item.nome} aprovado com sucesso!`);
         renderDiretoriaOverview();
+        renderGestaoAssociados();
     }
 }
 
@@ -295,13 +483,6 @@ function excluirAssociado(cpf) {
         renderDiretoriaOverview();
     }
 }
-
-// LÓGICA DO ASSOCIADO & GRÁFICOS
-
-let chartBalanceteDoughnut = null;
-let chartBalanceteMensalComparativo = null;
-let chartMensalidadesPrevistoVsArrecadado = null;
-
 
 // PRÉ-CADASTRO E ENVIOS
 function toggleSemPai(checkbox) {

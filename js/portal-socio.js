@@ -1,5 +1,5 @@
-﻿// ==========================================
-// PORTAL ACBCSJ - ÃREA EXCLUSIVA DO ASSOCIADO
+// ==========================================
+// PORTAL ACBCSJ - ÁREA EXCLUSIVA DO ASSOCIADO
 // ==========================================
 
 // EDIÇÃO DOS DADOS CADASTRAIS PELO PRÓPRIO INTEGRANTE
@@ -58,10 +58,133 @@ function salvarMeusDados(e) {
     renderAssociadoOverview();
 }
 
+// SOLICITAÇÃO DE DESLIGAMENTO VOLUNTÁRIO PELO ASSOCIADO
+function abrirModalSolicitarDesligamento() {
+    if (!currentUser) return;
+    if (currentUser.solicitacao_desligamento && currentUser.solicitacao_desligamento.status === 'pendente') {
+        alert('Você já possui uma solicitação de desligamento em análise pela Diretoria.');
+        return;
+    }
+    document.getElementById('solicitacaoDesligamentoMotivo').value = '';
+    const fileInput = document.getElementById('solicitacaoDesligamentoArquivo');
+    if (fileInput) fileInput.value = '';
+    openModal('modalSolicitarDesligamento');
+}
+
+function enviarSolicitacaoDesligamento(e) {
+    e.preventDefault();
+    if (!currentUser) return;
+
+    const motivo = document.getElementById('solicitacaoDesligamentoMotivo').value.trim();
+    const fileInput = document.getElementById('solicitacaoDesligamentoArquivo');
+
+    if (!motivo) {
+        alert('Por favor, descreva o motivo do seu pedido de desligamento.');
+        return;
+    }
+
+    const agora = new Date();
+    const dataHora = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    const processarEnvio = (cartaDataUrl = null, cartaNome = null) => {
+        currentUser.solicitacao_desligamento = {
+            data: dataHora,
+            data_iso: agora.toISOString(),
+            motivo: motivo,
+            status: 'pendente',
+            carta_url: cartaDataUrl,
+            carta_nome: cartaNome
+        };
+
+        let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+        const index = list.findIndex(a => a.cpf === currentUser.cpf);
+        if (index >= 0) {
+            list[index] = { ...list[index], ...currentUser };
+        }
+        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+
+        try {
+            if (typeof dbService !== 'undefined') {
+                dbService.saveAssociado(currentUser);
+                // Notifica a Diretoria
+                dbService.addMensagem({
+                    id: 'msg_deslig_' + Date.now(),
+                    associado_id: currentUser.id || null,
+                    associado_cpf: currentUser.cpf,
+                    associado_nome: currentUser.nome_guerra || currentUser.nome,
+                    destinatario: 'diretoria',
+                    assunto: `⚠️ Solicitação de Desligamento: ${currentUser.nome_guerra || currentUser.nome}`,
+                    conteudo: `O associado ${currentUser.nome} (CPF: ${currentUser.cpf}) enviou uma solicitação de desligamento voluntário em ${dataHora}.\n\nMotivo: ${motivo}`,
+                    prioridade: 'Urgente',
+                    status: 'pendente',
+                    data_envio: dataHora
+                });
+            }
+        } catch(err) {}
+
+        alert('Sua solicitação de desligamento foi enviada com sucesso à Diretoria da ACBCSJ para análise e homologação.');
+        closeModal('modalSolicitarDesligamento');
+        renderAssociadoOverview();
+    };
+
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            processarEnvio(event.target.result, file.name);
+        };
+        reader.readAsDataURL(file);
+    } else {
+        processarEnvio();
+    }
+}
+
+function cancelarSolicitacaoDesligamento() {
+    if (!currentUser) return;
+    if (!confirm('Deseja realmente cancelar sua solicitação de desligamento e permanecer como associado ativo?')) {
+        return;
+    }
+
+    currentUser.solicitacao_desligamento = null;
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const index = list.findIndex(a => a.cpf === currentUser.cpf);
+    if (index >= 0) {
+        list[index].solicitacao_desligamento = null;
+    }
+    localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+
+    try {
+        if (typeof dbService !== 'undefined') {
+            dbService.saveAssociado(currentUser);
+        }
+    } catch(e) {}
+
+    alert('Sua solicitação de desligamento foi cancelada. Seu cadastro permanece ativo.');
+    renderAssociadoOverview();
+}
 
 // RENDERIZAR PAINEL DO ASSOCIADO (VISÃO GERAL, MENSAGENS E MENSALIDADES)
 function renderAssociadoOverview() {
     if (!currentUser) return;
+
+    // 0. Banner de solicitação de desligamento pendente
+    const bannerDesligamento = document.getElementById('bannerSolicitacaoDesligamento');
+    const btnSolicitar = document.getElementById('btnSolicitarDesligamento');
+    const sol = currentUser.solicitacao_desligamento;
+
+    if (sol && sol.status === 'pendente') {
+        if (bannerDesligamento) {
+            bannerDesligamento.style.display = 'block';
+            const lblInfo = document.getElementById('lblBannerSolicitacaoInfo');
+            const lblMotivo = document.getElementById('lblBannerSolicitacaoMotivo');
+            if (lblInfo) lblInfo.innerHTML = `Seu pedido voluntário de desligamento enviado em <b>${sol.data}</b> está aguardando homologação formal pela Diretoria.`;
+            if (lblMotivo) lblMotivo.textContent = `Motivo informado: "${sol.motivo}" ${sol.carta_nome ? `(Anexo: ${sol.carta_nome})` : ''}`;
+        }
+        if (btnSolicitar) btnSolicitar.style.display = 'none';
+    } else {
+        if (bannerDesligamento) bannerDesligamento.style.display = 'none';
+        if (btnSolicitar) btnSolicitar.style.display = 'inline-flex';
+    }
 
     // 1. Nome de boas-vindas
     const welcome = document.getElementById('associadoWelcomeName');
@@ -149,7 +272,7 @@ function renderAssociadoOverview() {
     const storageKey = `acbcsj_mensalidades_grid_${ano}`;
     let grid = JSON.parse(localStorage.getItem(storageKey));
     if (!grid) {
-        grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || INITIAL_MENSAL_DATA || [];
+        grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || (typeof INITIAL_MENSAL_DATA !== 'undefined' ? INITIAL_MENSAL_DATA : []);
     }
 
     const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
@@ -188,10 +311,10 @@ function renderAssociadoOverview() {
 
     const rowsHtml = mesesList.map(m => {
         const valPago = parseFloat(socio[m.key]) || 0;
-        const tarifaVigente = getValorMensalidadeVigente(m.index, ano);
+        const tarifaVigente = typeof getValorMensalidadeVigente === 'function' ? getValorMensalidadeVigente(m.index, ano) : 50;
         totalPagoAno += valPago;
 
-        const info = calcularStatusMensalidade(m.index, ano, valPago);
+        const info = typeof calcularStatusMensalidade === 'function' ? calcularStatusMensalidade(m.index, ano, valPago) : { status: valPago >= tarifaVigente ? 'pago' : 'pendente', vencimento: `15/${m.index < 10 ? '0'+m.index : m.index}/${ano}`, isVencido: false, debitAmount: Math.max(0, tarifaVigente - valPago) };
         if (info.isVencido) {
             temDebitoVencido = true;
             totalDebitosPendente += info.debitAmount;
@@ -357,60 +480,4 @@ function renderComunicadosHistoricoAssociado() {
             </div>
         `;
     }).join('');
-}
-
-// EDIÇÃO DOS DADOS CADASTRAIS PELO PRÓPRIO INTEGRANTE
-function abrirModalEditarMeusDados() {
-    if (!currentUser) return;
-    document.getElementById('editMeusTelefone').value = currentUser.telefone || '';
-    document.getElementById('editMeusOBM').value = currentUser.obm || 'São José';
-    document.getElementById('editMeusProfissao').value = currentUser.profissao || '';
-    document.getElementById('editMeusLogradouro').value = currentUser.logradouro || '';
-    document.getElementById('editMeusNumero').value = currentUser.numero || '';
-    document.getElementById('editMeusComplemento').value = currentUser.complemento || '';
-    document.getElementById('editMeusCEP').value = currentUser.cep || '';
-    document.getElementById('editMeusBairro').value = currentUser.bairro || '';
-    document.getElementById('editMeusCidade').value = currentUser.cidade || 'São José / SC';
-
-    openModal('modalEditarMeusDados');
-}
-
-function salvarMeusDados(e) {
-    e.preventDefault();
-    if (!currentUser) return;
-
-    const telefone = document.getElementById('editMeusTelefone').value.trim();
-    const obm = document.getElementById('editMeusOBM').value.trim();
-    const profissao = document.getElementById('editMeusProfissao').value.trim();
-    const logradouro = document.getElementById('editMeusLogradouro').value.trim();
-    const numero = document.getElementById('editMeusNumero').value.trim();
-    const complemento = document.getElementById('editMeusComplemento').value.trim();
-    const cep = document.getElementById('editMeusCEP').value.trim();
-    const bairro = document.getElementById('editMeusBairro').value.trim();
-    const cidade = document.getElementById('editMeusCidade').value.trim();
-
-    currentUser.telefone = telefone;
-    currentUser.obm = obm;
-    currentUser.profissao = profissao;
-    currentUser.logradouro = logradouro;
-    currentUser.numero = numero;
-    currentUser.complemento = complemento;
-    currentUser.cep = cep;
-    currentUser.bairro = bairro;
-    currentUser.cidade = cidade;
-
-    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const index = list.findIndex(a => a.cpf === currentUser.cpf);
-    if (index >= 0) {
-        list[index] = { ...list[index], ...currentUser };
-    }
-    localStorage.setItem('acbcsj_associados', JSON.stringify(list));
-
-    try {
-        dbService.saveAssociado(currentUser);
-    } catch (err) {}
-
-    alert('Seus dados cadastrais foram atualizados com sucesso!');
-    closeModal('modalEditarMeusDados');
-    renderAssociadoOverview();
 }
