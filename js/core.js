@@ -283,7 +283,8 @@ function renderDiretoriaOverview() {
 
     // 1. Total Ativos Gerais
     const totalAtivos = associados.filter(a => a.status === 'ativo').length;
-    document.getElementById('metricTotalAssociados').textContent = totalAtivos;
+    const elTotal = document.getElementById('metricTotalAssociados');
+    if (elTotal) elTotal.textContent = `${totalAtivos} associados`;
 
     // 2. Novas Associações no Ano Selecionado
     const novosNoAno = associados.filter(a => {
@@ -291,7 +292,7 @@ function renderDiretoriaOverview() {
         return anoFiltro === 'todos' || a.data_cadastro.includes(anoFiltro);
     }).length;
     const elNovos = document.getElementById('metricNovosAno');
-    if (elNovos) elNovos.textContent = novosNoAno;
+    if (elNovos) elNovos.textContent = `${novosNoAno} associado${novosNoAno === 1 ? '' : 's'}`;
 
     // 3. Desligamentos no Ano Selecionado
     const desligadosNoAno = associados.filter(a => {
@@ -303,11 +304,11 @@ function renderDiretoriaOverview() {
         return emData || emMotivo || emCadastro;
     }).length;
     const elDesligados = document.getElementById('metricDesligadosAno');
-    if (elDesligados) elDesligados.textContent = desligadosNoAno;
+    if (elDesligados) elDesligados.textContent = `${desligadosNoAno} associado${desligadosNoAno === 1 ? '' : 's'}`;
 
     // 4. Solicitações Pendentes de Pré-Cadastro
     const elCadastrosPendentes = document.getElementById('metricCadastrosPendentes');
-    if (elCadastrosPendentes) elCadastrosPendentes.textContent = pendentes.length;
+    if (elCadastrosPendentes) elCadastrosPendentes.textContent = `${pendentes.length} associado${pendentes.length === 1 ? '' : 's'}`;
     
     const elBadgePreCadastros = document.getElementById('badgeContadorPreCadastros');
     if (elBadgePreCadastros) elBadgePreCadastros.textContent = `${pendentes.length} pendente(s)`;

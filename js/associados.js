@@ -236,7 +236,7 @@ function renderSolicitacoesDesligamentoDiretoria() {
     if (elBadge) elBadge.textContent = `${pendentes.length} pendente(s)`;
 
     const elMetric = document.getElementById('metricDesligamentosPendentes');
-    if (elMetric) elMetric.textContent = pendentes.length;
+    if (elMetric) elMetric.textContent = `${pendentes.length} associado${pendentes.length === 1 ? '' : 's'}`;
 
     const secaoGestao = document.getElementById('secaoDesligamentosGestaoAssociados');
     if (secaoGestao) {
