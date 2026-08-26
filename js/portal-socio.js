@@ -496,12 +496,7 @@ function renderAssociadoOverview() {
 
     const socio = grid.find(s => {
         const sCpf = (s.cpf || '').replace(/\D/g, '');
-        if (sCpf && cleanUserCpf && sCpf === cleanUserCpf) return true;
-        const ng = (typeof s.nome_guerra === 'string' ? s.nome_guerra : '').toLowerCase();
-        const nc = (typeof s.nome_completo === 'string' ? s.nome_completo : '').toLowerCase();
-        const userNg = (typeof currentUser.nome_guerra === 'string' ? currentUser.nome_guerra : '').toLowerCase();
-        const userNc = (typeof currentUser.nome === 'string' ? currentUser.nome : '').toLowerCase();
-        return (ng && userNg && ng === userNg) || (nc && userNc && nc === userNc) || (userNc && nc && nc.includes(userNc));
+        return sCpf && cleanUserCpf && sCpf === cleanUserCpf;
     }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
 
     const containerTable = document.getElementById('tableMinhasMensalidadesBody');

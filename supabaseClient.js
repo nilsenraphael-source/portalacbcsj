@@ -311,13 +311,16 @@ const dbService = {
 
     async clearMensalidades() {
         localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify([]));
-        localStorage.setItem('acbcsj_mensalidades_grid_2026', JSON.stringify([]));
+        localStorage.setItem('acbcsj_mensalidades_grid', JSON.stringify([]));
+        ['2024','2025','2026','2027','2028'].forEach(ano => {
+            localStorage.setItem('acbcsj_mensalidades_grid_' + ano, JSON.stringify([]));
+        });
         if (typeof recalcularTodasGridsMensalidades === 'function') {
             recalcularTodasGridsMensalidades();
         }
         if (supabaseClient) {
             try {
-                const { error } = await supabaseClient.from('mensalidades').delete().neq('id', '0');
+                const { error } = await supabaseClient.from('mensalidades').delete().not('id', 'is', null);
                 if (error) console.error("⚠️ Erro ao limpar mensalidades no Supabase:", error.message);
                 else console.log("🗑️ Todas as mensalidades foram excluídas do Supabase.");
             } catch (e) {

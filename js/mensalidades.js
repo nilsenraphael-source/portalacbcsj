@@ -1,11 +1,12 @@
-﻿// ==========================================
-// PORTAL ACBCSJ - GESTÃƒO DE MENSALIDADES
+// ==========================================
+// PORTAL ACBCSJ - GESTÃO DE MENSALIDADES
 // ==========================================
 
 function recalcularTodasGridsMensalidades() {
     const listAssoc = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const anos = ['2024', '2025', '2026', '2027', '2028'];
     const historico = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+    const mesesKeysMap = { jan:'jan', fev:'fev', mar:'mar', abr:'abr', mai:'mai', jun:'jun', jul:'jul', ago:'ago', set:'set', out:'out', nov:'nov', dez:'dez', Jan:'jan', Fev:'fev', Mar:'mar', Abr:'abr', Mai:'mai', Jun:'jun', Jul:'jul', Ago:'ago', Set:'set', Out:'out', Nov:'nov', Dez:'dez' };
 
     anos.forEach(ano => {
         const storageKey = 'acbcsj_mensalidades_grid_' + ano;
@@ -18,15 +19,15 @@ function recalcularTodasGridsMensalidades() {
                 jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0
             };
 
+            // VINCULAÇÃO ESTRITAMENTE POR CPF DO ASSOCIADO
             const lancamentosSocio = historico.filter(m => (m.cpf || '').replace(/\D/g, '') === cleanCpf && String(m.ano) === String(ano));
             lancamentosSocio.forEach(m => {
-                const mesStr = (m.meses_quitados || m.mes_referencia || '').toLowerCase();
-                const valorParcial = parseFloat(m.valor) || 20;
-                const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-                
-                mesesKeys.forEach(mk => {
-                    if (mesStr.includes(mk)) {
-                        row[mk] = 20;
+                const mesesQuitados = (m.meses_quitados || m.mes_referencia || '').split(',').map(s => s.trim());
+                const valorPorMes = (parseFloat(m.valor) || 0) / (mesesQuitados.length || 1);
+                mesesQuitados.forEach(mSigla => {
+                    const mk = mesesKeysMap[mSigla] || mSigla.toLowerCase();
+                    if (row.hasOwnProperty(mk)) {
+                        row[mk] = (parseFloat(row[mk]) || 0) + (valorPorMes > 0 ? valorPorMes : 20);
                     }
                 });
             });
@@ -34,17 +35,18 @@ function recalcularTodasGridsMensalidades() {
             return row;
         });
         localStorage.setItem(storageKey, JSON.stringify(grid));
+        if (ano === '2026') {
+            localStorage.setItem('acbcsj_mensalidades_grid', JSON.stringify(grid));
+        }
     });
 
-    if (typeof renderGestaoMensalidades === 'function' && document.getElementById('tableMensalidadesBody')) {
+    if (typeof renderGestaoMensalidades === 'function' && (document.getElementById('tableGestaoMensalidadesBody') || document.getElementById('tableMensalidadesBody'))) {
         renderGestaoMensalidades();
     }
 }
 
-
 // GESTÃO HISTÓRICA DO VALOR BASE DA MENSALIDADE COM DATA DE VIGÊNCIA
 function getHistoricoReajustesMensalidade() {
-    let historico = JSON.parse(localStorage.getItem('acbcsj_historico_reajustes_mensalidade'));
     if (!historico || !Array.isArray(historico) || historico.length === 0 || historico.some(h => h.valor !== 20.00)) {
         historico = [{
             id: 'reaj_inicial',
@@ -400,14 +402,10 @@ function renderGestaoMensalidades() {
             containerDesligados.innerHTML = `<tr><td colspan="16" style="text-align: center; color: var(--text-muted); padding: 15px;">Nenhum associado desligado registrado no sistema.</td></tr>`;
         } else {
             containerDesligados.innerHTML = desligados.map(socio => {
+                const sCpf = (socio.cpf || '').replace(/\D/g, '');
                 const itemGrid = grid.find(g => {
                     const gCpf = (g.cpf || '').replace(/\D/g, '');
-                    const sCpf = (socio.cpf || '').replace(/\D/g, '');
-                    if (gCpf && sCpf && gCpf === sCpf) return true;
-                    const ng = (typeof g.nome_guerra === 'string' ? g.nome_guerra : '').toLowerCase();
-                    const sNg = (typeof socio.nome_guerra === 'string' ? socio.nome_guerra : '').toLowerCase();
-                    const sNc = (typeof socio.nome === 'string' ? socio.nome : '').toLowerCase();
-                    return (ng && sNg && ng === sNg) || (sNc && ng && sNc.includes(ng));
+                    return gCpf && sCpf && gCpf === sCpf;
                 }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
 
                 let totalPagoSocio = 0;
@@ -481,9 +479,6 @@ function atualizarCheckboxesBaixa() {
 
     const baseVal = getValorMensalidadeVigente();
 
-    const listAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
-    const socioObj = listAssociados.find(a => a.cpf === cpf);
-
     const storageKey = `acbcsj_mensalidades_grid_${anoRef}`;
     const grid = JSON.parse(localStorage.getItem(storageKey)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
     
@@ -491,14 +486,7 @@ function atualizarCheckboxesBaixa() {
 
     const socioGrid = grid.find(g => {
         const gCpf = (g.cpf || '').replace(/\D/g, '');
-        if (gCpf && cleanCpf && gCpf === cleanCpf) return true;
-        if (socioObj) {
-            const ng = (typeof g.nome_guerra === 'string' ? g.nome_guerra : '').toLowerCase();
-            const sNg = (typeof socioObj.nome_guerra === 'string' ? socioObj.nome_guerra : '').toLowerCase();
-            const sNc = (typeof socioObj.nome === 'string' ? socioObj.nome : '').toLowerCase();
-            return (ng && sNg && ng === sNg) || (sNc && ng && sNc.includes(ng));
-        }
-        return false;
+        return gCpf && cleanCpf && gCpf === cleanCpf;
     }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
 
     const mesesNomesMap = { jan:'Jan', fev:'Fev', mar:'Mar', abr:'Abr', mai:'Mai', jun:'Jun', jul:'Jul', ago:'Ago', set:'Set', out:'Out', nov:'Nov', dez:'Dez' };
@@ -835,5 +823,27 @@ function excluirBaixaMensalidade(id) {
         renderGestaoMensalidades();
         renderGestaoFinanceira();
         verExtratoAssociado(item.cpf);
+    }
+}
+
+async function limparBancoMensalidadesCompletamente() {
+    if (!currentUser || currentUser.perfil !== 'diretoria') {
+        alert('Apenas membros da Diretoria podem zerar o banco de dados de mensalidades.');
+        return;
+    }
+    if (confirm('Atenção: Deseja realmente ZERAR todos os registros de mensalidades do banco de dados e deixar todos os associados zerados (sem pagamentos)?')) {
+        if (typeof dbService !== 'undefined' && dbService.clearMensalidades) {
+            await dbService.clearMensalidades();
+        } else {
+            localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify([]));
+            localStorage.setItem('acbcsj_mensalidades_grid', JSON.stringify([]));
+            ['2024','2025','2026','2027','2028'].forEach(ano => {
+                localStorage.setItem('acbcsj_mensalidades_grid_' + ano, JSON.stringify([]));
+            });
+            recalcularTodasGridsMensalidades();
+        }
+        alert('Banco de mensalidades zerado com sucesso! Todos os associados estão com R$ 0,00.');
+        renderGestaoMensalidades();
+        renderGestaoFinanceira();
     }
 }
