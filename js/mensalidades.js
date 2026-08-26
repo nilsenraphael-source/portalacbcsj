@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // PORTAL ACBCSJ - GESTÃO DE MENSALIDADES
 // ==========================================
 
@@ -226,7 +226,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
             isVencido: false,
             debitAmount: 0
         };
-    }
+    } else if (valor > 0) {
         const falta = baseVal - valor;
         const isV = (anoNum < anoAtual || (anoNum === anoAtual && (mesIndex < mesAtualNum || (mesIndex === mesAtualNum && diaAtual > 15))));
         return {
@@ -269,7 +269,6 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
         }
     }
 }
-
 
 // CONTROLE DE MENSALIDADES DOS ASSOCIADOS (DIRETORIA)
 function renderGestaoMensalidades() {
