@@ -1,6 +1,61 @@
-// ==========================================
+﻿// ==========================================
 // PORTAL ACBCSJ - GESTÃO DE MENSALIDADES
 // ==========================================
+
+const TODOS_MESES_KEYS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const MES_MAP_EXPAND = {
+    jan: 'jan', janeiro: 'jan', '01': 'jan', '1': 'jan',
+    fev: 'fev', fevereiro: 'fev', '02': 'fev', '2': 'fev',
+    mar: 'mar', marco: 'mar', 'março': 'mar', '03': 'mar', '3': 'mar',
+    abr: 'abr', abril: 'abr', '04': 'abr', '4': 'abr',
+    mai: 'mai', maio: 'mai', '05': 'mai', '5': 'mai',
+    jun: 'jun', junho: 'jun', '06': 'jun', '6': 'jun',
+    jul: 'jul', julho: 'jul', '07': 'jul', '7': 'jul',
+    ago: 'ago', agosto: 'ago', '08': 'ago', '8': 'ago',
+    set: 'set', setembro: 'set', '09': 'set', '9': 'set',
+    out: 'out', outubro: 'out', '10': 'out',
+    nov: 'nov', novembro: 'nov', '11': 'nov',
+    dez: 'dez', dezembro: 'dez', '12': 'dez'
+};
+
+function extrairListaMesesQuitados(rawString) {
+    if (!rawString) return [];
+    const str = String(rawString).trim().toLowerCase();
+    if (!str) return [];
+
+    if (str.includes('anual') || str.includes('todos') || str.includes('12m') || str === 'jan-dez' || str.startsWith('jan-dez') || str === 'jan a dez') {
+        return [...TODOS_MESES_KEYS];
+    }
+
+    const rangeMatch = str.match(/([a-z]{3})\s*[-a]\s*([a-z]{3})/i);
+    if (rangeMatch) {
+        const startKey = MES_MAP_EXPAND[rangeMatch[1]];
+        const endKey = MES_MAP_EXPAND[rangeMatch[2]];
+        if (startKey && endKey) {
+            const startIdx = TODOS_MESES_KEYS.indexOf(startKey);
+            const endIdx = TODOS_MESES_KEYS.indexOf(endKey);
+            if (startIdx >= 0 && endIdx >= startIdx) {
+                return TODOS_MESES_KEYS.slice(startIdx, endIdx + 1);
+            }
+        }
+    }
+
+    const parts = str.split(/[,;\/|]+/).map(p => p.trim());
+    const result = [];
+    parts.forEach(p => {
+        const clean = p.replace(/[^a-z0-9]/g, '');
+        if (MES_MAP_EXPAND[clean]) {
+            if (!result.includes(MES_MAP_EXPAND[clean])) result.push(MES_MAP_EXPAND[clean]);
+        }
+    });
+
+    if (result.length > 0) return result;
+
+    const cleanAll = str.replace(/[^a-z0-9]/g, '');
+    if (MES_MAP_EXPAND[cleanAll]) return [MES_MAP_EXPAND[cleanAll]];
+
+    return ['jan'];
+}
 
 function recalcularTodasGridsMensalidades() {
     let list = [];
@@ -19,7 +74,6 @@ function recalcularTodasGridsMensalidades() {
 
     const anos = ['2024', '2025', '2026', '2027', '2028'];
     const historico = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
-    const mesesKeysMap = { jan:'jan', fev:'fev', mar:'mar', abr:'abr', mai:'mai', jun:'jun', jul:'jul', ago:'ago', set:'set', out:'out', nov:'nov', dez:'dez', Jan:'jan', Fev:'fev', Mar:'mar', Abr:'abr', Mai:'mai', Jun:'jun', Jul:'jul', Ago:'ago', Set:'set', Out:'out', Nov:'nov', Dez:'dez' };
 
     anos.forEach(ano => {
         const storageKey = `acbcsj_mensalidades_grid_${ano}`;
@@ -35,10 +89,10 @@ function recalcularTodasGridsMensalidades() {
             // VINCULAÇÃO ESTRITAMENTE POR CPF DO ASSOCIADO
             const lancamentosSocio = historico.filter(m => (m.cpf || '').replace(/\D/g, '') === cleanCpf && String(m.ano) === String(ano));
             lancamentosSocio.forEach(m => {
-                const mesesQuitados = (m.meses_quitados || m.mes_referencia || '').split(',').map(s => s.trim());
-                const valorPorMes = (parseFloat(m.valor) || 0) / (mesesQuitados.length || 1);
-                mesesQuitados.forEach(mSigla => {
-                    const mk = mesesKeysMap[mSigla] || mSigla.toLowerCase();
+                const meses = extrairListaMesesQuitados(m.meses_quitados || m.mes_referencia);
+                const valorTotal = typeof m.valor === 'number' ? m.valor : (parseFloat(String(m.valor || '0').replace(',', '.')) || 0);
+                const valorPorMes = meses.length > 0 ? (valorTotal / meses.length) : valorTotal;
+                meses.forEach(mk => {
                     if (row.hasOwnProperty(mk)) {
                         row[mk] = (parseFloat(row[mk]) || 0) + (valorPorMes > 0 ? valorPorMes : 20);
                     }
@@ -563,7 +617,7 @@ function atualizarValoresBaixa() {
         total += getValorMensalidadeVigente(mIndex, anoRef);
     });
 
-    const inputTotal = document.getElementById('baixaValorTotal');
+        const inputTotal = document.getElementById('baixaValorTotal');
     if (inputTotal) inputTotal.value = total.toFixed(2);
 }
 
@@ -585,7 +639,7 @@ async function salvarBaixaMensalidade(e) {
         return;
     }
 
-    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || (typeof ASSOCIADOS_PLANILHA_REAL !== 'undefined' ? ASSOCIADOS_PLANILHA_REAL : []);
     const socio = list.find(a => (a.cpf || '').replace(/\D/g, '') === (cpf || '').replace(/\D/g, ''));
     const nomeAssociado = socio ? (socio.nome_guerra || socio.nome) : 'Associado';
 
@@ -600,28 +654,34 @@ async function salvarBaixaMensalidade(e) {
         cpf: cpf,
         associado_nome: nomeAssociado,
         ano: anoRef,
+        mes_referencia: mesesTexto,
+        meses_quitados: mesesTexto,
         valor: valorTotal,
         data: dataBR,
         data_iso: dataInput,
         forma: 'PIX',
         comprovante_pix: comprovantePix || 'Comprovante PIX recebido',
-        meses_quitados: mesesTexto,
-        obs: obs || `Quitação de mensalidade PIX (${mesesTexto}/${anoRef})`
+        obs: obs || `Quitação de mensalidade PIX (${mesesTexto}/${anoRef})`,
+        status: 'pago'
     };
 
     let historicoGeral = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
     historicoGeral.unshift(itemHistorico);
     localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(historicoGeral));
 
-        if (typeof dbService !== 'undefined' && dbService.addMensalidade) {
+    if (typeof dbService !== 'undefined' && dbService.addMensalidade) {
         try { await dbService.addMensalidade(itemHistorico); } catch(e) { console.error('Erro ao enviar para Supabase:', e); }
     }
     recalcularGridAssociado(cpf, anoRef);
+    recalcularTodasGridsMensalidades();
 
     alert(`Baixa de mensalidade de R$ ${valorTotal.toFixed(2).replace('.', ',')} (${mesesTexto}/${anoRef}) efetuada com sucesso para ${nomeAssociado}!`);
     closeModal('modalDarBaixaMensalidade');
     renderGestaoMensalidades();
     renderGestaoFinanceira();
+    if (typeof renderAssociadoOverview === 'function') {
+        renderAssociadoOverview();
+    }
 }
 
 // VER EXTRATO DO ASSOCIADO E OPÇÕES DE EDIÇÃO
@@ -639,7 +699,6 @@ function verExtratoAssociado(cpf) {
     if (container) {
         container.innerHTML = `
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 15px;">
-                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <div style="font-size: 11px; color: var(--text-muted);">ASSOCIADO</div>
                     <div style="font-size: 15px; font-weight: bold; color: var(--accent-gold);">${a.nome_guerra || a.nome}</div>
                     <div style="font-size: 11px; color: var(--text-muted);">${a.nome}</div>
@@ -699,16 +758,15 @@ function verExtratoAssociado(cpf) {
 
     openModal('modalExtratoAssociado');
 }
-
 // RECALCULAR GRADE DO ASSOCIADO APÓS EDIÇÃO / EXCLUSÃO
 function recalcularGridAssociado(cpf, ano) {
     const storageKey = `acbcsj_mensalidades_grid_${ano}`;
     let grid = JSON.parse(localStorage.getItem(storageKey)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
     const historicoGeral = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
     const cleanCpf = (cpf || '').replace(/\D/g, '');
-    const baixasDoAno = historicoGeral.filter(h => (h.cpf || '').replace(/\D/g, '') === cleanCpf && h.ano === ano);
+    const baixasDoAno = historicoGeral.filter(h => (h.cpf || '').replace(/\D/g, '') === cleanCpf && String(h.ano) === String(ano));
 
-    const listAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const listAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || (typeof ASSOCIADOS_PLANILHA_REAL !== 'undefined' ? ASSOCIADOS_PLANILHA_REAL : []);
     const assocObj = listAssociados.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
 
     let socioGrid = grid.find(g => (g.cpf || '').replace(/\D/g, '') === cleanCpf);
@@ -726,25 +784,16 @@ function recalcularGridAssociado(cpf, ano) {
     if (!socioGrid) return;
     socioGrid.cpf = cpf;
 
-    if (ano === '2026') {
-        const basePlanilha = (INITIAL_MENSAL_DATA || []).find(b => (b.cpf || '').replace(/\D/g, '') === cleanCpf);
-        const mesesKeys = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-        mesesKeys.forEach(k => {
-            socioGrid[k] = basePlanilha ? (parseFloat(basePlanilha[k]) || 0) : 0;
-        });
-    } else {
-        const mesesKeys = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-        mesesKeys.forEach(k => socioGrid[k] = 0);
-    }
+    const mesesKeys = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    mesesKeys.forEach(k => socioGrid[k] = 0);
 
-    const mesesNomesMapInv = { Jan:'jan', Fev:'fev', Mar:'mar', Abr:'abr', Mai:'mai', Jun:'jun', Jul:'jul', Ago:'ago', Set:'set', Out:'out', Nov:'nov', Dez:'dez' };
     baixasDoAno.forEach(b => {
-        const listaMeses = (b.meses_quitados || '').split(',').map(m => m.trim());
-        const valorPorMes = (parseFloat(b.valor) || 0) / (listaMeses.length || 1);
-        listaMeses.forEach(mSigla => {
-            const key = mesesNomesMapInv[mSigla];
-            if (key) {
-                socioGrid[key] = (parseFloat(socioGrid[key]) || 0) + valorPorMes;
+        const listaMeses = extrairListaMesesQuitados(b.meses_quitados || b.mes_referencia);
+        const valorTotal = typeof b.valor === 'number' ? b.valor : (parseFloat(String(b.valor || '0').replace(',', '.')) || 0);
+        const valorPorMes = listaMeses.length > 0 ? (valorTotal / listaMeses.length) : valorTotal;
+        listaMeses.forEach(mk => {
+            if (socioGrid.hasOwnProperty(mk)) {
+                socioGrid[mk] = (parseFloat(socioGrid[mk]) || 0) + (valorPorMes > 0 ? valorPorMes : 20);
             }
         });
     });
