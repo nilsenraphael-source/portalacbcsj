@@ -68,12 +68,234 @@ function abrirModalSolicitarDesligamento() {
     document.getElementById('solicitacaoDesligamentoMotivo').value = '';
     const fileInput = document.getElementById('solicitacaoDesligamentoArquivo');
     if (fileInput) fileInput.value = '';
+    const chk = document.getElementById('solicitacaoDesligamentoConcordo');
+    if (chk) chk.checked = false;
     openModal('modalSolicitarDesligamento');
+}
+
+// GERAR CARTA DE DESLIGAMENTO PREENCHIDA COM DADOS DO ASSOCIADO
+function gerarCartaDesligamentoPreenchida() {
+    if (!currentUser) return;
+
+    const mesesNomes = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    const hoje = new Date();
+    const dia = hoje.getDate();
+    const mes = mesesNomes[hoje.getMonth()];
+    const ano = hoje.getFullYear();
+    const dataExtenso = `${dia < 10 ? '0' + dia : dia} de ${mes} de ${ano}`;
+
+    const nome = currentUser.nome || 'Associado';
+    const cpf = currentUser.cpf || 'Não informado';
+
+    const win = window.open('', '_blank');
+    if (!win) {
+        alert('Por favor, permita popups para visualizar e imprimir a Carta de Desligamento.');
+        return;
+    }
+
+    const htmlDoc = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Carta de Desligamento - ${nome}</title>
+            <style>
+                @page {
+                    size: A4;
+                    margin: 25mm 20mm 20mm 20mm;
+                }
+                * {
+                    box-sizing: border-box;
+                }
+                body {
+                    font-family: Arial, Helvetica, sans-serif;
+                    color: #111;
+                    background: #fff;
+                    margin: 0;
+                    padding: 40px;
+                    line-height: 1.6;
+                }
+                .no-print-bar {
+                    background: #1e293b;
+                    color: #fff;
+                    padding: 14px 20px;
+                    border-radius: 8px;
+                    margin-bottom: 35px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                }
+                .btn-action {
+                    background: #d4af37;
+                    color: #000;
+                    border: none;
+                    padding: 10px 20px;
+                    font-size: 13px;
+                    font-weight: bold;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+                .btn-action:hover {
+                    background: #c29d2b;
+                }
+                .header {
+                    text-align: center;
+                    position: relative;
+                    padding-bottom: 25px;
+                }
+                .header-logo {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 75px;
+                    height: auto;
+                }
+                .header-title {
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: #333;
+                    margin: 0 auto;
+                    max-width: 480px;
+                    line-height: 1.3;
+                    text-transform: uppercase;
+                }
+                .header-line {
+                    margin-top: 15px;
+                    height: 8px;
+                    background: linear-gradient(90deg, #b0c4de 0%, #dcdcdc 100%);
+                    border-radius: 4px;
+                }
+                .doc-title {
+                    text-align: center;
+                    font-size: 17px;
+                    font-weight: bold;
+                    margin: 45px 0 35px 0;
+                    letter-spacing: 0.5px;
+                }
+                .greeting {
+                    font-size: 15px;
+                    margin-bottom: 30px;
+                }
+                .doc-body {
+                    font-size: 15px;
+                    text-align: justify;
+                    line-height: 2;
+                    margin-bottom: 50px;
+                }
+                .doc-body p {
+                    margin-bottom: 18px;
+                    text-indent: 40px;
+                }
+                .date-location {
+                    text-align: right;
+                    font-size: 15px;
+                    margin: 60px 0 80px 0;
+                }
+                .signature-wrapper {
+                    text-align: center;
+                    margin: 0 auto;
+                    width: 380px;
+                }
+                .signature-line {
+                    border-top: 1.5px solid #000;
+                    margin-bottom: 8px;
+                }
+                .signature-name {
+                    font-weight: bold;
+                    font-size: 15px;
+                    text-transform: uppercase;
+                }
+                .footer-container {
+                    margin-top: 120px;
+                    text-align: center;
+                    font-size: 12px;
+                    color: #444;
+                    line-height: 1.5;
+                }
+                .footer-line-red {
+                    height: 14px;
+                    background: #c0392b;
+                    margin-top: 15px;
+                    clip-path: polygon(15% 0, 100% 0, 100% 100%, 0% 100%);
+                }
+                @media print {
+                    .no-print-bar { display: none !important; }
+                    body { padding: 0; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="no-print-bar">
+                <div>
+                    <b style="font-size: 15px;">📄 Carta Oficial de Desligamento</b><br>
+                    <span style="font-size: 12px; color: #94a3b8;">Documento preenchido automaticamente com seus dados. Imprima ou salve em PDF para assinar.</span>
+                </div>
+                <button class="btn-action" onclick="window.print()">
+                    🖨️ Imprimir / Salvar PDF
+                </button>
+            </div>
+
+            <div class="header">
+                <img src="${window.location.origin}/logo.png" alt="Logo ACBCSJ" class="header-logo" onerror="this.style.display='none'">
+                <div class="header-title">
+                    Associação Corpo de Bombeiros Comunitários de São José
+                </div>
+                <div class="header-line"></div>
+            </div>
+
+            <div class="doc-title">
+                Comunicação de Desligamento
+            </div>
+
+            <div class="greeting">
+                Prezado(a) Sr.(a),
+            </div>
+
+            <div class="doc-body">
+                <p>
+                    Eu <b>${nome}</b>, portador(a) do CPF <b>${cpf}</b>, solicito o desligamento da Associação Corpo de Bombeiros Comunitários de São José - CNPJ 07.962.460/0001-40, localizada na Rua Getúlio Vargas, Nº 278, Centro, São José – SC, CEP 88103-400.
+                </p>
+                <p>
+                    Declaro não deixar pendências financeiras.
+                </p>
+            </div>
+
+            <div class="date-location">
+                São José, ${dataExtenso}.
+            </div>
+
+            <div class="signature-wrapper">
+                <div class="signature-line"></div>
+                <div class="signature-name">${nome}</div>
+            </div>
+
+            <div class="footer-container">
+                <div>Rua Getúlio Vargas, 278 – Praia Comprida – São José – SC</div>
+                <div>CEP 88103-400 — E-mail bcassociacao@gmail.com</div>
+                <div class="footer-line-red"></div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    win.document.open();
+    win.document.write(htmlDoc);
+    win.document.close();
 }
 
 function enviarSolicitacaoDesligamento(e) {
     e.preventDefault();
     if (!currentUser) return;
+
+    const chkConcordo = document.getElementById('solicitacaoDesligamentoConcordo');
+    if (chkConcordo && !chkConcordo.checked) {
+        alert('Você precisa assinalar a declaração de concordância com o seu desligamento.');
+        return;
+    }
 
     const motivo = document.getElementById('solicitacaoDesligamentoMotivo').value.trim();
     const fileInput = document.getElementById('solicitacaoDesligamentoArquivo');
@@ -91,6 +313,7 @@ function enviarSolicitacaoDesligamento(e) {
             data: dataHora,
             data_iso: agora.toISOString(),
             motivo: motivo,
+            concordou: true,
             status: 'pendente',
             carta_url: cartaDataUrl,
             carta_nome: cartaNome
