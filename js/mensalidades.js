@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // PORTAL ACBCSJ - GESTÃO DE MENSALIDADES
 // ==========================================
 
@@ -414,8 +414,8 @@ function renderGestaoMensalidades() {
     const elPendentes = document.getElementById('metricAssociadosPendentes');
 
     if (elArrecadado) elArrecadado.textContent = `R$ ${totalArrecadadoAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-    if (elEmDia) elEmDia.textContent = String(emDiaCount);
-    if (elPendentes) elPendentes.textContent = String(pendentesCount);
+    if (elEmDia) elEmDia.textContent = `${emDiaCount} associado${emDiaCount === 1 ? '' : 's'}`;
+    if (elPendentes) elPendentes.textContent = `${pendentesCount} associado${pendentesCount === 1 ? '' : 's'}`;
 
     if (searchTerm) {
         associadosProcessados = associadosProcessados.filter(a => {
