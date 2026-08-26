@@ -6,12 +6,59 @@ const SUPABASE_JWKS_URL = "https://ucutgspmvbupknjodeit.supabase.co/rest/v1/";
 
 let supabaseClient = null;
 
-if (typeof supabase !== 'undefined' && supabase.createClient) {
+function getSupabaseClient() {
+    if (!supabaseClient && typeof supabase !== 'undefined' && supabase.createClient) {
+        try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+            console.log("✅ Supabase inicializado com sucesso!");
+        } catch (e) {
+            console.error("⚠️ Erro ao inicializar Supabase:", e);
+        }
+    }
+    return supabaseClient;
+}
+
+getSupabaseClient();
+
+// Helper REST direto com fallback infalível
+async function supabaseRest(endpoint, options = {}) {
+    const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;
+    const headers = {
+        'apikey': SUPABASE_PUBLISHABLE_KEY,
+        'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+        ...(options.headers || {})
+    };
+    const res = await fetch(url, { ...options, headers });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+}
+
+async function supabaseRestUpsert(table, row) {
     try {
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-        console.log("✅ Supabase inicializado com sucesso!");
-    } catch (e) {
-        console.error("⚠️ Erro ao inicializar Supabase:", e);
+        return await supabaseRest(table, {
+            method: 'POST',
+            headers: {
+                'Prefer': 'resolution=merge-duplicates'
+            },
+            body: JSON.stringify(row)
+        });
+    } catch(e) {
+        console.warn(`Aviso no supabaseRestUpsert (${table}):`, e);
+        return null;
+    }
+}
+
+async function supabaseRestDelete(table, query) {
+    try {
+        return await supabaseRest(`${table}?${query}`, {
+            method: 'DELETE'
+        });
+    } catch(e) {
+        console.warn(`Aviso no supabaseRestDelete (${table}):`, e);
+        return null;
     }
 }
 
@@ -145,9 +192,10 @@ function sanitizeMensagem(item) {
 const dbService = {
     // ASSOCIADOS
     async getAssociados() {
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { data, error } = await supabaseClient.from('associados').select('*');
+                const { data, error } = await client.from('associados').select('*');
                 if (!error && data && data.length > 0) {
                     localStorage.setItem('acbcsj_associados', JSON.stringify(data));
                     return data;
@@ -156,6 +204,13 @@ const dbService = {
                 console.error("Erro no Supabase getAssociados:", e);
             }
         }
+        try {
+            const data = await supabaseRest('associados?select=*');
+            if (Array.isArray(data) && data.length > 0) {
+                localStorage.setItem('acbcsj_associados', JSON.stringify(data));
+                return data;
+            }
+        } catch(e) {}
         return JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     },
 
@@ -169,23 +224,26 @@ const dbService = {
         else list.push(clean);
         localStorage.setItem('acbcsj_associados', JSON.stringify(list));
 
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
                 let payload = { ...clean };
-                let { error } = await supabaseClient.from('associados').upsert([payload]);
+                let { error } = await client.from('associados').upsert([payload]);
                 if (error && error.message && error.message.includes('solicitacao_desligamento')) {
                     delete payload.solicitacao_desligamento;
-                    const resRetry = await supabaseClient.from('associados').upsert([payload]);
+                    const resRetry = await client.from('associados').upsert([payload]);
                     if (resRetry.error) console.error("Erro retry salvar associado:", resRetry.error.message);
                 } else if (error) {
                     console.error("Erro ao salvar associado no Supabase:", error.message);
                 } else {
                     console.log("✅ Associado salvo no Supabase:", clean.nome_guerra || clean.nome);
+                    return true;
                 }
             } catch (e) {
                 console.error("Erro ao salvar associado no Supabase:", e);
             }
         }
+        await supabaseRestUpsert('associados', clean);
         return true;
     },
 
@@ -194,23 +252,27 @@ const dbService = {
         list = list.filter(a => a.cpf !== cpf);
         localStorage.setItem('acbcsj_associados', JSON.stringify(list));
 
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { error } = await supabaseClient.from('associados').delete().eq('cpf', cpf);
+                const { error } = await client.from('associados').delete().eq('cpf', cpf);
                 if (error) console.error("Erro ao excluir associado do Supabase:", error.message);
                 else console.log("🗑️ Associado excluído do Supabase:", cpf);
             } catch (e) {
                 console.error("Erro ao excluir associado do Supabase:", e);
             }
+        } else {
+            await supabaseRestDelete('associados', `cpf=eq.${cpf}`);
         }
         return true;
     },
 
     // FINANCEIRO
     async getFinanceiro() {
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { data, error } = await supabaseClient.from('financeiro_lancamentos').select('*');
+                const { data, error } = await client.from('financeiro_lancamentos').select('*');
                 if (!error && data && data.length > 0) {
                     localStorage.setItem('acbcsj_financeiro', JSON.stringify(data));
                     return data;
@@ -219,6 +281,13 @@ const dbService = {
                 console.error("Erro no Supabase getFinanceiro:", e);
             }
         }
+        try {
+            const data = await supabaseRest('financeiro_lancamentos?select=*');
+            if (Array.isArray(data) && data.length > 0) {
+                localStorage.setItem('acbcsj_financeiro', JSON.stringify(data));
+                return data;
+            }
+        } catch(e) {}
         return JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
     },
 
@@ -232,15 +301,18 @@ const dbService = {
         else list.unshift(clean);
         localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
 
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { error } = await supabaseClient.from('financeiro_lancamentos').upsert([clean]);
+                const { error } = await client.from('financeiro_lancamentos').upsert([clean]);
                 if (error) console.error("Erro ao salvar lançamento no Supabase:", error.message);
                 else console.log("✅ Lançamento financeiro salvo no Supabase:", clean.descricao, clean.valor);
+                return true;
             } catch (e) {
                 console.error("Erro ao salvar lançamento financeiro no Supabase:", e);
             }
         }
+        await supabaseRestUpsert('financeiro_lancamentos', clean);
         return true;
     },
 
@@ -254,23 +326,27 @@ const dbService = {
         list = list.filter(f => f.id !== id);
         localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
 
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { error } = await supabaseClient.from('financeiro_lancamentos').delete().eq('id', id);
+                const { error } = await client.from('financeiro_lancamentos').delete().eq('id', id);
                 if (error) console.error("Erro ao excluir lançamento do Supabase:", error.message);
                 else console.log("🗑️ Lançamento financeiro excluído do Supabase:", id);
             } catch (e) {
                 console.error("Erro ao excluir lançamento financeiro do Supabase:", e);
             }
+        } else {
+            await supabaseRestDelete('financeiro_lancamentos', `id=eq.${id}`);
         }
         return true;
     },
 
     // MENSALIDADES (BAIXAS)
     async getMensalidades() {
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { data, error } = await supabaseClient.from('mensalidades').select('*');
+                const { data, error } = await client.from('mensalidades').select('*');
                 if (!error && data && Array.isArray(data)) {
                     localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(data));
                     if (typeof recalcularTodasGridsMensalidades === 'function') {
@@ -282,6 +358,16 @@ const dbService = {
                 console.error("Erro no Supabase getMensalidades:", e);
             }
         }
+        try {
+            const data = await supabaseRest('mensalidades?select=*');
+            if (Array.isArray(data)) {
+                localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(data));
+                if (typeof recalcularTodasGridsMensalidades === 'function') {
+                    recalcularTodasGridsMensalidades();
+                }
+                return data;
+            }
+        } catch(e) {}
         return JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
     },
 
@@ -294,18 +380,21 @@ const dbService = {
         list.unshift(clean);
         localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(list));
 
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { error } = await supabaseClient.from('mensalidades').upsert([clean]);
+                const { error } = await client.from('mensalidades').upsert([clean]);
                 if (error) {
                     console.error("⚠️ Erro ao salvar mensalidade no Supabase:", error.message);
                 } else {
                     console.log("✅ Mensalidade salva com sucesso no Supabase:", clean.cpf, clean.mes_referencia, clean.valor);
+                    return true;
                 }
             } catch (e) {
                 console.error("Erro ao enviar mensalidade para Supabase:", e);
             }
         }
+        await supabaseRestUpsert('mensalidades', clean);
         return true;
     },
 
@@ -318,15 +407,17 @@ const dbService = {
         if (typeof recalcularTodasGridsMensalidades === 'function') {
             recalcularTodasGridsMensalidades();
         }
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { error } = await supabaseClient.from('mensalidades').delete().not('id', 'is', null);
+                const { error } = await client.from('mensalidades').delete().not('id', 'is', null);
                 if (error) console.error("⚠️ Erro ao limpar mensalidades no Supabase:", error.message);
                 else console.log("🗑️ Todas as mensalidades foram excluídas do Supabase.");
             } catch (e) {
                 console.error("Erro ao limpar mensalidades do Supabase:", e);
             }
         }
+        await supabaseRestDelete('mensalidades', 'id=neq.null_never_match');
         return true;
     },
 
@@ -335,23 +426,27 @@ const dbService = {
         list = list.filter(m => m.id !== id);
         localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(list));
 
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { error } = await supabaseClient.from('mensalidades').delete().eq('id', id);
+                const { error } = await client.from('mensalidades').delete().eq('id', id);
                 if (error) console.error("Erro ao excluir mensalidade do Supabase:", error.message);
                 else console.log("🗑️ Mensalidade excluída do Supabase:", id);
             } catch (e) {
                 console.error("Erro ao excluir mensalidade do Supabase:", e);
             }
+        } else {
+            await supabaseRestDelete('mensalidades', `id=eq.${id}`);
         }
         return true;
     },
 
     // MENSAGENS E COMUNICADOS
     async getMensagens() {
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { data, error } = await supabaseClient.from('mensagens').select('*');
+                const { data, error } = await client.from('mensagens').select('*');
                 if (!error && data) {
                     localStorage.setItem('acbcsj_mensagens', JSON.stringify(data));
                     return data;
@@ -360,6 +455,13 @@ const dbService = {
                 console.error("Erro no Supabase getMensagens:", e);
             }
         }
+        try {
+            const data = await supabaseRest('mensagens?select=*');
+            if (Array.isArray(data)) {
+                localStorage.setItem('acbcsj_mensagens', JSON.stringify(data));
+                return data;
+            }
+        } catch(e) {}
         return JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
     },
 
@@ -371,15 +473,18 @@ const dbService = {
         list.unshift(clean);
         localStorage.setItem('acbcsj_mensagens', JSON.stringify(list));
 
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { error } = await supabaseClient.from('mensagens').upsert([clean]);
+                const { error } = await client.from('mensagens').upsert([clean]);
                 if (error) console.error("Erro ao salvar mensagem no Supabase:", error.message);
                 else console.log("✅ Mensagem salva no Supabase:", clean.assunto);
+                return true;
             } catch (e) {
                 console.error("Erro ao enviar mensagem para Supabase:", e);
             }
         }
+        await supabaseRestUpsert('mensagens', clean);
         return true;
     },
 
@@ -388,19 +493,23 @@ const dbService = {
         list = list.filter(m => m.id !== id);
         localStorage.setItem('acbcsj_mensagens', JSON.stringify(list));
 
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                await supabaseClient.from('mensagens').delete().eq('id', id);
+                await client.from('mensagens').delete().eq('id', id);
             } catch (e) {}
+        } else {
+            await supabaseRestDelete('mensagens', `id=eq.${id}`);
         }
         return true;
     },
 
     // DOCUMENTOS
     async getDocumentos() {
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { data, error } = await supabaseClient.from('documentos').select('*');
+                const { data, error } = await client.from('documentos').select('*');
                 if (!error && data) {
                     localStorage.setItem('acbcsj_documentos', JSON.stringify(data));
                     return data;
@@ -409,6 +518,13 @@ const dbService = {
                 console.error("Erro no Supabase getDocumentos:", e);
             }
         }
+        try {
+            const data = await supabaseRest('documentos?select=*');
+            if (Array.isArray(data)) {
+                localStorage.setItem('acbcsj_documentos', JSON.stringify(data));
+                return data;
+            }
+        } catch(e) {}
         return JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
     },
 
@@ -422,15 +538,18 @@ const dbService = {
         else list.unshift(clean);
         localStorage.setItem('acbcsj_documentos', JSON.stringify(list));
 
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { error } = await supabaseClient.from('documentos').upsert([clean]);
+                const { error } = await client.from('documentos').upsert([clean]);
                 if (error) console.error("Erro ao salvar documento no Supabase:", error.message);
                 else console.log("✅ Documento salvo no Supabase:", clean.titulo);
+                return true;
             } catch (e) {
                 console.error("Erro ao salvar documento no Supabase:", e);
             }
         }
+        await supabaseRestUpsert('documentos', clean);
         return true;
     },
 
@@ -439,56 +558,89 @@ const dbService = {
         list = list.filter(d => d.id !== id);
         localStorage.setItem('acbcsj_documentos', JSON.stringify(list));
 
-        if (supabaseClient) {
+        const client = getSupabaseClient();
+        if (client) {
             try {
-                const { error } = await supabaseClient.from('documentos').delete().eq('id', id);
+                const { error } = await client.from('documentos').delete().eq('id', id);
                 if (error) console.error("Erro ao excluir documento do Supabase:", error.message);
                 else console.log("🗑️ Documento excluído do Supabase:", id);
             } catch (e) {
                 console.error("Erro ao excluir documento do Supabase:", e);
             }
+        } else {
+            await supabaseRestDelete('documentos', `id=eq.${id}`);
         }
         return true;
     },
 
     // BUSCAR TUDO EXCLUSIVAMENTE DO SUPABASE
     async syncFromSupabase() {
-        if (!supabaseClient) {
-            this.updateOnlineBadge(false, "Supabase Offline");
-            return false;
-        }
-
         this.updateOnlineBadge(null, "Sincronizando...");
         console.log("🌐 Sincronizando dados exclusivos do Supabase...");
-        try {
-            const [assocRes, finRes, msgRes, docRes, mensRes] = await Promise.all([
-                supabaseClient.from('associados').select('*'),
-                supabaseClient.from('financeiro_lancamentos').select('*'),
-                supabaseClient.from('mensagens').select('*'),
-                supabaseClient.from('documentos').select('*'),
-                supabaseClient.from('mensalidades').select('*')
-            ]);
 
+        const client = getSupabaseClient();
+        let assocData = null, finData = null, msgData = null, docData = null, mensData = null;
+
+        if (client) {
+            try {
+                const [assocRes, finRes, msgRes, docRes, mensRes] = await Promise.all([
+                    client.from('associados').select('*'),
+                    client.from('financeiro_lancamentos').select('*'),
+                    client.from('mensagens').select('*'),
+                    client.from('documentos').select('*'),
+                    client.from('mensalidades').select('*')
+                ]);
+                if (assocRes && !assocRes.error && assocRes.data) assocData = assocRes.data;
+                if (finRes && !finRes.error && finRes.data) finData = finRes.data;
+                if (msgRes && !msgRes.error && msgRes.data) msgData = msgRes.data;
+                if (docRes && !docRes.error && docRes.data) docData = docRes.data;
+                if (mensRes && !mensRes.error && mensRes.data) mensData = mensRes.data;
+            } catch (e) {
+                console.warn("⚠️ Client SDK falhou, tentando fallback REST:", e);
+            }
+        }
+
+        // Se o client SDK não retornou os dados, usa a REST API direta (100% nativa)
+        if (!assocData) {
+            try {
+                const [a, f, m, d, ms] = await Promise.all([
+                    supabaseRest('associados?select=*'),
+                    supabaseRest('financeiro_lancamentos?select=*'),
+                    supabaseRest('mensagens?select=*'),
+                    supabaseRest('documentos?select=*'),
+                    supabaseRest('mensalidades?select=*')
+                ]);
+                if (Array.isArray(a)) assocData = a;
+                if (Array.isArray(f)) finData = f;
+                if (Array.isArray(m)) msgData = m;
+                if (Array.isArray(d)) docData = d;
+                if (Array.isArray(ms)) mensData = ms;
+            } catch (errRest) {
+                console.error("⚠️ Erro na consulta REST ao Supabase:", errRest);
+            }
+        }
+
+        if (assocData || finData || msgData || docData || mensData) {
             let count = 0;
-            if (!assocRes.error && assocRes.data) {
-                localStorage.setItem('acbcsj_associados', JSON.stringify(assocRes.data));
-                count += assocRes.data.length;
+            if (assocData && Array.isArray(assocData)) {
+                localStorage.setItem('acbcsj_associados', JSON.stringify(assocData));
+                count += assocData.length;
             }
-            if (!finRes.error && finRes.data) {
-                localStorage.setItem('acbcsj_financeiro', JSON.stringify(finRes.data));
-                count += finRes.data.length;
+            if (finData && Array.isArray(finData)) {
+                localStorage.setItem('acbcsj_financeiro', JSON.stringify(finData));
+                count += finData.length;
             }
-            if (!msgRes.error && msgRes.data) {
-                localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgRes.data));
-                count += msgRes.data.length;
+            if (msgData && Array.isArray(msgData)) {
+                localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgData));
+                count += msgData.length;
             }
-            if (!docRes.error && docRes.data) {
-                localStorage.setItem('acbcsj_documentos', JSON.stringify(docRes.data));
-                count += docRes.data.length;
+            if (docData && Array.isArray(docData)) {
+                localStorage.setItem('acbcsj_documentos', JSON.stringify(docData));
+                count += docData.length;
             }
-            if (!mensRes.error && mensRes.data && Array.isArray(mensRes.data)) {
-                localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(mensRes.data));
-                count += mensRes.data.length;
+            if (mensData && Array.isArray(mensData)) {
+                localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(mensData));
+                count += mensData.length;
                 if (typeof recalcularTodasGridsMensalidades === 'function') {
                     recalcularTodasGridsMensalidades();
                 }
@@ -497,8 +649,8 @@ const dbService = {
             this.updateOnlineBadge(true, "Supabase Online");
             console.log(`🎉 Dados do Supabase sincronizados com sucesso! (${count} registros no total)`);
             return true;
-        } catch (err) {
-            console.error("⚠️ Erro ao consultar Supabase:", err);
+        } else {
+            console.warn("⚠️ Não foi possível conectar ao Supabase.");
             this.updateOnlineBadge(false, "Erro de Conexão");
             return false;
         }
