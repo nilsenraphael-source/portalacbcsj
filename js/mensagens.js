@@ -70,6 +70,43 @@ function alternarAbaMensagensDiretoria(aba) {
     renderMensagensDiretoria();
 }
 
+function getMensagensLidasDiretoria() {
+    return JSON.parse(localStorage.getItem('acbcsj_mensagens_lidas_diretoria')) || [];
+}
+
+function marcarMensagemLidaDiretoria(msgId) {
+    let lidas = getMensagensLidasDiretoria();
+    if (!lidas.includes(msgId)) {
+        lidas.push(msgId);
+        localStorage.setItem('acbcsj_mensagens_lidas_diretoria', JSON.stringify(lidas));
+    }
+    let msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+    const m = msgs.find(item => item.id === msgId);
+    if (m) {
+        m.lida_diretoria = true;
+        localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgs));
+        if (typeof dbService !== 'undefined') dbService.addMensagem(m);
+    }
+    renderMensagensDiretoriaOverview();
+    renderMensagensDiretoria();
+}
+
+function marcarMensagemNaoLidaDiretoria(msgId) {
+    let lidas = getMensagensLidasDiretoria();
+    lidas = lidas.filter(id => id !== msgId);
+    localStorage.setItem('acbcsj_mensagens_lidas_diretoria', JSON.stringify(lidas));
+
+    let msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+    const m = msgs.find(item => item.id === msgId);
+    if (m) {
+        m.lida_diretoria = false;
+        localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgs));
+        if (typeof dbService !== 'undefined') dbService.addMensagem(m);
+    }
+    renderMensagensDiretoriaOverview();
+    renderMensagensDiretoria();
+}
+
 // RENDERIZAR MENSAGENS NO PAINEL GERAL DA DIRETORIA (VISÃO GERAL)
 function renderMensagensDiretoriaOverview() {
     const container = document.getElementById('tableMensagensDiretoriaOverviewBody');
@@ -77,26 +114,43 @@ function renderMensagensDiretoriaOverview() {
 
     const msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
     const recebidas = msgs.filter(m => m.destinatario === 'diretoria' || (m.associado_cpf && !m.id.startsWith('comunicado_')));
+    const lidasDiretoria = getMensagensLidasDiretoria();
+
+    // Filtra apenas mensagens NÃO LIDAS para manter a página geral limpa
+    const naoLidas = recebidas.filter(m => !lidasDiretoria.includes(m.id) && !m.lida_diretoria);
 
     const elBadge = document.getElementById('badgeContadorMensagensRecebidas');
     if (elBadge) {
-        const pendentes = recebidas.filter(m => m.status === 'pendente').length;
-        elBadge.textContent = `${pendentes} pendente(s) / ${recebidas.length} total`;
+        elBadge.textContent = `${naoLidas.length} não lida(s) / ${recebidas.length} no histórico`;
+        if (naoLidas.length > 0) {
+            elBadge.style.background = 'rgba(52, 152, 219, 0.2)';
+            elBadge.style.color = '#3498DB';
+        } else {
+            elBadge.style.background = 'rgba(46, 204, 113, 0.15)';
+            elBadge.style.color = '#2ECC71';
+        }
     }
 
-    if (recebidas.length === 0) {
-        container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 16px;">Nenhuma mensagem recebida de associados até o momento.</td></tr>`;
+    if (naoLidas.length === 0) {
+        container.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                    ✅ <b>Nenhuma mensagem pendente de leitura. O painel geral está limpo.</b><br>
+                    <span style="font-size: 12px;">Todas as ${recebidas.length} mensagens lidas permanecem arquivadas na <a href="#" onclick="navigateTab('mensagens-diretoria'); return false;" style="color: var(--accent-gold); text-decoration: underline; font-weight: bold;">Central de Mensagens</a>.</span>
+                </td>
+            </tr>
+        `;
         return;
     }
 
-    container.innerHTML = recebidas.map(m => {
+    container.innerHTML = naoLidas.map(m => {
         let statusBadge = '<span class="badge badge-info" style="font-size: 11px;">🟡 Pendente</span>';
         let infoResp = '';
 
         if (m.status === 'respondida') {
             statusBadge = '<span class="badge badge-success" style="font-size: 11px;">✅ Respondida</span>';
             if (m.respondido_por) {
-                infoResp = `<br><small style="color:var(--text-muted); font-size: 11px;">Respondido por: <b style="color:var(--accent-gold);">${m.respondido_por}</b> em ${m.data_resposta || m.data_envio || ''}</small>`;
+                infoResp = `<br><small style="color:var(--text-muted); font-size: 11px;">Por: <b style="color:var(--accent-gold);">${m.respondido_por}</b> em ${m.data_resposta || m.data_envio || ''}</small>`;
             }
         } else if (m.status === 'homologada') {
             statusBadge = '<span class="badge badge-warning" style="font-size: 11px; background:#E67E22;">📜 Homologada</span>';
@@ -110,26 +164,29 @@ function renderMensagensDiretoriaOverview() {
             }
         }
 
-        const msgPreview = (m.conteudo || m.mensagem || '').substring(0, 140) + ((m.conteudo || m.mensagem || '').length > 140 ? '...' : '');
+        const msgPreview = (m.conteudo || m.mensagem || '').substring(0, 120) + ((m.conteudo || m.mensagem || '').length > 120 ? '...' : '');
 
         return `
             <tr>
                 <td><b>${m.associado_nome || 'Associado'}</b><br><small style="color:var(--text-muted)">${m.associado_cpf || '-'}</small></td>
                 <td><small style="color:var(--accent-gold); font-weight:600;">${m.data_envio || m.data || '-'}</small></td>
                 <td><b>${m.assunto || 'Sem assunto'}</b></td>
-                <td><div style="max-width: 280px; font-size: 12px; white-space: pre-wrap;">${msgPreview}</div></td>
+                <td><div style="max-width: 250px; font-size: 12px; white-space: pre-wrap;">${msgPreview}</div></td>
                 <td>${statusBadge}${infoResp}</td>
                 <td>
                     <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                         ${m.status === 'pendente' ? `
-                            <button class="btn btn-sm btn-primary" style="font-size: 11px; padding: 4px 8px;" onclick="abrirModalResponderMensagem('${m.id}')">
+                            <button type="button" class="btn btn-sm btn-primary" style="font-size: 11px; padding: 4px 8px;" onclick="abrirModalResponderMensagem('${m.id}')">
                                 ✉️ Responder
                             </button>
                         ` : `
-                            <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 4px 8px;" onclick="verDetalhesMensagem('${m.id}')">
-                                👁️ Ver Resposta
+                            <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 4px 8px;" onclick="verDetalhesMensagem('${m.id}')">
+                                👁️ Ver
                             </button>
                         `}
+                        <button type="button" class="btn btn-sm btn-gold" style="font-size: 11px; padding: 4px 8px; font-weight: bold;" title="Marcar como lida e mover para o histórico" onclick="marcarMensagemLidaDiretoria('${m.id}')">
+                            ✅ Marcar como Lida
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -144,6 +201,7 @@ function renderMensagensDiretoria() {
     if (abaMensagensAtiva === 'recebidas') {
         const msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
         const recebidas = msgs.filter(m => m.destinatario === 'diretoria' || (m.associado_cpf && !m.id.startsWith('comunicado_')));
+        const lidasDiretoria = getMensagensLidasDiretoria();
 
         if (recebidas.length === 0) {
             container.innerHTML = `
@@ -153,10 +211,16 @@ function renderMensagensDiretoria() {
             `;
         } else {
             container.innerHTML = recebidas.map(m => {
+                const isLida = lidasDiretoria.includes(m.id) || m.lida_diretoria;
+
                 let statusBadge = '<span class="badge badge-info">🟡 Aguardando Resposta</span>';
                 if (m.status === 'respondida') statusBadge = '<span class="badge badge-success">✅ Respondida</span>';
                 if (m.status === 'homologada') statusBadge = '<span class="badge badge-warning" style="background:#E67E22;">📜 Homologada</span>';
                 if (m.status === 'indeferida') statusBadge = '<span class="badge badge-danger">❌ Indeferida</span>';
+
+                let lidaBadge = isLida 
+                    ? '<span class="badge badge-success" style="font-size: 10px;">✅ Mensagem Lida</span>'
+                    : '<span class="badge badge-warning" style="font-size: 10px;">🟡 Não Lida no Painel Geral</span>';
 
                 let respostaHtml = '';
                 if (m.resposta) {
@@ -171,11 +235,12 @@ function renderMensagensDiretoria() {
                 }
 
                 return `
-                    <div class="card" style="margin-bottom: 14px; border-left: 4px solid ${m.status === 'pendente' ? 'var(--accent-gold)' : '#2ECC71'};">
+                    <div class="card" style="margin-bottom: 14px; border-left: 4px solid ${isLida ? '#2ECC71' : 'var(--accent-gold)'};">
                         <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
                             <div style="display: flex; gap: 8px; align-items: center;">
                                 <b style="font-size: 15px; color: var(--accent-gold);">${m.assunto || 'Sem assunto'}</b>
                                 ${statusBadge}
+                                ${lidaBadge}
                             </div>
                             <small style="color:var(--text-muted); font-size: 11px;">📅 ${m.data_envio || m.data || '-'}</small>
                         </div>
@@ -184,11 +249,16 @@ function renderMensagensDiretoria() {
                         </div>
                         <p style="font-size:13px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; white-space: pre-wrap; margin: 0;">${m.conteudo || m.mensagem || ''}</p>
                         ${respostaHtml}
-                        <div style="display: flex; justify-content: flex-end; margin-top: 10px; gap: 8px;">
+                        <div style="display: flex; justify-content: flex-end; margin-top: 10px; gap: 8px; flex-wrap: wrap;">
                             ${m.status === 'pendente' ? `
-                                <button class="btn btn-sm btn-primary" onclick="abrirModalResponderMensagem('${m.id}')">✉️ Responder Mensagem</button>
+                                <button type="button" class="btn btn-sm btn-primary" onclick="abrirModalResponderMensagem('${m.id}')">✉️ Responder Mensagem</button>
                             ` : `
-                                <button class="btn btn-sm btn-outline" onclick="abrirModalResponderMensagem('${m.id}')">✏️ Atualizar Resposta</button>
+                                <button type="button" class="btn btn-sm btn-outline" onclick="abrirModalResponderMensagem('${m.id}')">✏️ Atualizar Resposta</button>
+                            `}
+                            ${isLida ? `
+                                <button type="button" class="btn btn-sm btn-outline" onclick="marcarMensagemNaoLidaDiretoria('${m.id}')">↩️ Marcar como Não Lida</button>
+                            ` : `
+                                <button type="button" class="btn btn-sm btn-gold" onclick="marcarMensagemLidaDiretoria('${m.id}')">✅ Marcar como Lida</button>
                             `}
                         </div>
                     </div>
@@ -280,6 +350,14 @@ function confirmarRespostaMensagemDiretoria(e) {
         msgs[idx].respondido_por = nomeDiretor;
         msgs[idx].respondido_por_cpf = currentUser ? currentUser.cpf : '';
         msgs[idx].data_resposta = dataHora;
+        msgs[idx].lida_diretoria = true;
+    }
+
+    // Marca como lida para arquivar do painel geral
+    let lidas = getMensagensLidasDiretoria();
+    if (!lidas.includes(id)) {
+        lidas.push(id);
+        localStorage.setItem('acbcsj_mensagens_lidas_diretoria', JSON.stringify(lidas));
     }
 
     // Cria também uma notificação direta no histórico de comunicados para o associado
