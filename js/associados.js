@@ -2,19 +2,52 @@
 // PORTAL ACBCSJ - MÓDULO DE ASSOCIADOS & PRÉ-CADASTRO
 // ==========================================
 
-// EXIBIR APENAS ASSOCIADOS ATIVOS COM CONTROLE DE PERFIL PELA DIRETORIA
-function renderGestaoAssociados() {
+// EXIBIR APENAS ASSOCIADOS ATIVOS COM CONTROLE DE PERFIL, BUSCA E EDIÇÃO
+function renderGestaoAssociados(filtroEspecifico) {
     renderSolicitacoesDesligamentoDiretoria();
 
     const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     let ativos = list.filter(a => a.status === 'ativo');
+
+    // Campo de busca
+    const inputBusca = document.getElementById('inputBuscaAssociados');
+    const termo = (filtroEspecifico !== undefined ? filtroEspecifico : (inputBusca ? inputBusca.value : '')).trim().toLowerCase();
+    
+    if (termo) {
+        const termoSemAcento = termo.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        ativos = ativos.filter(a => {
+            const nomeNorm = (a.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const guerraNorm = (a.nome_guerra || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const cpfNorm = (a.cpf || '').replace(/\D/g, '');
+            const telNorm = (a.telefone || '').replace(/\D/g, '');
+            const obmNorm = (a.obm || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const profNorm = (a.profissao || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const emailNorm = (a.email || '').toLowerCase();
+            const termoNums = termo.replace(/\D/g, '');
+
+            return nomeNorm.includes(termoSemAcento) ||
+                   guerraNorm.includes(termoSemAcento) ||
+                   (termoNums && cpfNorm.includes(termoNums)) ||
+                   (termoNums && telNorm.includes(termoNums)) ||
+                   obmNorm.includes(termoSemAcento) ||
+                   profNorm.includes(termoSemAcento) ||
+                   emailNorm.includes(termo);
+        });
+    }
+
+    // Atualiza contador de associados encontrados
+    const elContador = document.getElementById('contadorAssociadosFiltrados');
+    if (elContador) {
+        elContador.textContent = `${ativos.length} associado(s)${termo ? ' filtrado(s)' : ''}`;
+    }
+
     ativos.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
     const container = document.getElementById('tableTodosAssociadosBody');
     const isDiretoria = currentUser && currentUser.perfil === 'diretoria';
 
     if (container) {
         if (ativos.length === 0) {
-            container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum associado ativo cadastrado.</td></tr>`;
+            container.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">${termo ? 'Nenhum associado encontrado para a busca "' + termo + '".' : 'Nenhum associado ativo cadastrado.'}</td></tr>`;
         } else {
             container.innerHTML = ativos.map(a => {
                 const isSelf = a.cpf === currentUser.cpf;
@@ -38,15 +71,134 @@ function renderGestaoAssociados() {
                         <td>${a.cpf}</td>
                         <td>${a.telefone || a.email || '-'}</td>
                         <td>${perfilControl}</td>
-                        <td><button class="btn btn-sm btn-gold" onclick="verFichaAssociado('${a.cpf}')">📋 Ver Ficha Completa</button></td>
+                        <td><button class="btn btn-sm btn-gold" onclick="verFichaAssociado('${a.cpf}')">📋 Ver Ficha</button></td>
                         <td>
-                            ${!isSelf ? `<button class="btn btn-sm btn-outline" style="color:#E74C3C; border-color:#E74C3C" onclick="abrirModalDesligar('${a.cpf}')">Desligar Associado</button>` : '<small style="color:var(--text-muted)">Você (Diretoria)</small>'}
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <button class="btn btn-sm btn-outline" style="color: var(--accent-gold); border-color: var(--accent-gold); font-size: 11px; padding: 4px 8px;" onclick="abrirModalEditarAssociadoDiretoria('${a.cpf}')">
+                                    ✏️ Editar Dados
+                                </button>
+                                ${!isSelf ? `
+                                    <button class="btn btn-sm btn-outline" style="color:#E74C3C; border-color:#E74C3C; font-size: 11px; padding: 4px 8px;" onclick="abrirModalDesligar('${a.cpf}')">
+                                        Desligar
+                                    </button>
+                                ` : '<small style="color:var(--text-muted); align-self: center; font-size: 10px;">(Você)</small>'}
+                            </div>
                         </td>
                     </tr>
                 `;
             }).join('');
         }
     }
+}
+
+function filtrarAssociadosGestao() {
+    renderGestaoAssociados();
+}
+
+function limparBuscaAssociados() {
+    const input = document.getElementById('inputBuscaAssociados');
+    if (input) input.value = '';
+    renderGestaoAssociados();
+}
+
+function abrirModalEditarAssociadoDiretoria(cpf) {
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const a = list.find(item => item.cpf === cpf);
+    if (!a) {
+        alert('Associado não encontrado.');
+        return;
+    }
+
+    document.getElementById('editDirCpfOriginal').value = a.cpf;
+    const lblTitulo = document.getElementById('lblTituloEditarAssociadoDiretoria');
+    if (lblTitulo) lblTitulo.textContent = `✏️ Editar Cadastro: ${a.nome_guerra || a.nome}`;
+
+    // Preenche todos os campos
+    document.getElementById('editDirNome').value = a.nome || '';
+    document.getElementById('editDirNomeGuerra').value = a.nome_guerra || '';
+    document.getElementById('editDirCPF').value = a.cpf || '';
+    document.getElementById('editDirDataNasc').value = a.data_nascimento || '';
+    document.getElementById('editDirSexo').value = a.sexo || '';
+    document.getElementById('editDirTelefone').value = a.telefone || '';
+    document.getElementById('editDirEmail').value = a.email || '';
+    document.getElementById('editDirNomeMae').value = a.nome_mae || '';
+    document.getElementById('editDirNomePai').value = a.nome_pai || '';
+    document.getElementById('editDirLogradouro').value = a.logradouro || '';
+    document.getElementById('editDirNumero').value = a.numero || '';
+    document.getElementById('editDirComplemento').value = a.complemento || '';
+    document.getElementById('editDirCEP').value = a.cep || '';
+    document.getElementById('editDirBairro').value = a.bairro || '';
+    document.getElementById('editDirCidade').value = a.cidade || 'São José - SC';
+    document.getElementById('editDirOBM').value = a.obm || 'São José';
+    document.getElementById('editDirProfissao').value = a.profissao || 'Bombeiro Comunitário';
+    document.getElementById('editDirPerfil').value = a.perfil || 'associado';
+    document.getElementById('editDirStatus').value = a.status || 'ativo';
+    document.getElementById('editDirSenha').value = a.senha || '1234';
+    document.getElementById('editDirDataCadastro').value = a.data_cadastro || '';
+
+    openModal('modalEditarAssociadoDiretoria');
+}
+
+function salvarEdicaoAssociadoDiretoria(e) {
+    e.preventDefault();
+    const cpfOriginal = document.getElementById('editDirCpfOriginal').value;
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const idx = list.findIndex(item => item.cpf === cpfOriginal);
+
+    if (idx === -1) {
+        alert('Erro: Associado original não localizado no banco de dados.');
+        return;
+    }
+
+    const cpfNovo = document.getElementById('editDirCPF').value.trim();
+    if (cpfNovo !== cpfOriginal && list.some((item, i) => i !== idx && item.cpf === cpfNovo)) {
+        alert('Já existe outro associado cadastrado com este novo CPF.');
+        return;
+    }
+
+    const a = list[idx];
+    a.nome = document.getElementById('editDirNome').value.trim();
+    a.nome_guerra = document.getElementById('editDirNomeGuerra').value.trim();
+    a.cpf = cpfNovo;
+    a.data_nascimento = document.getElementById('editDirDataNasc').value.trim();
+    a.sexo = document.getElementById('editDirSexo').value;
+    a.telefone = document.getElementById('editDirTelefone').value.trim();
+    a.email = document.getElementById('editDirEmail').value.trim();
+    a.nome_mae = document.getElementById('editDirNomeMae').value.trim();
+    a.nome_pai = document.getElementById('editDirNomePai').value.trim();
+    a.logradouro = document.getElementById('editDirLogradouro').value.trim();
+    a.numero = document.getElementById('editDirNumero').value.trim();
+    a.complemento = document.getElementById('editDirComplemento').value.trim();
+    a.cep = document.getElementById('editDirCEP').value.trim();
+    a.bairro = document.getElementById('editDirBairro').value.trim();
+    a.cidade = document.getElementById('editDirCidade').value.trim();
+    a.obm = document.getElementById('editDirOBM').value.trim();
+    a.profissao = document.getElementById('editDirProfissao').value.trim();
+    a.perfil = document.getElementById('editDirPerfil').value;
+    a.status = document.getElementById('editDirStatus').value;
+    a.senha = document.getElementById('editDirSenha').value.trim() || '1234';
+    a.data_cadastro = document.getElementById('editDirDataCadastro').value.trim() || a.data_cadastro;
+
+    list[idx] = a;
+    localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+
+    if (typeof dbService !== 'undefined') {
+        dbService.saveAssociado(a);
+    }
+
+    // Se o próprio usuário editou seu cadastro
+    if (currentUser && currentUser.cpf === cpfOriginal) {
+        currentUser = a;
+        localStorage.setItem('acbcsj_user', JSON.stringify(a));
+        const headerName = document.getElementById('headerUserName');
+        if (headerName) headerName.textContent = a.nome_guerra || a.nome;
+    }
+
+    alert(`Dados cadastrais de ${a.nome_guerra || a.nome} salvos e atualizados com sucesso!`);
+    closeModal('modalEditarAssociadoDiretoria');
+    renderGestaoAssociados();
+    renderAssociadosDesligados();
+    renderDiretoriaOverview();
 }
 
 // GESTÃO DE SOLICITAÇÕES DE DESLIGAMENTO PELA DIRETORIA

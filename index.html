@@ -207,9 +207,28 @@
 
                 <!-- ABA 2: GESTÃO DE ASSOCIADOS (DIRETORIA) -->
                 <div id="tab-gestao-associados" class="tab-content" style="display: none;">
-                    <div class="page-header">
-                        <h2 class="page-title">Controle de Associados Ativos</h2>
-                        <button class="btn btn-primary btn-sm" onclick="openModal('modalPreCadastro')">+ Novo Cadastro</button>
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 class="page-title">Controle de Associados Ativos</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Quadro geral de bombeiros comunitários e integrantes cadastrados no sistema.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button class="btn btn-primary btn-sm" onclick="openModal('modalPreCadastro')">+ Novo Cadastro</button>
+                        </div>
+                    </div>
+
+                    <!-- BARRA DE PESQUISA E FILTRO DE ASSOCIADOS -->
+                    <div class="card" style="margin-bottom: 20px; padding: 14px 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                            <div style="position: relative; flex: 1; min-width: 280px; max-width: 520px;">
+                                <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--accent-gold); font-size: 14px; pointer-events: none;">🔍</span>
+                                <input type="text" id="inputBuscaAssociados" class="form-control" placeholder="Pesquisar por nome, nome de guerra, CPF, telefone ou OBM..." oninput="filtrarAssociadosGestao()" style="padding-left: 40px; font-size: 13px;">
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <span id="contadorAssociadosFiltrados" class="badge" style="background: rgba(212, 175, 55, 0.15); color: var(--accent-gold); border: 1px solid rgba(212, 175, 55, 0.4); font-size: 12px; padding: 6px 12px;">0 associados</span>
+                                <button class="btn btn-sm btn-outline" onclick="limparBuscaAssociados()" title="Limpar campo de busca">Limpar</button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- SEÇÃO DE DESLIGAMENTOS PENDENTES NA ABA DE ASSOCIADOS -->
@@ -1280,6 +1299,162 @@
                 <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('modalNovoLancamento')">Cancelar</button>
                     <button type="submit" class="btn btn-gold" id="btnSalvarLancamento">Salvar Lançamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO COMPLETA DE ASSOCIADO PELA DIRETORIA -->
+    <div id="modalEditarAssociadoDiretoria" class="modal-backdrop">
+        <div class="modal-content modal-content-lg" style="max-width: 850px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" id="lblTituloEditarAssociadoDiretoria">✏️ Editar Cadastro de Associado</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Como Diretoria, você pode atualizar todos os dados cadastrais, institucionais e de acesso do associado.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalEditarAssociadoDiretoria')">&times;</button>
+            </div>
+
+            <form onsubmit="salvarEdicaoAssociadoDiretoria(event)">
+                <input type="hidden" id="editDirCpfOriginal">
+                
+                <div class="form-grid">
+                    <!-- SEÇÃO 1: DADOS PESSOAIS -->
+                    <div class="form-group-full" style="border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 4px;">
+                        <h4 style="font-size: 13px; color: var(--accent-gold); margin: 0;">👤 Identificação & Contato</h4>
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label>Nome Completo <span class="req-star">*</span></label>
+                        <input type="text" id="editDirNome" class="form-control" required placeholder="Nome completo do associado">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nome de Guerra <span class="req-star">*</span></label>
+                        <input type="text" id="editDirNomeGuerra" class="form-control" required placeholder="Ex: BC SILVA">
+                    </div>
+
+                    <div class="form-group">
+                        <label>CPF <span class="req-star">*</span></label>
+                        <input type="text" id="editDirCPF" class="form-control" required placeholder="000.000.000-00">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data de Nascimento</label>
+                        <input type="text" id="editDirDataNasc" class="form-control" placeholder="DD/MM/AAAA ou AAAA-MM-DD">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Sexo</label>
+                        <select id="editDirSexo" class="form-control">
+                            <option value="">Selecione...</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Feminino">Feminino</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Telefone / WhatsApp <span class="req-star">*</span></label>
+                        <input type="text" id="editDirTelefone" class="form-control" required placeholder="(48) 99999-9999">
+                    </div>
+
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" id="editDirEmail" class="form-control" placeholder="associado@email.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nome da Mãe</label>
+                        <input type="text" id="editDirNomeMae" class="form-control" placeholder="Nome da mãe">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nome do Pai</label>
+                        <input type="text" id="editDirNomePai" class="form-control" placeholder="Nome do pai">
+                    </div>
+
+                    <!-- SEÇÃO 2: ENDEREÇO RESIDENCIAL -->
+                    <div class="form-group-full" style="border-top: 1px dashed var(--border-color); border-bottom: 1px solid var(--border-color); padding: 10px 0 6px 0; margin-top: 8px;">
+                        <h4 style="font-size: 13px; color: var(--accent-gold); margin: 0;">🏠 Endereço Residencial</h4>
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label>Logradouro (Rua, Avenida...) <span class="req-star">*</span></label>
+                        <input type="text" id="editDirLogradouro" class="form-control" required placeholder="Ex: Rua Central">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Número <span class="req-star">*</span></label>
+                        <input type="text" id="editDirNumero" class="form-control" required placeholder="Ex: 123">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Complemento</label>
+                        <input type="text" id="editDirComplemento" class="form-control" placeholder="Ex: Apto 101 / Bloco C">
+                    </div>
+
+                    <div class="form-group">
+                        <label>CEP</label>
+                        <input type="text" id="editDirCEP" class="form-control" placeholder="88100-000">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bairro <span class="req-star">*</span></label>
+                        <input type="text" id="editDirBairro" class="form-control" required placeholder="Ex: Centro">
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label>Cidade / UF <span class="req-star">*</span></label>
+                        <input type="text" id="editDirCidade" class="form-control" required placeholder="Ex: São José - SC">
+                    </div>
+
+                    <!-- SEÇÃO 3: INSTITUCIONAL E ACESSO -->
+                    <div class="form-group-full" style="border-top: 1px dashed var(--border-color); border-bottom: 1px solid var(--border-color); padding: 10px 0 6px 0; margin-top: 8px;">
+                        <h4 style="font-size: 13px; color: var(--accent-gold); margin: 0;">🛡️ Dados Institucionais & Acesso</h4>
+                    </div>
+
+                    <div class="form-group">
+                        <label>OBM (Posto / Unidade)</label>
+                        <input type="text" id="editDirOBM" class="form-control" placeholder="Ex: São José">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Profissão / Ocupação</label>
+                        <input type="text" id="editDirProfissao" class="form-control" placeholder="Ex: Bombeiro Comunitário">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Perfil de Acesso <span class="req-star">*</span></label>
+                        <select id="editDirPerfil" class="form-control" required>
+                            <option value="associado">ASSOCIADO (Comum)</option>
+                            <option value="diretoria">DIRETORIA (Administrador)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status Cadastral <span class="req-star">*</span></label>
+                        <select id="editDirStatus" class="form-control" required>
+                            <option value="ativo">ATIVO</option>
+                            <option value="pendente">PENDENTE (Aguardando Aprovação)</option>
+                            <option value="desligado">DESLIGADO</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Senha de Acesso ao Portal</label>
+                        <input type="text" id="editDirSenha" class="form-control" placeholder="Senha do associado">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data de Cadastro</label>
+                        <input type="text" id="editDirDataCadastro" class="form-control" placeholder="Data de entrada">
+                    </div>
+                </div>
+
+                <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalEditarAssociadoDiretoria')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold" style="width: auto; padding: 8px 24px;">💾 Salvar Alterações</button>
                 </div>
             </form>
         </div>
