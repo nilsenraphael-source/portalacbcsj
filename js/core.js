@@ -305,16 +305,25 @@ function renderDiretoriaOverview() {
     const elDesligados = document.getElementById('metricDesligadosAno');
     if (elDesligados) elDesligados.textContent = desligadosNoAno;
 
-    // 4. Solicitações Pendentes
-    document.getElementById('metricCadastrosPendentes').textContent = pendentes.length;
+    // 4. Solicitações Pendentes de Pré-Cadastro
+    const elCadastrosPendentes = document.getElementById('metricCadastrosPendentes');
+    if (elCadastrosPendentes) elCadastrosPendentes.textContent = pendentes.length;
+    
+    const elBadgePreCadastros = document.getElementById('badgeContadorPreCadastros');
+    if (elBadgePreCadastros) elBadgePreCadastros.textContent = `${pendentes.length} pendente(s)`;
 
-    // 5. Saldo em Caixa
+    // 5. Saldo em Caixa (Vermelho quando negativo, verde quando positivo/zerado)
     const totalReceitas = financeiro.filter(f => f.tipo === 'receita').reduce((sum, item) => sum + Number(item.valor), 0);
     const totalDespesas = financeiro.filter(f => f.tipo === 'despesa').reduce((sum, item) => sum + Number(item.valor), 0);
     const saldo = totalReceitas - totalDespesas;
-    document.getElementById('metricSaldoCaixa').textContent = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    
+    const elSaldoCaixa = document.getElementById('metricSaldoCaixa');
+    if (elSaldoCaixa) {
+        elSaldoCaixa.textContent = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        elSaldoCaixa.style.color = saldo < 0 ? '#E74C3C' : 'var(--status-success)';
+    }
 
-    // Tabela de aprovação rápida
+    // Tabela de aprovação rápida de Pré-Cadastros
     const container = document.getElementById('tablePendentesBody');
     if (container) {
         if (pendentes.length === 0) {
