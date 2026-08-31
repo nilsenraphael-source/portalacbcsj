@@ -799,8 +799,6 @@ function abrirModalDarBaixa(cpf = null) {
 
     const obsInput = document.getElementById('baixaObs');
     if (obsInput) obsInput.value = '';
-
-    const compInput = document.getElementById('baixaComprovantePix');
     if (compInput) compInput.value = '';
 
     atualizarCheckboxesBaixa();
@@ -820,50 +818,128 @@ function atualizarCheckboxesBaixa() {
     
     const cleanCpf = (cpf || '').replace(/\D/g, '');
 
-    const socioGrid = grid.find(g => {
+    const list = JSON.parse(localStorage.getItem('acbcsj_associados')) || (typeof ASSOCIADOS_PLANILHA_REAL !== 'undefined' ? ASSOCIADOS_PLANILHA_REAL : []);
+    const socio = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf) || null;
+
+    const socioGrid = (Array.isArray(grid) ? grid.find(g => {
         const gCpf = (g.cpf || '').replace(/\D/g, '');
         return gCpf && cleanCpf && gCpf === cleanCpf;
-    }) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+    }) : null) || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
 
     const mesesNomesMap = { jan:'Jan', fev:'Fev', mar:'Mar', abr:'Abr', mai:'Mai', jun:'Jun', jul:'Jul', ago:'Ago', set:'Set', out:'Out', nov:'Nov', dez:'Dez' };
+    const mesesKeysList = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+    // Bloco de informações do associado selecionado
+    const infoHeaderEl = document.getElementById('baixaInfoAssociado');
+    if (infoHeaderEl) {
+        if (socio) {
+            const infoIngresso = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso(socio) : { dataFormatada: socio.data_cadastro || '-' };
+            const statusTexto = socio.status === 'desligado' 
+                ? `<span class="badge badge-danger" style="font-size:11px;">🚫 DESLIGADO (${socio.data_desligamento || 'Data não informada'})</span>` 
+                : `<span class="badge badge-success" style="font-size:11px;">🟢 ATIVO</span>`;
+            infoHeaderEl.innerHTML = `
+                <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px;">
+                    <div>
+                        <b>${socio.nome_guerra || socio.nome}</b> (${socio.cpf})<br>
+                        <span style="color: var(--text-muted);">Data de Ingresso: <b>${infoIngresso.dataFormatada}</b> ${infoIngresso.dia > 15 ? '<span style="color:#F39C12;">(Admitido após dia 15: isento no mês de admissão)</span>' : ''}</span>
+                    </div>
+                    <div>${statusTexto}</div>
+                </div>
+            `;
+            infoHeaderEl.style.display = 'block';
+        } else {
+            infoHeaderEl.style.display = 'none';
+        }
+    }
 
     const checkboxes = document.querySelectorAll('input[name="baixaMeses"]');
     checkboxes.forEach(cb => {
         const mKey = cb.value;
+        const mIndex = mesesKeysList.indexOf(mKey) + 1;
         const valPago = parseFloat(socioGrid[mKey]) || 0;
         const parentLabel = cb.closest('label');
 
-        if (valPago >= baseVal) {
+        // Calcula status de mensalidade com a regra de ingresso e desligamento
+        const st = calcularStatusMensalidade(mIndex, anoRef, valPago, socio);
+
+        // Remove tag antiga se houver
+        const oldSpan = parentLabel ? parentLabel.querySelector('.mes-status-tag') : null;
+        if (oldSpan) oldSpan.remove();
+
+        if (st.status === 'pago') {
             // Mês já pago/quitado: pré-marcar e desabilitar
             cb.checked = true;
             cb.disabled = true;
             if (parentLabel) {
-                parentLabel.style.opacity = '0.65';
-                parentLabel.style.background = 'rgba(46, 204, 113, 0.25)';
-                parentLabel.style.borderColor = '#2ECC71';
-                parentLabel.style.padding = '4px 6px';
+                parentLabel.style.opacity = '0.75';
+                parentLabel.style.background = 'rgba(46, 204, 113, 0.18)';
+                parentLabel.style.border = '1px solid rgba(46, 204, 113, 0.4)';
+                parentLabel.style.padding = '4px 8px';
                 parentLabel.style.borderRadius = '4px';
                 parentLabel.style.cursor = 'not-allowed';
-                parentLabel.title = `Mês de ${mesesNomesMap[mKey]} já foi quitado (R$ ${valPago.toFixed(2).replace('.', ',')})`;
+                parentLabel.title = `Mês de ${mesesNomesMap[mKey]}/${anoRef} já está quitado (R$ ${valPago.toFixed(2).replace('.', ',')})`;
+                parentLabel.insertAdjacentHTML('beforeend', ` <span class="mes-status-tag" style="font-size:10px; color:#2ECC71; font-weight:bold;">(Pago)</span>`);
+            }
+        } else if (st.status === 'isento') {
+            // MÊS ISENTO: BLOQUEAR PARA EVITAR CONFUSÃO DO OPERADOR
+            cb.checked = false;
+            cb.disabled = true;
+            if (parentLabel) {
+                parentLabel.style.opacity = '0.55';
+                parentLabel.style.background = 'rgba(148, 163, 184, 0.12)';
+                parentLabel.style.border = '1px dashed rgba(148, 163, 184, 0.35)';
+                parentLabel.style.padding = '4px 8px';
+                parentLabel.style.borderRadius = '4px';
+                parentLabel.style.cursor = 'not-allowed';
+                parentLabel.title = `Mês de ${mesesNomesMap[mKey]}/${anoRef} ISENTO (Anterior à admissão ou admitido após dia 15) - Bloqueado`;
+                parentLabel.insertAdjacentHTML('beforeend', ` <span class="mes-status-tag" style="font-size:10px; color:var(--text-muted); font-weight:bold;">(Isento)</span>`);
+            }
+        } else if (st.status === 'desligado') {
+            // Mês posterior ao desligamento: bloquear
+            cb.checked = false;
+            cb.disabled = true;
+            if (parentLabel) {
+                parentLabel.style.opacity = '0.55';
+                parentLabel.style.background = 'rgba(231, 76, 60, 0.08)';
+                parentLabel.style.border = '1px dashed rgba(231, 76, 60, 0.3)';
+                parentLabel.style.padding = '4px 8px';
+                parentLabel.style.borderRadius = '4px';
+                parentLabel.style.cursor = 'not-allowed';
+                parentLabel.title = `Mês de ${mesesNomesMap[mKey]}/${anoRef} - Associado desligado (Não exigível) - Bloqueado`;
+                parentLabel.insertAdjacentHTML('beforeend', ` <span class="mes-status-tag" style="font-size:10px; color:#E74C3C; font-weight:bold;">(Desligado)</span>`);
             }
         } else {
-            // Mês em aberto: desmarcar e habilitar
+            // Mês em aberto/pendente: disponível para seleção
             cb.checked = false;
             cb.disabled = false;
             if (parentLabel) {
                 parentLabel.style.opacity = '1';
-                parentLabel.style.background = 'transparent';
-                parentLabel.style.borderColor = 'transparent';
-                parentLabel.style.padding = '0';
-                parentLabel.style.borderRadius = '0';
+                parentLabel.style.background = 'rgba(255, 255, 255, 0.03)';
+                parentLabel.style.border = '1px solid var(--border-color)';
+                parentLabel.style.padding = '4px 8px';
+                parentLabel.style.borderRadius = '4px';
                 parentLabel.style.cursor = 'pointer';
-                parentLabel.title = `Mês de ${mesesNomesMap[mKey]} pendente para baixa`;
+                parentLabel.title = `Mês de ${mesesNomesMap[mKey]}/${anoRef} pendente - Clique para marcar e dar baixa`;
             }
         }
     });
 
     atualizarValoresBaixa();
 }
+
+function selecionarTodosMesesPendentesBaixa() {
+    const checkboxes = document.querySelectorAll('input[name="baixaMeses"]:not(:disabled)');
+    checkboxes.forEach(cb => { cb.checked = true; });
+    atualizarValoresBaixa();
+}
+window.selecionarTodosMesesPendentesBaixa = selecionarTodosMesesPendentesBaixa;
+
+function desmarcarTodosMesesPendentesBaixa() {
+    const checkboxes = document.querySelectorAll('input[name="baixaMeses"]:not(:disabled)');
+    checkboxes.forEach(cb => { cb.checked = false; });
+    atualizarValoresBaixa();
+}
+window.desmarcarTodosMesesPendentesBaixa = desmarcarTodosMesesPendentesBaixa;
 
 function atualizarValoresBaixa() {
     const anoRef = document.getElementById('baixaAnoRef')?.value || '2026';
@@ -877,7 +953,7 @@ function atualizarValoresBaixa() {
         total += getValorMensalidadeVigente(mIndex, anoRef);
     });
 
-        const inputTotal = document.getElementById('baixaValorTotal');
+    const inputTotal = document.getElementById('baixaValorTotal');
     if (inputTotal) inputTotal.value = total.toFixed(2);
 }
 
@@ -891,7 +967,7 @@ async function salvarBaixaMensalidade(e) {
     const comprovantePix = document.getElementById('baixaComprovantePix').value.trim();
     const obs = document.getElementById('baixaObs').value.trim();
 
-    // Pega somente os meses NOVOS selecionados (que não estavam previamente marcados/desabilitados)
+    // Pega somente os meses NOVOS selecionados e garante que não são isentos/desligados/desabilitados
     const checkedMeses = Array.from(document.querySelectorAll('input[name="baixaMeses"]:checked:not(:disabled)')).map(c => c.value);
 
     if (!cpf || checkedMeses.length === 0 || valorTotal <= 0 || !dataInput) {

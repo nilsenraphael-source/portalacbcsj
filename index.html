@@ -1735,6 +1735,8 @@
                         <select id="baixaAssociadoCPF" class="form-control" required onchange="atualizarCheckboxesBaixa()"></select>
                     </div>
 
+                    <div id="baixaInfoAssociado" class="form-group-full" style="display: none; grid-column: 1 / -1;"></div>
+
                     <div class="form-group">
                         <label>Exercício / Ano da Mensalidade <span class="req-star">*</span></label>
                         <select id="baixaAnoRef" class="form-control" required onchange="atualizarCheckboxesBaixa()">
@@ -1752,7 +1754,13 @@
                     </div>
 
                     <div class="form-group form-group-full">
-                        <label>Selecione os Meses Quitados neste Pagamento <span class="req-star">*</span></label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+                            <label style="margin-bottom: 0;">Selecione os Meses Quitados neste Pagamento <span class="req-star">*</span></label>
+                            <div style="display: flex; gap: 6px;">
+                                <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 8px;" onclick="selecionarTodosMesesPendentesBaixa()">Marcar Todos os Pendentes</button>
+                                <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 8px;" onclick="desmarcarTodosMesesPendentesBaixa()">Limpar Seleção</button>
+                            </div>
+                        </div>
                         <div id="baixaMesesCheckboxes" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
                             <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="jan" onchange="atualizarValoresBaixa()"> Jan</label>
                             <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="baixaMeses" value="fev" onchange="atualizarValoresBaixa()"> Fev</label>
@@ -1994,14 +2002,14 @@
     </div>
 
     <!-- SCRIPTS JS MODULARES -->
-    <script src="supabaseClient.js?v=20260831_9"></script>
-    <script src="js/core.js?v=20260831_9"></script>
-    <script src="js/auth.js?v=20260831_9"></script>
-    <script src="js/associados.js?v=20260831_9"></script>
-    <script src="js/documentos.js?v=20260831_9"></script>
-    <script src="js/mensagens.js?v=20260831_9"></script>
-    <script src="js/financeiro.js?v=20260831_9"></script>
-    <script src="js/portal-socio.js?v=20260831_9"></script>
-    <script src="js/mensalidades.js?v=20260831_9"></script>
+    <script src="supabaseClient.js?v=20260831_10"></script>
+    <script src="js/core.js?v=20260831_10"></script>
+    <script src="js/auth.js?v=20260831_10"></script>
+    <script src="js/associados.js?v=20260831_10"></script>
+    <script src="js/documentos.js?v=20260831_10"></script>
+    <script src="js/mensagens.js?v=20260831_10"></script>
+    <script src="js/financeiro.js?v=20260831_10"></script>
+    <script src="js/portal-socio.js?v=20260831_10"></script>
+    <script src="js/mensalidades.js?v=20260831_10"></script>
 </body>
 </html>
