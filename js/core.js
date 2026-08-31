@@ -404,9 +404,9 @@ function extrairTextoMesesQuitados(h) {
 }
 window.extrairTextoMesesQuitados = extrairTextoMesesQuitados;
 
-// PARSER UNIVERSAL DE DATA DE INGRESSO / ADMISSÃO DO ASSOCIADO
+// PARSER UNIVERSAL DE DATA DE INGRESSO / ADMISSÃO DO ASSOCIADO (COM REGRA DE CORTE DIA 15)
 function extrairMesEAnoIngresso(socioOuData) {
-    if (!socioOuData) return { mes: 1, ano: 2020, dia: 1, dataFormatada: '01/01/2020' };
+    if (!socioOuData) return { mes: 1, ano: 2020, dia: 1, dataFormatada: '01/01/2020', mesInicioCobranca: 1, anoInicioCobranca: 2020, isentoNoMesIngresso: false };
 
     let str = '';
     if (typeof socioOuData === 'object') {
@@ -417,49 +417,15 @@ function extrairMesEAnoIngresso(socioOuData) {
 
     str = String(str || '').trim();
     if (!str || str === 'undefined' || str === 'null' || str === '-') {
-        return { mes: 1, ano: 2020, dia: 1, dataFormatada: '01/01/2020' };
+        return { mes: 1, ano: 2020, dia: 1, dataFormatada: '01/01/2020', mesInicioCobranca: 1, anoInicioCobranca: 2020, isentoNoMesIngresso: false };
     }
 
     const apenasData = str.split(' ')[0].split('T')[0].trim();
+    let dia = 1, mes = 1, ano = 2020;
 
     // Formato ISO: YYYY-MM-DD ou YYYY/MM/DD
     if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(apenasData)) {
         const [a, m, d] = apenasData.split(/[-/]/);
-        const dia = parseInt(d, 10) || 1;
-        const mes = parseInt(m, 10) || 1;
-        const ano = parseInt(a, 10) || 2020;
-        return {
-            mes: mes,
-            ano: ano,
-            dia: dia,
-            dataFormatada: `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`
-        };
-    }
-
-    // Formatos DD/MM/YYYY ou M/D/YYYY ou DD-MM-YYYY
-    const parts = apenasData.split(/[\/\-]/);
-    if (parts.length === 3) {
-        let p1 = parseInt(parts[0], 10) || 1;
-        let p2 = parseInt(parts[1], 10) || 1;
-        let p3 = parseInt(parts[2], 10) || 2020;
-
-        if (p3 < 100) p3 += 2000;
-
-        // Se p1 > 12 => D/M/YYYY
-        if (p1 > 12) {
-            return {
-                mes: p2,
-                ano: p3,
-                dia: p1,
-                dataFormatada: `${String(p1).padStart(2, '0')}/${String(p2).padStart(2, '0')}/${p3}`
-            };
-        }
-        // Se p2 > 12 => M/D/YYYY
-        if (p2 > 12) {
-            return {
-                mes: p1,
-                ano: p3,
-                dia: p2,
                 dataFormatada: `${String(p2).padStart(2, '0')}/${String(p1).padStart(2, '0')}/${p3}`
             };
         }
