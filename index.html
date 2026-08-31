@@ -347,7 +347,7 @@
                         <div class="metric-card" style="border-left: 4px solid #3498DB;">
                             <div class="title">ARRECADADO EM MENSALIDADES (<span class="lblAnoMensalidadeMetrica">2026</span>)</div>
                             <div id="metricTotalArrecadadoMensalidades" class="value" style="color: #3498DB;">R$ 0,00</div>
-                            <div class="subtext" style="color: var(--text-muted);">Soma de recebimentos no ano</div>
+                            <div id="metricSubtextTotalArrecadadoMensalidades" class="subtext" style="color: var(--text-muted);">Soma de recebimentos no ano</div>
                         </div>
                     </div>
 
@@ -356,10 +356,13 @@
                             <h3 class="card-title">Grade Anual de Mensalidades por Associado</h3>
                             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                                 <input type="text" id="searchAssociadoMensalidade" class="form-control" placeholder="🔍 Buscar por nome ou CPF..." style="width: 220px; padding: 6px 12px; font-size: 12px;" oninput="renderGestaoMensalidades()">
-                                <select id="filterStatusMensalidade" class="form-control" style="width: 160px; padding: 6px 12px; font-size: 12px;" onchange="renderGestaoMensalidades()">
-                                    <option value="todos">Todos os Status</option>
-                                    <option value="em_dia">🟢 Apenas Em Dia</option>
-                                    <option value="atrasado">🔴 Inadimplentes</option>
+                                <select id="filterStatusMensalidade" class="form-control" style="width: 180px; padding: 6px 12px; font-size: 12px;" onchange="renderGestaoMensalidades()">
+                                    <option value="todos">Todos os Associados</option>
+                                    <option value="ativos">🟢 Apenas Ativos</option>
+                                    <option value="em_dia">🟢 Ativos Em Dia</option>
+                                    <option value="atrasado">🔴 Ativos Inadimplentes</option>
+                                    <option value="desligados">🚫 Apenas Desligados</option>
+                                    <option value="com_pagamento">💳 Com Pagamento no Ano</option>
                                 </select>
                             </div>
                         </div>
@@ -387,6 +390,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="tableGestaoMensalidadesBody"></tbody>
+                                <tfoot id="tableGestaoMensalidadesFoot"></tfoot>
                             </table>
                         </div>
                     </div>
@@ -423,6 +427,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="tableMensalidadesDesligadosBody"></tbody>
+                                <tfoot id="tableMensalidadesDesligadosFoot"></tfoot>
                             </table>
                         </div>
                     </div>
@@ -1989,14 +1994,14 @@
     </div>
 
     <!-- SCRIPTS JS MODULARES -->
-    <script src="supabaseClient.js?v=20260831_8"></script>
-    <script src="js/core.js?v=20260831_8"></script>
-    <script src="js/auth.js?v=20260831_8"></script>
-    <script src="js/associados.js?v=20260831_8"></script>
-    <script src="js/documentos.js?v=20260831_8"></script>
-    <script src="js/mensagens.js?v=20260831_8"></script>
-    <script src="js/financeiro.js?v=20260831_8"></script>
-    <script src="js/portal-socio.js?v=20260831_8"></script>
-    <script src="js/mensalidades.js?v=20260831_8"></script>
+    <script src="supabaseClient.js?v=20260831_9"></script>
+    <script src="js/core.js?v=20260831_9"></script>
+    <script src="js/auth.js?v=20260831_9"></script>
+    <script src="js/associados.js?v=20260831_9"></script>
+    <script src="js/documentos.js?v=20260831_9"></script>
+    <script src="js/mensagens.js?v=20260831_9"></script>
+    <script src="js/financeiro.js?v=20260831_9"></script>
+    <script src="js/portal-socio.js?v=20260831_9"></script>
+    <script src="js/mensalidades.js?v=20260831_9"></script>
 </body>
 </html>

@@ -436,6 +436,16 @@ body {
   background-color: var(--bg-card-hover);
 }
 
+.custom-table tfoot tr {
+  background-color: rgba(212, 175, 55, 0.06);
+  font-weight: 700;
+}
+
+.custom-table tfoot td {
+  border-top: 2px solid var(--border-color);
+  padding: 10px 14px;
+}
+
 .badge {
   padding: 4px 8px;
   font-size: 11px;

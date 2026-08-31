@@ -20,20 +20,77 @@ function getSupabaseClient() {
 
 getSupabaseClient();
 
-// Helper REST direto com fallback infalível
+// Helper seguro para salvar no LocalStorage sem estourar cota de 5MB
+function safeSetLocalStorage(key, data) {
+    if (!data) return;
+    try {
+        localStorage.setItem(key, JSON.stringify(data));
+    } catch (e) {
+        console.warn(`LocalStorage quota excedida ao salvar ${key}. Otimizando campos...`, e);
+        try {
+            if (Array.isArray(data)) {
+                const cleanedData = data.map(item => {
+                    if (typeof item === 'object' && item !== null) {
+                        const copy = { ...item };
+                        if (copy.carta_desligamento_url && copy.carta_desligamento_url.length > 500) {
+                            copy.carta_desligamento_url = '[ARMAZENADO_NO_SUPABASE]';
+                        }
+                        if (copy.arquivo_url && copy.arquivo_url.length > 500) {
+                            copy.arquivo_url = '[ARMAZENADO_NO_SUPABASE]';
+                        }
+                        if (copy.comprovante_url && copy.comprovante_url.length > 500) {
+                            copy.comprovante_url = '[ARMAZENADO_NO_SUPABASE]';
+                        }
+                        return copy;
+                    }
+                    return item;
+                });
+                localStorage.setItem(key, JSON.stringify(cleanedData));
+            }
+        } catch(innerErr) {
+            console.error(`Erro ao salvar no LocalStorage (${key}):`, innerErr);
+        }
+    }
+}
+
+// Helper REST direto com fallback infalível e controle de timeout
 async function supabaseRest(endpoint, options = {}) {
     const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;
     const headers = {
         'apikey': SUPABASE_PUBLISHABLE_KEY,
         'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
         'Content-Type': 'application/json',
-        'Prefer': 'return=representation',
         ...(options.headers || {})
     };
-    const res = await fetch(url, { ...options, headers });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    const text = await res.text();
-    return text ? JSON.parse(text) : null;
+
+    let controller = null;
+    let timeoutId = null;
+    if (typeof AbortController !== 'undefined') {
+        controller = new AbortController();
+        timeoutId = setTimeout(() => {
+            try { controller.abort(); } catch(e) {}
+        }, options.timeout || 10000);
+    }
+
+    try {
+        const fetchOptions = {
+            ...options,
+            headers,
+            ...(controller ? { signal: controller.signal } : {})
+        };
+        const res = await fetch(url, fetchOptions);
+        if (timeoutId) clearTimeout(timeoutId);
+        if (!res.ok) {
+            console.warn(`Supabase REST aviso HTTP ${res.status}: ${res.statusText} (${endpoint})`);
+            return null;
+        }
+        const text = await res.text();
+        return text ? JSON.parse(text) : [];
+    } catch (err) {
+        if (timeoutId) clearTimeout(timeoutId);
+        console.warn(`Supabase REST fetch aviso (${endpoint}):`, err.message || err);
+        return null;
+    }
 }
 
 async function supabaseRestUpsert(table, row) {
@@ -41,7 +98,7 @@ async function supabaseRestUpsert(table, row) {
         return await supabaseRest(table, {
             method: 'POST',
             headers: {
-                'Prefer': 'resolution=merge-duplicates'
+                'Prefer': 'resolution=merge-duplicates,return=representation'
             },
             body: JSON.stringify(row)
         });
@@ -592,51 +649,83 @@ const dbService = {
         console.log("🌐 Sincronizando dados exclusivos do Supabase...");
 
         try {
-            const [assocData, finData, msgData, docData, mensData] = await Promise.all([
-                supabaseRest('associados?select=*'),
-                supabaseRest('financeiro_lancamentos?select=*'),
-                supabaseRest('mensagens?select=*'),
-                supabaseRest('documentos?select=*'),
-                supabaseRest('mensalidades?select=*')
-            ]);
+            let sucessos = 0;
+            let countTotal = 0;
 
-            let count = 0;
-            if (assocData && Array.isArray(assocData)) {
-                localStorage.setItem('acbcsj_associados', JSON.stringify(assocData));
-                count += assocData.length;
-            }
-            if (finData && Array.isArray(finData)) {
-                localStorage.setItem('acbcsj_financeiro', JSON.stringify(finData));
-                count += finData.length;
-            }
-            if (msgData && Array.isArray(msgData)) {
-                localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgData));
-                count += msgData.length;
-            }
-            if (docData && Array.isArray(docData)) {
-                localStorage.setItem('acbcsj_documentos', JSON.stringify(docData));
-                count += docData.length;
-            }
-            if (mensData && Array.isArray(mensData)) {
-                localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(mensData));
-                count += mensData.length;
+            // Executa requisições de forma resiliente e individual
+            const fetchPromises = [
+                supabaseRest('associados?select=*').then(data => {
+                    if (data && Array.isArray(data)) {
+                        safeSetLocalStorage('acbcsj_associados', data);
+                        countTotal += data.length;
+                        sucessos++;
+                    }
+                }),
+                supabaseRest('financeiro_lancamentos?select=*').then(data => {
+                    if (data && Array.isArray(data)) {
+                        safeSetLocalStorage('acbcsj_financeiro', data);
+                        countTotal += data.length;
+                        sucessos++;
+                    }
+                }),
+                supabaseRest('mensagens?select=*').then(data => {
+                    if (data && Array.isArray(data)) {
+                        safeSetLocalStorage('acbcsj_mensagens', data);
+                        countTotal += data.length;
+                        sucessos++;
+                    }
+                }),
+                supabaseRest('documentos?select=*').then(data => {
+                    if (data && Array.isArray(data)) {
+                        safeSetLocalStorage('acbcsj_documentos', data);
+                        countTotal += data.length;
+                        sucessos++;
+                    }
+                }),
+                supabaseRest('mensalidades?select=*').then(data => {
+                    if (data && Array.isArray(data)) {
+                        safeSetLocalStorage('acbcsj_mensalidades_historico', data);
+                        countTotal += data.length;
+                        sucessos++;
+                    }
+                })
+            ];
+
+            await Promise.allSettled(fetchPromises);
+
+            try {
+                if (typeof recalcularTodasGridsMensalidades === 'function') {
+                    recalcularTodasGridsMensalidades();
+                }
+            } catch(calcErr) {
+                console.warn("Aviso ao recalcular grids:", calcErr);
             }
 
-            if (typeof recalcularTodasGridsMensalidades === 'function') {
-                recalcularTodasGridsMensalidades();
+            // Se pelo menos uma tabela respondeu ou se a conexão está ativa
+            if (sucessos > 0) {
+                this.updateOnlineBadge(true, "Supabase Online");
+                console.log(`🎉 Dados do Supabase sincronizados com sucesso! (${countTotal} registros no total)`);
+            } else {
+                const ping = await supabaseRest('associados?select=id&limit=1', { timeout: 4000 });
+                if (ping !== null) {
+                    this.updateOnlineBadge(true, "Supabase Online");
+                } else {
+                    this.updateOnlineBadge(false, "Modo Local");
+                }
             }
 
-            this.updateOnlineBadge(true, "Supabase Online");
-            console.log(`🎉 Dados do Supabase sincronizados com sucesso! (${count} registros no total)`);
-
-            if (typeof refreshCurrentView === 'function') {
-                refreshCurrentView();
+            try {
+                if (typeof refreshCurrentView === 'function') {
+                    refreshCurrentView();
+                }
+            } catch(uiErr) {
+                console.warn("Aviso ao atualizar tela:", uiErr);
             }
 
             return true;
         } catch (err) {
-            console.error("⚠️ Erro ao consultar Supabase:", err);
-            this.updateOnlineBadge(false, "Erro de Conexão");
+            console.error("⚠️ Aviso na sincronização do Supabase:", err);
+            this.updateOnlineBadge(false, "Modo Local");
             return false;
         }
     },
