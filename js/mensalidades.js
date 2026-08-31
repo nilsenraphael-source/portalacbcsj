@@ -799,6 +799,7 @@ function abrirModalDarBaixa(cpf = null) {
 
     const obsInput = document.getElementById('baixaObs');
     if (obsInput) obsInput.value = '';
+    const compInput = document.getElementById('baixaComprovante');
     if (compInput) compInput.value = '';
 
     atualizarCheckboxesBaixa();

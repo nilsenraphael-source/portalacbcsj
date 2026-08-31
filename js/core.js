@@ -406,11 +406,15 @@ window.extrairTextoMesesQuitados = extrairTextoMesesQuitados;
 
 // PARSER UNIVERSAL DE DATA DE INGRESSO / ADMISSÃO DO ASSOCIADO (COM REGRA DO DIA 15)
 function extrairMesEAnoIngresso(socioOuData) {
-    if (!socioOuData) return { mes: 1, ano: 2020, dia: 1, dataFormatada: '01/01/2020', mesInicioCobranca: 1, anoInicioCobranca: 2020, isentoNoMesIngresso: false };
+    if (!socioOuData) {
+        return { mes: 1, ano: 2020, dia: 1, dataFormatada: '01/01/2020', mesInicioCobranca: 1, anoInicioCobranca: 2020, isentoNoMesIngresso: false };
+    }
 
     let str = '';
+    let dataDesligamentoStr = '';
     if (typeof socioOuData === 'object') {
-        str = socioOuData.data_ingresso || socioOuData.data_admissao || socioOuData.data_cadastro || socioOuData.data_entrada || '';
+        str = socioOuData.data_ingresso || socioOuData.data_admissao || socioOuData.data_cadastro || socioOuData.criado_em || socioOuData.data_entrada || '';
+        dataDesligamentoStr = socioOuData.data_desligamento || '';
     } else {
         str = String(socioOuData);
     }
@@ -421,6 +425,7 @@ function extrairMesEAnoIngresso(socioOuData) {
     }
 
     const apenasData = str.split(' ')[0].split('T')[0].trim();
+    const temHora = str.includes(':') || str.includes('T');
     let dia = 1, mes = 1, ano = 2020;
 
     // Formato ISO: YYYY-MM-DD ou YYYY/MM/DD
@@ -444,7 +449,39 @@ function extrairMesEAnoIngresso(socioOuData) {
             } else if (p2 > 12) {
                 dia = p2; mes = p1; ano = p3;
             } else {
-                dia = p1; mes = p2; ano = p3;
+                // Ambos <= 12: resolver ambiguidade
+                if (dataDesligamentoStr) {
+                    const desParts = String(dataDesligamentoStr).split(' ')[0].split(/[\/\-]/);
+                    if (desParts.length === 3) {
+                        let dD = parseInt(desParts[0], 10), mD = parseInt(desParts[1], 10), aD = parseInt(desParts[2], 10);
+                        if (aD < 100) aD += 2000;
+                        if (dD <= 12 && mD <= 12) {
+                            // se formato é DD/MM
+                            // nada a trocar
+                        } else if (mD > 12) {
+                            let tmp = dD; dD = mD; mD = tmp;
+                        }
+                        
+                        // Se p2 > mD no mesmo ano, p2 é impossível ser o mês (admissão posterior ao desligamento)
+                        if (p3 === aD && p2 > mD && p1 <= mD) {
+                            mes = p1; dia = p2; ano = p3;
+                        } else if (p3 === aD && p1 > mD && p2 <= mD) {
+                            mes = p2; dia = p1; ano = p3;
+                        } else if (temHora) {
+                            mes = p1; dia = p2; ano = p3;
+                        } else {
+                            dia = p1; mes = p2; ano = p3;
+                        }
+                    } else if (temHora) {
+                        mes = p1; dia = p2; ano = p3;
+                    } else {
+                        dia = p1; mes = p2; ano = p3;
+                    }
+                } else if (temHora) {
+                    mes = p1; dia = p2; ano = p3;
+                } else {
+                    dia = p1; mes = p2; ano = p3;
+                }
             }
         }
     }
