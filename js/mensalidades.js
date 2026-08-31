@@ -551,12 +551,18 @@ function renderGestaoMensalidades() {
             || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
 
         let totalPagoSocio = 0;
+        let mesesDevidos = 0;
 
         mesesKeys.forEach((key, index) => {
             const val = parseFloat(itemGrid[key]) || 0;
             totalPagoSocio += val;
             totaisMesDesligados[key] += val;
             totaisMesConsolidado[key] += val;
+
+            const st = calcularStatusMensalidade(index + 1, ano, val, socio);
+            if (st.isVencido) {
+                mesesDevidos++;
+            }
         });
 
         totalPagoDesligados += totalPagoSocio;
@@ -565,7 +571,9 @@ function renderGestaoMensalidades() {
         return {
             ...socio,
             gridData: itemGrid,
-            totalPagoSocio
+            totalPagoSocio,
+            mesesDevidos,
+            isEmDia: mesesDevidos === 0
         };
     });
 
@@ -678,49 +686,21 @@ function renderGestaoMensalidades() {
         }
     }
 
+    // Removido totalizadores e subtotais no rodapé conforme solicitado
     const footGestao = document.getElementById('tableGestaoMensalidadesFoot');
     if (footGestao) {
-        const cellsTotaisAtivos = mesesKeys.map(k => `<td style="font-weight: bold; font-size: 11px; color: #2ECC71;">R$ ${totaisMesAtivos[k].toFixed(2).replace('.', ',')}</td>`).join('');
-        const cellsTotaisDesligados = mesesKeys.map(k => `<td style="font-weight: bold; font-size: 11px; color: #E74C3C;">R$ ${totaisMesDesligados[k].toFixed(2).replace('.', ',')}</td>`).join('');
-        const cellsTotaisConsolidado = mesesKeys.map(k => `<td style="font-weight: 800; font-size: 11.5px; color: var(--accent-gold);">R$ ${totaisMesConsolidado[k].toFixed(2).replace('.', ',')}</td>`).join('');
-
-        footGestao.innerHTML = `
-            <tr style="background: rgba(46, 204, 113, 0.08); border-top: 2px solid rgba(46, 204, 113, 0.3);">
-                <td style="text-align: left; font-weight: bold; color: #2ECC71;">🟢 Subtotal Ativos (${ativos.length}):</td>
-                ${cellsTotaisAtivos}
-                <td style="font-weight: bold; color: #2ECC71; font-size: 12px;">R$ ${totalPagoAtivos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                <td colspan="2" style="font-size: 11px; color: var(--text-muted); text-align: center;">${emDiaCount} em dia / ${pendentesCount} pendentes</td>
-            </tr>
-            <tr style="background: rgba(231, 76, 60, 0.08); border-top: 1px dashed rgba(231, 76, 60, 0.3);">
-                <td style="text-align: left; font-weight: bold; color: #E74C3C;">🚫 Subtotal Desligados (${desligados.length}):</td>
-                ${cellsTotaisDesligados}
-                <td style="font-weight: bold; color: #E74C3C; font-size: 12px;">R$ ${totalPagoDesligados.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                <td colspan="2" style="font-size: 11px; color: var(--text-muted); text-align: center;">${desligadosComPagamentoCount} c/ arrecadação no ano</td>
-            </tr>
-            <tr style="background: rgba(212, 175, 55, 0.15); border-top: 2px solid var(--accent-gold);">
-                <td style="text-align: left; font-weight: 800; color: var(--accent-gold); font-size: 12px;">🏆 TOTAL GERAL ARRECADADO:</td>
-                ${cellsTotaisConsolidado}
-                <td style="font-weight: 800; color: var(--accent-gold); font-size: 13px;">R$ ${totalFinalArrecadado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                <td colspan="2" style="font-weight: bold; font-size: 11px; color: var(--accent-gold); text-align: center;">100% Contabilizado (Ativos + Desligados)</td>
-            </tr>
-        `;
+        footGestao.innerHTML = '';
     }
 
     // PROCESSA ASSOCIADOS DESLIGADOS NA PARTE INFERIOR
     const containerDesligados = document.getElementById('tableMensalidadesDesligadosBody');
     if (containerDesligados) {
         if (displayDesligados.length === 0) {
-            containerDesligados.innerHTML = `<tr><td colspan="16" style="text-align: center; color: var(--text-muted); padding: 15px;">Nenhum associado desligado encontrado para os filtros selecionados.</td></tr>`;
+            containerDesligados.innerHTML = `<tr><td colspan="16" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum associado desligado encontrado para os filtros selecionados.</td></tr>`;
         } else {
             containerDesligados.innerHTML = displayDesligados.map(socio => {
-                const sCpf = (socio.cpf || '').replace(/\D/g, '');
-                const itemGrid = (Array.isArray(grid) ? grid.find(g => (g.cpf || '').replace(/\D/g, '') === sCpf) : null) 
-                    || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
-
-                let totalPagoSocio = 0;
                 const cellsMeses = mesesKeys.map((k, idx) => {
-                    const val = parseFloat(itemGrid[k]) || 0;
-                    totalPagoSocio += val;
+                    const val = parseFloat(socio.gridData[k]) || 0;
                     const info = calcularStatusMensalidade(idx + 1, ano, val, socio);
                     return `<td>${info.badge}</td>`;
                 }).join('');
@@ -728,25 +708,25 @@ function renderGestaoMensalidades() {
                 const dataDeslig = socio.data_desligamento || 'Data não registrada';
                 const infoIngressoDeslig = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso(socio) : { dataFormatada: socio.data_cadastro || '-' };
 
-                const badgeContribuicao = totalPagoSocio > 0 
-                    ? `<span class="badge badge-success" style="font-size: 10px;" title="Contribuiu com R$ ${totalPagoSocio.toFixed(2).replace('.', ',')} no exercício">✅ Contribuiu no Ano</span>` 
-                    : `<span class="badge badge-secondary" style="font-size: 10px;">Sem pagamentos</span>`;
+                const statusBadge = socio.isEmDia 
+                    ? `<span class="badge badge-success" style="font-size:11px; padding: 4px 8px; background:#2ECC71; color:#fff; font-weight:bold;">🟢 QUITADO (${socio.totalPagoSocio > 0 ? 'R$ ' + socio.totalPagoSocio.toFixed(2).replace('.', ',') : 'Sem débitos'})</span>` 
+                    : `<span class="badge badge-danger" style="font-size:11px; padding: 4px 8px; background:#E74C3C; color:#fff; font-weight:bold;" title="${socio.mesesDevidos} mês(es) pendente(s) antes do desligamento">🔴 PENDENTE (${socio.mesesDevidos}m)</span>`;
 
                 return `
-                    <tr style="background: rgba(231, 76, 60, 0.04);">
+                    <tr>
                         <td style="text-align: left;">
                             <b>${socio.nome_guerra || socio.nome}</b><br>
                             <small style="color: var(--text-muted);">${socio.cpf}</small><br>
                             <span style="font-size: 10px; color: var(--accent-gold); opacity: 0.95; display: inline-flex; align-items: center; gap: 3px;" title="Data de Ingresso do Associado">
                                 📅 Admissão: <b>${infoIngressoDeslig.dataFormatada || socio.data_cadastro || '-'}</b>
                             </span><br>
-                            <span class="badge badge-danger" style="font-size: 9px; margin-top: 2px;">🚫 DESLIGADO em ${dataDeslig}</span>
+                            <span class="badge badge-danger" style="font-size: 9.5px; padding: 2px 6px; margin-top: 3px; display: inline-block;">🚫 DESLIGADO em ${dataDeslig}</span>
                         </td>
                         ${cellsMeses}
                         <td style="font-weight: 700; color: var(--accent-gold);">
-                            R$ ${totalPagoSocio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            R$ ${socio.totalPagoSocio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </td>
-                        <td>${badgeContribuicao}</td>
+                        <td>${statusBadge}</td>
                         <td>
                             <div style="display: flex; gap: 4px; justify-content: center;">
                                 <button class="btn btn-sm btn-gold" style="padding: 2px 6px; font-size: 11px;" onclick="abrirModalDarBaixa('${socio.cpf}')">💳 Baixar</button>
@@ -760,17 +740,10 @@ function renderGestaoMensalidades() {
         }
     }
 
+    // Removido totalizador do rodapé de desligados conforme solicitado
     const footDesligados = document.getElementById('tableMensalidadesDesligadosFoot');
     if (footDesligados) {
-        const cellsTotaisDesligados = mesesKeys.map(k => `<td style="font-weight: bold; font-size: 11px; color: #E74C3C;">R$ ${totaisMesDesligados[k].toFixed(2).replace('.', ',')}</td>`).join('');
-        footDesligados.innerHTML = `
-            <tr style="background: rgba(231, 76, 60, 0.1); border-top: 2px solid #E74C3C;">
-                <td style="text-align: left; font-weight: bold; color: #FF6B6B;">Total Arrecadado de Desligados (${desligados.length}):</td>
-                ${cellsTotaisDesligados}
-                <td style="font-weight: 800; color: var(--accent-gold); font-size: 12px;">R$ ${totalPagoDesligados.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                <td colspan="2" style="font-size: 11px; color: var(--text-muted); text-align: center;">Contabilizado no total geral</td>
-            </tr>
-        `;
+        footDesligados.innerHTML = '';
     }
 }
 
