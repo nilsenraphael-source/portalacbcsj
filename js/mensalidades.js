@@ -55,6 +55,35 @@ function formatarMesesReferenciaCompacto(checkedMesesKeys) {
 }
 window.formatarMesesReferenciaCompacto = formatarMesesReferenciaCompacto;
 
+function extrairAnoPagamentoEfetivo(item) {
+    if (!item) return '';
+    const strData = String(item.data_pagamento || item.data || item.data_iso || item.created_at || item.data_baixa || '').trim();
+    if (!strData) {
+        return String(item.ano || '').trim();
+    }
+    // Formato ISO: YYYY-MM-DD
+    const matchIso = strData.match(/^(\d{4})[-/]/);
+    if (matchIso) return matchIso[1];
+
+    // Formato BR: DD/MM/YYYY
+    const matchBr = strData.match(/\d{1,2}[-/]\d{1,2}[-/](\d{4})/);
+    if (matchBr) return matchBr[1];
+
+    // Formato BR 2 dígitos: DD/MM/YY
+    const matchBrShort = strData.match(/\d{1,2}[-/]\d{1,2}[-/](\d{2})$/);
+    if (matchBrShort) {
+        let yy = parseInt(matchBrShort[1]);
+        return String(yy < 100 ? (2000 + yy) : yy);
+    }
+
+    // Qualquer número de 4 dígitos (ex: 2024, 2025, 2026)
+    const matchAny4 = strData.match(/\b(20\d\d)\b/);
+    if (matchAny4) return matchAny4[1];
+
+    return String(item.ano || '').trim();
+}
+window.extrairAnoPagamentoEfetivo = extrairAnoPagamentoEfetivo;
+
 function parseStringMeses(str) {
     if (!str || str === 'undefined' || str === 'null') return [];
     const strLower = str.toLowerCase().trim();
@@ -630,25 +659,45 @@ function renderGestaoMensalidades() {
         };
     });
 
-    // Total arrecadado no ano (Ativos + Desligados)
-    const totalGeralMensalidadesPagas = totalPagoAtivos + totalPagoDesligados;
-
+    // CÁLCULO DO TOTAL ARRECADADO NO ANO (REGIME DE CAIXA / DATA DO PAGAMENTO)
+    // Regra: Somar APENAS valores que REALMENTE ENTRARAM NO ANO SELECIONADO.
+    // Pagamentos antecipados feitos no ano anterior (ex: 2025) NÃO contam para a arrecadação de 2026.
     let historicoGeral = [];
     try {
         historicoGeral = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
     } catch(e) { historicoGeral = []; }
 
-    let historicoGeralTotal = 0;
+    const mapStatusAssociadoPorCpf = {};
+    list.forEach(socio => {
+        const clean = (socio.cpf || '').replace(/\D/g, '');
+        mapStatusAssociadoPorCpf[clean] = socio.status || 'ativo';
+    });
+
+    let totalArrecadadoNoAnoAtivos = 0;
+    let totalArrecadadoNoAnoDesligados = 0;
+
     historicoGeral.forEach(item => {
-        const infoM = (typeof extrairInfoMensalidade === 'function') 
-            ? extrairInfoMensalidade(item, ano) 
-            : { ano: item.ano || '2026', mes: '01' };
-        if (infoM.ano === ano || String(item.ano) === String(ano)) {
-            historicoGeralTotal += (parseFloat(item.valor) || 0);
+        const anoEfetivoPagamento = typeof extrairAnoPagamentoEfetivo === 'function' 
+            ? extrairAnoPagamentoEfetivo(item) 
+            : (() => {
+                const str = String(item.data_pagamento || item.data || item.data_iso || item.created_at || '').trim();
+                const m = str.match(/\b(20\d\d)\b/);
+                return m ? m[1] : String(item.ano || '');
+            })();
+
+        if (String(anoEfetivoPagamento) === String(ano)) {
+            const val = typeof item.valor === 'number' ? item.valor : (parseFloat(String(item.valor || '0').replace(',', '.')) || 0);
+            const cleanCpf = (item.cpf || '').replace(/\D/g, '');
+            const statusSocio = mapStatusAssociadoPorCpf[cleanCpf] || 'ativo';
+            if (statusSocio === 'desligado') {
+                totalArrecadadoNoAnoDesligados += val;
+            } else {
+                totalArrecadadoNoAnoAtivos += val;
+            }
         }
     });
 
-    const totalFinalArrecadado = Math.max(totalGeralMensalidadesPagas, historicoGeralTotal);
+    const totalFinalArrecadado = totalArrecadadoNoAnoAtivos + totalArrecadadoNoAnoDesligados;
 
     const elArrecadado = document.getElementById('metricTotalArrecadadoMensalidades');
     const elSubtextArrecadado = document.getElementById('metricSubtextTotalArrecadadoMensalidades');
@@ -657,7 +706,7 @@ function renderGestaoMensalidades() {
 
     if (elArrecadado) elArrecadado.textContent = `R$ ${totalFinalArrecadado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
     if (elSubtextArrecadado) {
-        elSubtextArrecadado.innerHTML = `🟢 Ativos: <b>R$ ${totalPagoAtivos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b> | 🚫 Desligados: <b>R$ ${totalPagoDesligados.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b>`;
+        elSubtextArrecadado.innerHTML = `🟢 Ativos: <b>R$ ${totalArrecadadoNoAnoAtivos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b> | 🚫 Desligados: <b>R$ ${totalArrecadadoNoAnoDesligados.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b>`;
     }
     if (elEmDia) elEmDia.textContent = `${emDiaCount} associado${emDiaCount === 1 ? '' : 's'}`;
     if (elPendentes) elPendentes.textContent = `${pendentesCount} associado${pendentesCount === 1 ? '' : 's'}`;
