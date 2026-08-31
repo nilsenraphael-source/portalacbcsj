@@ -354,36 +354,42 @@ function extrairInfoMensalidade(m, anoPadrao = '2026') {
     };
 }
 
-// FORMATADOR UNIVERSAL E SEGURO DE MESES QUITADOS (EVITA 'UNDEFINED')
+// FORMATADOR UNIVERSAL E SEGURO DE MESES QUITADOS (EVITA 'UNDEFINED' E RANGES CORROMPIDOS)
 function extrairTextoMesesQuitados(h) {
     if (!h) return '-';
     
-    // 1. Tentar pegar meses_quitados se válido
+    // 1. Tentar extrair do texto de observações ou obs se constar os meses exatos entre parênteses, ex: "(Jan, Fev, Mar, Mai, Ago/2026)"
+    const obsTexto = String(h.obs || h.observacoes || '');
+    if (obsTexto) {
+        const match = obsTexto.match(/\(([^)]+)\)/);
+        if (match && match[1]) {
+            const limpo = match[1].replace(/\/\s*\d{4}/g, '').trim();
+            if (limpo && limpo.length >= 3 && !limpo.toLowerCase().includes('null') && !limpo.toLowerCase().includes('undefined') && !limpo.includes('m)')) {
+                return limpo;
+            }
+        }
+    }
+
+    // 2. Tentar pegar meses_quitados se válido
     if (h.meses_quitados !== undefined && h.meses_quitados !== null && String(h.meses_quitados).trim() !== '' && String(h.meses_quitados).trim() !== 'undefined' && String(h.meses_quitados).trim() !== 'null') {
-        return String(h.meses_quitados).trim();
+        const mq = String(h.meses_quitados).trim();
+        if (!mq.includes('(') || !obsTexto) return mq;
     }
-    // 2. Tentar pegar mes_referencia se válido
+
+    // 3. Tentar pegar mes_referencia se válido
     if (h.mes_referencia !== undefined && h.mes_referencia !== null && String(h.mes_referencia).trim() !== '' && String(h.mes_referencia).trim() !== 'undefined' && String(h.mes_referencia).trim() !== 'null') {
-        return String(h.mes_referencia).trim();
+        const mr = String(h.mes_referencia).trim();
+        if (!mr.includes('(') || !obsTexto) return mr;
     }
-    // 3. Tentar pegar meses ou mes
+
+    // 4. Tentar pegar meses ou mes
     if (h.meses !== undefined && h.meses !== null && String(h.meses).trim() !== '' && String(h.meses).trim() !== 'undefined') {
         return String(h.meses).trim();
     }
     if (h.mes !== undefined && h.mes !== null && String(h.mes).trim() !== '' && String(h.mes).trim() !== 'undefined') {
         return String(h.mes).trim();
     }
-    // 4. Tentar extrair do texto de observações ou obs
-    const obsTexto = String(h.obs || h.observacoes || '');
-    if (obsTexto) {
-        const match = obsTexto.match(/\(([^)]+)\)/);
-        if (match && match[1]) {
-            const limpo = match[1].replace(/\/\s*\d{4}/g, '').trim();
-            if (limpo && limpo.length >= 3 && !limpo.toLowerCase().includes('null') && !limpo.toLowerCase().includes('undefined')) {
-                return limpo;
-            }
-        }
-    }
+
     // 5. Tentar inferir da data de pagamento
     const dataStr = h.data || h.data_pagamento || h.data_iso || '';
     if (dataStr) {

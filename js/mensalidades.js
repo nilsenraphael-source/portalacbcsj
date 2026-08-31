@@ -18,41 +18,84 @@ const MES_MAP_EXPAND = {
     dez: 'dez', dezembro: 'dez', '12': 'dez'
 };
 
-function extrairListaMesesQuitados(rawString) {
-    if (!rawString) return [];
-    const str = String(rawString).trim().toLowerCase();
-    if (!str) return [];
+function extrairListaMesesQuitados(rawInput) {
+    if (!rawInput) return [];
 
-    if (str.includes('anual') || str.includes('todos') || str.includes('12m') || str === 'jan-dez' || str.startsWith('jan-dez') || str === 'jan a dez') {
+    let str = '';
+    let itemObj = null;
+
+    if (typeof rawInput === 'object') {
+        itemObj = rawInput;
+        // 1. Verificar se no campo obs / observações constam os meses exatos entre parênteses, ex: "(Jan, Fev, Mar, Mai, Ago/2026)"
+        const obsTexto = String(itemObj.obs || itemObj.observacoes || '');
+        if (obsTexto && obsTexto.includes('(') && obsTexto.includes(')')) {
+            const m = obsTexto.match(/\(([^)]+)\)/);
+            if (m && m[1]) {
+                const mesesTexto = m[1].replace(/\/\s*\d{4}/g, '').trim();
+                const partes = mesesTexto.split(/[,;\/|]+/).map(p => p.trim().toLowerCase());
+                const listaParsed = [];
+                partes.forEach(p => {
+                    const clean = p.replace(/[^a-z0-9]/g, '');
+                    if (MES_MAP_EXPAND[clean] && !listaParsed.includes(MES_MAP_EXPAND[clean])) {
+                        listaParsed.push(MES_MAP_EXPAND[clean]);
+                    }
+                });
+                if (listaParsed.length > 0) return listaParsed;
+            }
+        }
+
+        str = String(itemObj.meses_quitados || itemObj.mes_referencia || itemObj.meses || itemObj.mes || '').trim();
+    } else {
+        str = String(rawInput).trim();
+    }
+
+    if (!str || str === 'undefined' || str === 'null') return [];
+
+    const strLower = str.toLowerCase();
+
+    if (strLower.includes('anual') || strLower.includes('todos') || strLower.includes('12m') || strLower === 'jan-dez' || strLower === 'jan a dez') {
         return [...TODOS_MESES_KEYS];
     }
 
-    const rangeMatch = str.match(/([a-z]{3})\s*[-a]\s*([a-z]{3})/i);
-    if (rangeMatch) {
-        const startKey = MES_MAP_EXPAND[rangeMatch[1]];
-        const endKey = MES_MAP_EXPAND[rangeMatch[2]];
-        if (startKey && endKey) {
-            const startIdx = TODOS_MESES_KEYS.indexOf(startKey);
-            const endIdx = TODOS_MESES_KEYS.indexOf(endKey);
-            if (startIdx >= 0 && endIdx >= startIdx) {
-                return TODOS_MESES_KEYS.slice(startIdx, endIdx + 1);
+    // Se tiver vírgulas, ponto e vírgula ou barras (lista de meses selecionados)
+    if (strLower.includes(',') || strLower.includes(';') || strLower.includes('/')) {
+        const parts = strLower.split(/[,;\/|]+/).map(p => p.trim());
+        const result = [];
+        parts.forEach(p => {
+            const clean = p.replace(/[^a-z0-9]/g, '');
+            if (MES_MAP_EXPAND[clean] && !result.includes(MES_MAP_EXPAND[clean])) {
+                result.push(MES_MAP_EXPAND[clean]);
+            }
+        });
+        if (result.length > 0) return result;
+    }
+
+    // Se for um range explícito estrito, SEM indicador de contagem (ex: "jan-mar" ou "jan a mar", mas NÃO "jan-ago (5m)")
+    if (!strLower.includes('(') && !strLower.includes('m)')) {
+        const rangeMatch = strLower.match(/^([a-z]{3})\s*[-a]\s*([a-z]{3})$/i);
+        if (rangeMatch) {
+            const startKey = MES_MAP_EXPAND[rangeMatch[1]];
+            const endKey = MES_MAP_EXPAND[rangeMatch[2]];
+            if (startKey && endKey) {
+                const startIdx = TODOS_MESES_KEYS.indexOf(startKey);
+                const endIdx = TODOS_MESES_KEYS.indexOf(endKey);
+                if (startIdx >= 0 && endIdx >= startIdx) {
+                    return TODOS_MESES_KEYS.slice(startIdx, endIdx + 1);
+                }
             }
         }
     }
 
-    const parts = str.split(/[,;\/|]+/).map(p => p.trim());
-    const result = [];
-    parts.forEach(p => {
-        const clean = p.replace(/[^a-z0-9]/g, '');
-        if (MES_MAP_EXPAND[clean]) {
-            if (!result.includes(MES_MAP_EXPAND[clean])) result.push(MES_MAP_EXPAND[clean]);
+    // Tentar extrair chaves de meses reconhecidas
+    const partsGen = strLower.split(/[^a-z0-9]+/).filter(Boolean);
+    const resultGen = [];
+    partsGen.forEach(p => {
+        if (MES_MAP_EXPAND[p] && !resultGen.includes(MES_MAP_EXPAND[p])) {
+            resultGen.push(MES_MAP_EXPAND[p]);
         }
     });
 
-    if (result.length > 0) return result;
-
-    const cleanAll = str.replace(/[^a-z0-9]/g, '');
-    if (MES_MAP_EXPAND[cleanAll]) return [MES_MAP_EXPAND[cleanAll]];
+    if (resultGen.length > 0) return resultGen;
 
     return ['jan'];
 }
@@ -89,7 +132,7 @@ function recalcularTodasGridsMensalidades() {
             // VINCULAÇÃO ESTRITAMENTE POR CPF DO ASSOCIADO
             const lancamentosSocio = historico.filter(m => (m.cpf || '').replace(/\D/g, '') === cleanCpf && String(m.ano) === String(ano));
             lancamentosSocio.forEach(m => {
-                const meses = extrairListaMesesQuitados(m.meses_quitados || m.mes_referencia);
+                const meses = extrairListaMesesQuitados(m);
                 const valorTotal = typeof m.valor === 'number' ? m.valor : (parseFloat(String(m.valor || '0').replace(',', '.')) || 0);
                 const valorPorMes = meses.length > 0 ? (valorTotal / meses.length) : valorTotal;
                 meses.forEach(mk => {
@@ -397,18 +440,12 @@ function renderGestaoMensalidades() {
     ativos.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
     desligados.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
 
+    recalcularTodasGridsMensalidades();
     const storageKey = `acbcsj_mensalidades_grid_${ano}`;
     let grid = [];
     try {
         grid = JSON.parse(localStorage.getItem(storageKey)) || [];
     } catch(e) { grid = []; }
-
-    if (!grid || !Array.isArray(grid) || grid.length === 0) {
-        recalcularTodasGridsMensalidades();
-        try {
-            grid = JSON.parse(localStorage.getItem(storageKey)) || [];
-        } catch(e) { grid = []; }
-    }
 
     const searchInput = document.getElementById('searchAssociadoMensalidade');
     const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -784,7 +821,7 @@ function verExtratoAssociado(cpf) {
                 </div>
                 <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <div style="font-size: 11px; color: var(--text-muted);">OBM / SITUAÇÃO</div>
-                    <div style="font-size: 14px; font-weight: bold;">${a.obm || 'São José'}</div>
+                    <div style="font-size: 14px; font-weight: bold;">${String(a.obm || 'São José').replace(/SÃ£o/g, 'São').replace(/JosÃ©/g, 'José').replace(/Ã§Ã£/g, 'çã').replace(/Ã£/g, 'ã').replace(/Ã©/g, 'é')}</div>
                     <span class="badge badge-${a.status === 'desligado' ? 'danger' : 'success'}" style="font-size: 10px;">${a.status === 'desligado' ? 'CADASTRO DESLIGADO' : 'CADASTRO ATIVO'}</span>
                 </div>
             </div>
@@ -875,7 +912,7 @@ function recalcularGridAssociado(cpf, ano) {
     mesesKeys.forEach(k => socioGrid[k] = 0);
 
     baixasDoAno.forEach(b => {
-        const listaMeses = extrairListaMesesQuitados(b.meses_quitados || b.mes_referencia);
+        const listaMeses = extrairListaMesesQuitados(b);
         const valorTotal = typeof b.valor === 'number' ? b.valor : (parseFloat(String(b.valor || '0').replace(',', '.')) || 0);
         const valorPorMes = listaMeses.length > 0 ? (valorTotal / listaMeses.length) : valorTotal;
         listaMeses.forEach(mk => {
