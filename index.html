@@ -1851,20 +1851,26 @@
                     </div>
 
                     <div class="form-group form-group-full">
-                        <label>Meses Quitados <span class="req-star">*</span></label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+                            <label style="margin-bottom: 0;">Meses Quitados <span class="req-star">*</span></label>
+                            <div style="display: flex; gap: 6px;">
+                                <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 8px;" onclick="selecionarTodosMesesEdicaoBaixa()">Marcar Todos</button>
+                                <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 8px;" onclick="desmarcarTodosMesesEdicaoBaixa()">Limpar Seleção</button>
+                            </div>
+                        </div>
                         <div id="editBaixaMesesCheckboxes" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
-                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="jan"> Jan</label>
-                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="fev"> Fev</label>
-                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="mar"> Mar</label>
-                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="abr"> Abr</label>
-                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="mai"> Mai</label>
-                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="jun"> Jun</label>
-                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="jul"> Jul</label>
-                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="ago"> Ago</label>
-                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="set"> Set</label>
-                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="out"> Out</label>
-                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="nov"> Nov</label>
-                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="dez"> Dez</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="jan" onchange="atualizarValoresEdicaoBaixa()"> Jan</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="fev" onchange="atualizarValoresEdicaoBaixa()"> Fev</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="mar" onchange="atualizarValoresEdicaoBaixa()"> Mar</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="abr" onchange="atualizarValoresEdicaoBaixa()"> Abr</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="mai" onchange="atualizarValoresEdicaoBaixa()"> Mai</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="jun" onchange="atualizarValoresEdicaoBaixa()"> Jun</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="jul" onchange="atualizarValoresEdicaoBaixa()"> Jul</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="ago" onchange="atualizarValoresEdicaoBaixa()"> Ago</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="set" onchange="atualizarValoresEdicaoBaixa()"> Set</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="out" onchange="atualizarValoresEdicaoBaixa()"> Out</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="nov" onchange="atualizarValoresEdicaoBaixa()"> Nov</label>
+                            <label style="font-size: 12px; cursor: pointer;"><input type="checkbox" name="editBaixaMeses" value="dez" onchange="atualizarValoresEdicaoBaixa()"> Dez</label>
                         </div>
                     </div>
 

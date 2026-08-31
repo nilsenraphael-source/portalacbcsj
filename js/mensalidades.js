@@ -26,25 +26,19 @@ function extrairListaMesesQuitados(rawInput) {
 
     if (typeof rawInput === 'object') {
         itemObj = rawInput;
-        // 1. Verificar se no campo obs / observações constam os meses exatos entre parênteses, ex: "(Jan, Fev, Mar, Mai, Ago/2026)"
-        const obsTexto = String(itemObj.obs || itemObj.observacoes || '');
-        if (obsTexto && obsTexto.includes('(') && obsTexto.includes(')')) {
-            const m = obsTexto.match(/\(([^)]+)\)/);
-            if (m && m[1]) {
-                const mesesTexto = m[1].replace(/\/\s*\d{4}/g, '').trim();
-                const partes = mesesTexto.split(/[,;\/|]+/).map(p => p.trim().toLowerCase());
-                const listaParsed = [];
-                partes.forEach(p => {
-                    const clean = p.replace(/[^a-z0-9]/g, '');
-                    if (MES_MAP_EXPAND[clean] && !listaParsed.includes(MES_MAP_EXPAND[clean])) {
-                        listaParsed.push(MES_MAP_EXPAND[clean]);
-                    }
-                });
-                if (listaParsed.length > 0) return listaParsed;
+        // 1. Prioridade: meses_quitados ou mes_referencia
+        str = String(itemObj.meses_quitados || itemObj.mes_referencia || itemObj.meses || itemObj.mes || '').trim();
+        
+        // 2. Se vazio ou genérico, buscar em observações/obs
+        if (!str || str === 'undefined' || str === 'null' || str.toLowerCase() === 'mensalidade' || str.toLowerCase() === 'pix') {
+            const obsTexto = String(itemObj.obs || itemObj.observacoes || '');
+            if (obsTexto && obsTexto.includes('(') && obsTexto.includes(')')) {
+                const m = obsTexto.match(/\(([^)]+)\)/);
+                if (m && m[1]) {
+                    str = m[1].replace(/\/\s*\d{4}/g, '').trim();
+                }
             }
         }
-
-        str = String(itemObj.meses_quitados || itemObj.mes_referencia || itemObj.meses || itemObj.mes || '').trim();
     } else {
         str = String(rawInput).trim();
     }
@@ -57,7 +51,7 @@ function extrairListaMesesQuitados(rawInput) {
         return [...TODOS_MESES_KEYS];
     }
 
-    // Se tiver vírgulas, ponto e vírgula ou barras (lista de meses selecionados)
+    // Se tiver vírgulas, ponto e vírgula, espaços ou barras (lista de meses selecionados)
     if (strLower.includes(',') || strLower.includes(';') || strLower.includes('/')) {
         const parts = strLower.split(/[,;\/|]+/).map(p => p.trim());
         const result = [];
@@ -70,9 +64,9 @@ function extrairListaMesesQuitados(rawInput) {
         if (result.length > 0) return result;
     }
 
-    // Se for um range explícito estrito, SEM indicador de contagem (ex: "jan-mar" ou "jan a mar", mas NÃO "jan-ago (5m)")
+    // Se for um range explícito estrito, SEM indicador de contagem (ex: "jan-mar" ou "fev-jun", mas NÃO "jan-ago (5m)")
     if (!strLower.includes('(') && !strLower.includes('m)')) {
-        const rangeMatch = strLower.match(/^([a-z]{3})\s*[-a]\s*([a-z]{3})$/i);
+        const rangeMatch = strLower.match(/^([a-z]{3})\s*[-a]\s*([a-z]{3})/i);
         if (rangeMatch) {
             const startKey = MES_MAP_EXPAND[rangeMatch[1]];
             const endKey = MES_MAP_EXPAND[rangeMatch[2]];
@@ -1180,19 +1174,46 @@ function abrirModalEditarBaixa(id) {
     document.getElementById('editBaixaComprovantePix').value = item.comprovante_pix || item.observacoes || '';
     document.getElementById('editBaixaObs').value = item.obs || item.observacoes || '';
 
-    const mesesTexto = typeof extrairTextoMesesQuitados === 'function' 
-        ? extrairTextoMesesQuitados(item) 
-        : (item.meses_quitados || item.mes_referencia || '');
-    const listaMeses = String(mesesTexto).split(/[,;\-]+/).map(m => m.trim().toLowerCase());
+    const listaMeses = typeof extrairListaMesesQuitados === 'function' ? extrairListaMesesQuitados(item) : [];
     const checkboxes = document.querySelectorAll('input[name="editBaixaMeses"]');
     checkboxes.forEach(cb => {
-        cb.checked = listaMeses.some(m => m.startsWith(cb.value) || cb.value.startsWith(m));
+        cb.checked = listaMeses.includes(cb.value);
     });
 
     openModal('modalEditarBaixaMensalidade');
 }
 
-function salvarEdicaoBaixaMensalidade(e) {
+function atualizarValoresEdicaoBaixa() {
+    const anoRef = document.getElementById('editBaixaAnoRef')?.value || '2026';
+    const checked = document.querySelectorAll('input[name="editBaixaMeses"]:checked');
+    const mesesKeysMap = { jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6, jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12 };
+    let total = 0;
+    checked.forEach(cb => {
+        const mIndex = mesesKeysMap[cb.value] || 1;
+        total += getValorMensalidadeVigente(mIndex, anoRef);
+    });
+    const inputVal = document.getElementById('editBaixaValor');
+    if (inputVal && checked.length > 0) {
+        inputVal.value = total.toFixed(2);
+    }
+}
+window.atualizarValoresEdicaoBaixa = atualizarValoresEdicaoBaixa;
+
+function selecionarTodosMesesEdicaoBaixa() {
+    const checkboxes = document.querySelectorAll('input[name="editBaixaMeses"]');
+    checkboxes.forEach(cb => { cb.checked = true; });
+    atualizarValoresEdicaoBaixa();
+}
+window.selecionarTodosMesesEdicaoBaixa = selecionarTodosMesesEdicaoBaixa;
+
+function desmarcarTodosMesesEdicaoBaixa() {
+    const checkboxes = document.querySelectorAll('input[name="editBaixaMeses"]');
+    checkboxes.forEach(cb => { cb.checked = false; });
+    atualizarValoresEdicaoBaixa();
+}
+window.desmarcarTodosMesesEdicaoBaixa = desmarcarTodosMesesEdicaoBaixa;
+
+async function salvarEdicaoBaixaMensalidade(e) {
     e.preventDefault();
     const id = document.getElementById('editBaixaId').value;
     const valorTotal = parseFloat(document.getElementById('editBaixaValor').value) || 0;
@@ -1217,6 +1238,8 @@ function salvarEdicaoBaixaMensalidade(e) {
     const dataBR = `${diaD}/${mesD}/${anoD}`;
     const mesesNomesMap = { jan:'Jan', fev:'Fev', mar:'Mar', abr:'Abr', mai:'Mai', jun:'Jun', jul:'Jul', ago:'Ago', set:'Set', out:'Out', nov:'Nov', dez:'Dez' };
     const mesesTexto = checkedMeses.map(m => mesesNomesMap[m]).join(', ');
+    const anoRef = historicoGeral[index].ano || '2026';
+    const obsTexto = obs || `Baixa de mensalidade PIX (${mesesTexto}/${anoRef})`;
 
     historicoGeral[index].valor = valorTotal;
     historicoGeral[index].data = dataBR;
@@ -1225,18 +1248,29 @@ function salvarEdicaoBaixaMensalidade(e) {
     historicoGeral[index].comprovante_pix = comprovantePix || 'Comprovante PIX confirmado';
     historicoGeral[index].meses_quitados = mesesTexto;
     historicoGeral[index].mes_referencia = mesesTexto;
-    historicoGeral[index].obs = obs || `Baixa de mensalidade PIX (${mesesTexto}/${historicoGeral[index].ano})`;
+    historicoGeral[index].obs = obsTexto;
+    historicoGeral[index].observacoes = obsTexto;
 
     localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(historicoGeral));
+
     if (typeof dbService !== 'undefined' && dbService.addMensalidade) {
-        dbService.addMensalidade(historicoGeral[index]);
+        try {
+            await dbService.addMensalidade(historicoGeral[index]);
+        } catch(err) {
+            console.error('Erro ao atualizar mensalidade no Supabase:', err);
+        }
     }
-    recalcularGridAssociado(historicoGeral[index].cpf, historicoGeral[index].ano);
+
+    recalcularGridAssociado(historicoGeral[index].cpf, anoRef);
+    recalcularTodasGridsMensalidades(false);
 
     alert('Lançamento de mensalidade atualizado com sucesso!');
     closeModal('modalEditarBaixaMensalidade');
     renderGestaoMensalidades();
     renderGestaoFinanceira();
+    if (typeof renderAssociadoOverview === 'function') {
+        renderAssociadoOverview();
+    }
     if (historicoGeral[index].cpf) verExtratoAssociado(historicoGeral[index].cpf);
 }
 
@@ -1250,13 +1284,17 @@ function excluirBaixaMensalidade(id) {
         localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(historicoGeral));
 
         if (typeof dbService !== 'undefined' && dbService.deleteMensalidade) {
-            dbService.deleteMensalidade(id);
+            try { dbService.deleteMensalidade(id); } catch(e) { console.error('Erro ao excluir no Supabase:', e); }
         }
-        recalcularGridAssociado(item.cpf, item.ano);
+        recalcularGridAssociado(item.cpf, item.ano || '2026');
+        recalcularTodasGridsMensalidades(false);
 
         alert('Lançamento de mensalidade removido com sucesso.');
         renderGestaoMensalidades();
         renderGestaoFinanceira();
+        if (typeof renderAssociadoOverview === 'function') {
+            renderAssociadoOverview();
+        }
         verExtratoAssociado(item.cpf);
     }
 }

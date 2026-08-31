@@ -203,6 +203,9 @@ function sanitizeMensalidade(item) {
     if (!assocId) assocId = "3"; // ID fallback válido para integridade
 
     let rawMes = String(item.meses_quitados || item.mes_referencia || 'Jan').trim();
+    if (rawMes.length > 20) {
+        rawMes = rawMes.substring(0, 20);
+    }
     const cleanObs = item.obs || item.observacoes || item.comprovante_pix || 'Quitacao de mensalidade PIX';
 
     return {
@@ -211,7 +214,6 @@ function sanitizeMensalidade(item) {
         cpf: String(item.cpf || ''),
         ano: String(item.ano || '2026'),
         mes_referencia: rawMes,
-        meses_quitados: rawMes,
         valor: parseFloat(item.valor) || 20.00,
         status: String(item.status || 'pago'),
         data_pagamento: String(item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR')),
