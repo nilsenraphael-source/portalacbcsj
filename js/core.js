@@ -268,31 +268,90 @@ function navigateTab(tabId) {
 
 // PARSER UNIVERSAL ROBUSTO DE DATA (EXTRAI MÊS '01'-'12' E ANO 'YYYY')
 function extrairMesEAno(dataStr, dataIso) {
-    let str = (dataIso || dataStr || '').trim();
-    if (!str) return { mes: '', ano: '' };
+    let str = String(dataIso || dataStr || '').trim();
+    if (!str || str === 'undefined' || str === 'null' || str === '-') {
+        return { mes: '', ano: '' };
+    }
 
     // Se tiver espaço ou T (ex: 2026-08-31T12:00 ou 31/08/2026 14:30), pegar apenas a parte da data
-    str = str.split('T')[0].split(' ')[0].trim();
+    if (str.includes('T')) str = str.split('T')[0].trim();
+    if (str.includes(' ')) str = str.split(' ')[0].trim();
 
     // Formato YYYY-MM-DD ou YYYY/MM/DD
     if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}/.test(str)) {
         const parts = str.split(/[-/]/);
-        return {
-            ano: parts[0].trim(),
-            mes: String(parts[1]).padStart(2, '0')
-        };
+        if (parts.length >= 3) {
+            return {
+                ano: String(parts[0]).trim(),
+                mes: String(parts[1]).padStart(2, '0')
+            };
+        }
     }
 
     // Formato DD/MM/YYYY ou DD-MM-YYYY
-    if (/^\d{1,2}[-/]\d{1,2}[-/]\d{4}/.test(str)) {
+    if (str.includes('/') || str.includes('-')) {
         const parts = str.split(/[-/]/);
-        return {
-            ano: parts[2].trim(),
-            mes: String(parts[1]).padStart(2, '0')
-        };
+        if (parts.length >= 3) {
+            if (parts[2].trim().length >= 4) {
+                return {
+                    ano: parts[2].trim().substring(0, 4),
+                    mes: String(parts[1]).padStart(2, '0')
+                };
+            }
+            if (parts[0].trim().length === 4) {
+                return {
+                    ano: parts[0].trim(),
+                    mes: String(parts[1]).padStart(2, '0')
+                };
+            }
+        }
     }
 
     return { mes: '', ano: '' };
+}
+
+function extrairInfoMensalidade(m, anoPadrao = '2026') {
+    if (!m) return { ano: anoPadrao, mes: '01', dataExibicao: `01/01/${anoPadrao}` };
+
+    const dataStr = m.data || m.data_pagamento || m.data_baixa || m.data_registro || '';
+    const dataIso = m.data_iso || m.created_at || '';
+    
+    let dInfo = extrairMesEAno(dataStr, dataIso);
+    let ano = dInfo.ano || String(m.ano || '').trim() || anoPadrao;
+    let mes = dInfo.mes;
+
+    // Se o mês não foi identificado na data, tenta inferir de mes_referencia ou meses_quitados
+    if (!mes) {
+        const ref = String(m.mes_referencia || m.meses_quitados || '').toLowerCase();
+        const mapa = {
+            'jan': '01', 'fev': '02', 'mar': '03', 'abr': '04', 'mai': '05', 'jun': '06',
+            'jul': '07', 'ago': '08', 'set': '09', 'out': '10', 'nov': '11', 'dez': '12'
+        };
+        for (const [k, v] of Object.entries(mapa)) {
+            if (ref.includes(k)) {
+                mes = v;
+                break;
+            }
+        }
+    }
+
+    if (!mes) mes = '01';
+
+    // Monta uma data amigável de exibição
+    let dataExibicao = dataStr || '';
+    if (!dataExibicao && dataIso) {
+        const p = dataIso.split('T')[0].split('-');
+        if (p.length === 3) dataExibicao = `${p[2]}/${p[1]}/${p[0]}`;
+    }
+    if (!dataExibicao || dataExibicao.length < 8) {
+        dataExibicao = `01/${mes}/${ano}`;
+    }
+
+    return {
+        ano: String(ano).trim(),
+        mes: String(mes).padStart(2, '0'),
+        dataExibicao: dataExibicao
+    };
 }
 
 // LÓGICA DA DIRETORIA: PAINEL GERAL E TABELAS
@@ -346,9 +405,8 @@ function renderDiretoriaOverview() {
     const historicoMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
     let totalMensalidadesArrecadadas = 0;
     historicoMensalidades.forEach(m => {
-        const parsed = extrairMesEAno(m.data, m.data_iso);
-        const mAno = parsed.ano || (m.data_iso ? m.data_iso.substring(0, 4) : (m.data ? m.data.split('/')[2] : m.ano || '2026'));
-        if (anoFiltro === 'todos' || mAno === anoFiltro) {
+        const infoM = extrairInfoMensalidade(m, anoFiltro);
+        if (anoFiltro === 'todos' || infoM.ano === anoFiltro) {
             totalMensalidadesArrecadadas += (parseFloat(m.valor) || 0);
         }
     });
@@ -356,7 +414,7 @@ function renderDiretoriaOverview() {
     const totalReceitasGerais = financeiro.filter(f => {
         if (f.tipo !== 'receita') return false;
         if (anoFiltro === 'todos') return true;
-        const parsed = typeof extrairMesEAno === 'function' ? extrairMesEAno(f.data, f.data_iso) : { ano: '' };
+        const parsed = extrairMesEAno(f.data, f.data_iso);
         const fAno = parsed.ano || (f.data_iso ? f.data_iso.substring(0, 4) : (f.data ? f.data.split('/')[2] : '2026'));
         return fAno === anoFiltro;
     }).reduce((sum, item) => sum + (parseFloat(item.valor) || 0), 0);

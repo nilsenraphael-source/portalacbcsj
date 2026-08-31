@@ -415,11 +415,10 @@ function renderGestaoMensalidades() {
 
     let totalArrecadadoAno = 0;
     historicoGeral.forEach(item => {
-        const dInfo = (typeof extrairMesEAno === 'function') 
-            ? extrairMesEAno(item.data, item.data_iso) 
+        const infoM = (typeof extrairInfoMensalidade === 'function') 
+            ? extrairInfoMensalidade(item, ano) 
             : { ano: item.ano || '2026', mes: '01' };
-        const itemAno = dInfo.ano || (item.data_iso ? item.data_iso.substring(0, 4) : (item.data ? item.data.split('/')[2] : item.ano || '2026'));
-        if (itemAno === ano) {
+        if (infoM.ano === ano) {
             totalArrecadadoAno += (parseFloat(item.valor) || 0);
         }
     });
@@ -673,6 +672,7 @@ async function salvarBaixaMensalidade(e) {
         meses_quitados: mesesTexto,
         valor: valorTotal,
         data: dataBR,
+        data_pagamento: dataBR,
         data_iso: dataInput,
         forma: 'PIX',
         comprovante_pix: comprovantePix || 'Comprovante PIX recebido',
@@ -714,6 +714,7 @@ function verExtratoAssociado(cpf) {
     if (container) {
         container.innerHTML = `
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 15px;">
+                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <div style="font-size: 11px; color: var(--text-muted);">ASSOCIADO</div>
                     <div style="font-size: 15px; font-weight: bold; color: var(--accent-gold);">${a.nome_guerra || a.nome}</div>
                     <div style="font-size: 11px; color: var(--text-muted);">${a.nome}</div>
@@ -750,7 +751,7 @@ function verExtratoAssociado(cpf) {
                         <tbody>
                             ${historicoAssociado.map(h => `
                                 <tr>
-                                    <td><b>${h.data}</b></td>
+                                    <td><b>${h.data || h.data_pagamento}</b></td>
                                     <td><span class="badge badge-info">${h.ano}</span></td>
                                     <td><b>${h.meses_quitados}</b></td>
                                     <td style="font-weight: 700; color: #2ECC71;">+ R$ ${(parseFloat(h.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
@@ -773,6 +774,7 @@ function verExtratoAssociado(cpf) {
 
     openModal('modalExtratoAssociado');
 }
+
 // RECALCULAR GRADE DO ASSOCIADO APÓS EDIÇÃO / EXCLUSÃO
 function recalcularGridAssociado(cpf, ano) {
     const storageKey = `acbcsj_mensalidades_grid_${ano}`;
@@ -829,14 +831,14 @@ function abrirModalEditarBaixa(id) {
     }
 
     document.getElementById('editBaixaId').value = item.id;
-    document.getElementById('editBaixaAssociadoNome').value = item.associado_nome;
-    document.getElementById('editBaixaAnoRef').value = item.ano;
-    document.getElementById('editBaixaValor').value = item.valor;
-    document.getElementById('editBaixaData').value = item.data_iso || new Date().toISOString().split('T')[0];
-    document.getElementById('editBaixaComprovantePix').value = item.comprovante_pix || '';
-    document.getElementById('editBaixaObs').value = item.obs || '';
+    document.getElementById('editBaixaAssociadoNome').value = item.associado_nome || '';
+    document.getElementById('editBaixaAnoRef').value = item.ano || '2026';
+    document.getElementById('editBaixaValor').value = item.valor || 0;
+    document.getElementById('editBaixaData').value = item.data_iso || (item.data_pagamento ? item.data_pagamento.split('/').reverse().join('-') : new Date().toISOString().split('T')[0]);
+    document.getElementById('editBaixaComprovantePix').value = item.comprovante_pix || item.observacoes || '';
+    document.getElementById('editBaixaObs').value = item.obs || item.observacoes || '';
 
-    const listaMeses = (item.meses_quitados || '').split(',').map(m => m.trim().toLowerCase());
+    const listaMeses = (item.meses_quitados || item.mes_referencia || '').split(',').map(m => m.trim().toLowerCase());
     const checkboxes = document.querySelectorAll('input[name="editBaixaMeses"]');
     checkboxes.forEach(cb => {
         cb.checked = listaMeses.some(m => m.startsWith(cb.value));
@@ -873,13 +875,15 @@ function salvarEdicaoBaixaMensalidade(e) {
 
     historicoGeral[index].valor = valorTotal;
     historicoGeral[index].data = dataBR;
+    historicoGeral[index].data_pagamento = dataBR;
     historicoGeral[index].data_iso = dataInput;
     historicoGeral[index].comprovante_pix = comprovantePix || 'Comprovante PIX confirmado';
     historicoGeral[index].meses_quitados = mesesTexto;
+    historicoGeral[index].mes_referencia = mesesTexto;
     historicoGeral[index].obs = obs || `Baixa de mensalidade PIX (${mesesTexto}/${historicoGeral[index].ano})`;
 
     localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(historicoGeral));
-        if (typeof dbService !== 'undefined' && dbService.addMensalidade) {
+    if (typeof dbService !== 'undefined' && dbService.addMensalidade) {
         dbService.addMensalidade(historicoGeral[index]);
     }
     recalcularGridAssociado(historicoGeral[index].cpf, historicoGeral[index].ano);
@@ -900,10 +904,10 @@ function excluirBaixaMensalidade(id) {
         historicoGeral = historicoGeral.filter(h => h.id !== id);
         localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(historicoGeral));
 
-            if (typeof dbService !== 'undefined' && dbService.deleteMensalidade) {
-        dbService.deleteMensalidade(id);
-    }
-    recalcularGridAssociado(item.cpf, item.ano);
+        if (typeof dbService !== 'undefined' && dbService.deleteMensalidade) {
+            dbService.deleteMensalidade(id);
+        }
+        recalcularGridAssociado(item.cpf, item.ano);
 
         alert('Lançamento de mensalidade removido com sucesso.');
         renderGestaoMensalidades();

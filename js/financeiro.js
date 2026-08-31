@@ -43,9 +43,8 @@ function renderBalancetesAssociado() {
         const strMes = String(m.index).padStart(2, '0');
         let somaArrecadadaNoMes = 0;
         listMensalidades.forEach(itemMens => {
-            const dInfo = extrairMesEAno(itemMens.data, itemMens.data_iso);
-            const mAno = dInfo.ano || (itemMens.data_iso ? itemMens.data_iso.substring(0, 4) : (itemMens.data ? itemMens.data.split('/')[2] : itemMens.ano || '2026'));
-            if (mAno === ano && dInfo.mes === strMes) {
+            const dInfo = extrairInfoMensalidade(itemMens, ano);
+            if (dInfo.ano === ano && dInfo.mes === strMes) {
                 somaArrecadadaNoMes += (parseFloat(itemMens.valor) || 0);
             }
         });
@@ -392,32 +391,90 @@ async function abrirComprovanteLancamento(id) {
 }
 
 function extrairMesEAno(dataStr, dataIso) {
-    let str = dataIso || dataStr || '';
-    if (!str) return { mes: '', ano: '' };
+    let str = String(dataIso || dataStr || '').trim();
+    if (!str || str === 'undefined' || str === 'null' || str === '-') {
+        return { mes: '', ano: '' };
+    }
 
-    // Formato YYYY-MM-DD
-    if (str.includes('-')) {
-        const parts = str.split('-');
+    // Se tiver espaço ou T (ex: 2026-08-31T12:00 ou 31/08/2026 14:30), pegar apenas a data
+    if (str.includes('T')) str = str.split('T')[0].trim();
+    if (str.includes(' ')) str = str.split(' ')[0].trim();
+
+    // Formato YYYY-MM-DD ou YYYY/MM/DD
+    if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(str) || str.indexOf('-') === 4 || str.indexOf('/') === 4) {
+        const parts = str.split(/[-/]/);
         if (parts.length >= 3) {
             return {
-                ano: parts[0].trim(),
+                ano: String(parts[0]).trim(),
                 mes: String(parts[1]).padStart(2, '0')
             };
         }
     }
 
-    // Formato DD/MM/YYYY
-    if (str.includes('/')) {
-        const parts = str.split('/');
+    // Formato DD/MM/YYYY ou DD-MM-YYYY
+    if (str.includes('/') || str.includes('-')) {
+        const parts = str.split(/[-/]/);
         if (parts.length >= 3) {
-            return {
-                ano: parts[2].trim(),
-                mes: String(parts[1]).padStart(2, '0')
-            };
+            if (parts[2].trim().length >= 4) {
+                return {
+                    ano: parts[2].trim().substring(0, 4),
+                    mes: String(parts[1]).padStart(2, '0')
+                };
+            }
+            if (parts[0].trim().length === 4) {
+                return {
+                    ano: parts[0].trim(),
+                    mes: String(parts[1]).padStart(2, '0')
+                };
+            }
         }
     }
 
     return { mes: '', ano: '' };
+}
+
+function extrairInfoMensalidade(m, anoPadrao = '2026') {
+    if (!m) return { ano: anoPadrao, mes: '01', dataExibicao: `01/01/${anoPadrao}` };
+
+    const dataStr = m.data || m.data_pagamento || m.data_baixa || m.data_registro || '';
+    const dataIso = m.data_iso || m.created_at || '';
+    
+    let dInfo = extrairMesEAno(dataStr, dataIso);
+    let ano = dInfo.ano || String(m.ano || '').trim() || anoPadrao;
+    let mes = dInfo.mes;
+
+    // Se o mês não foi identificado na data, tenta inferir de mes_referencia ou meses_quitados
+    if (!mes) {
+        const ref = String(m.mes_referencia || m.meses_quitados || '').toLowerCase();
+        const mapa = {
+            'jan': '01', 'fev': '02', 'mar': '03', 'abr': '04', 'mai': '05', 'jun': '06',
+            'jul': '07', 'ago': '08', 'set': '09', 'out': '10', 'nov': '11', 'dez': '12'
+        };
+        for (const [k, v] of Object.entries(mapa)) {
+            if (ref.includes(k)) {
+                mes = v;
+                break;
+            }
+        }
+    }
+
+    if (!mes) mes = '01';
+
+    // Monta uma data amigável de exibição
+    let dataExibicao = dataStr || '';
+    if (!dataExibicao && dataIso) {
+        const p = dataIso.split('T')[0].split('-');
+        if (p.length === 3) dataExibicao = `${p[2]}/${p[1]}/${p[0]}`;
+    }
+    if (!dataExibicao || dataExibicao.length < 8) {
+        dataExibicao = `01/${mes}/${ano}`;
+    }
+
+    return {
+        ano: String(ano).trim(),
+        mes: String(mes).padStart(2, '0'),
+        dataExibicao: dataExibicao
+    };
 }
 
 function renderGestaoFinanceira() {
@@ -461,20 +518,31 @@ function renderGestaoFinanceira() {
 
     // B) Lançamentos de Mensalidades PIX (Contabilizados pela data em que entraram no caixa)
     listMensalidades.forEach(m => {
-        const dateInfo = extrairMesEAno(m.data, m.data_iso);
-        const anoEntrada = dateInfo.ano || m.ano || anoSelected;
+        const infoM = extrairInfoMensalidade(m, anoSelected);
+
+        let nomeAssociado = m.associado_nome;
+        if (!nomeAssociado && m.cpf) {
+            const listAssoc = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+            const cleanC = String(m.cpf).replace(/\D/g, '');
+            const a = listAssoc.find(socio => String(socio.cpf || '').replace(/\D/g, '') === cleanC);
+            if (a) nomeAssociado = a.nome_guerra || a.nome;
+        }
+        if (!nomeAssociado) nomeAssociado = 'Associado';
+
+        const mesesQuitados = m.meses_quitados || m.mes_referencia || '';
+
         combinedList.push({
             id: m.id || ('mens_' + Math.random()),
-            data: m.data || '-',
-            data_iso: m.data_iso || '',
-            mes: dateInfo.mes,
-            ano: anoEntrada,
-            ano_referencia: m.ano,
-            descricao: `💳 Mensalidade PIX — ${m.associado_nome || 'Associado'} (${m.meses_quitados || ''}/${m.ano || anoEntrada})`,
+            data: infoM.dataExibicao,
+            data_iso: m.data_iso || m.created_at || '',
+            mes: infoM.mes,
+            ano: infoM.ano,
+            ano_referencia: m.ano || infoM.ano,
+            descricao: `💳 Mensalidade PIX — ${nomeAssociado} (${mesesQuitados}/${m.ano || infoM.ano})`,
             categoria: 'Mensalidades Associados',
             tipo: 'receita',
             valor: parseFloat(m.valor) || 0,
-            comprovante_nome: m.comprovante_pix || '',
+            comprovante_nome: m.comprovante_pix || m.observacoes || m.obs || '',
             origem: 'mensalidade'
         });
     });
@@ -660,9 +728,8 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
 
     // Mensalidades efetivamente recebidas neste mês/ano pela data de lançamento
     const mensalidadesMes = listMensalidades.filter(m => {
-        const dateInfo = extrairMesEAno(m.data, m.data_iso);
-        const mAno = dateInfo.ano || (m.data_iso ? m.data_iso.substring(0, 4) : (m.data ? m.data.split('/')[2] : m.ano || '2026'));
-        return dateInfo.mes === strMes && mAno === anoStr;
+        const infoM = extrairInfoMensalidade(m, anoStr);
+        return infoM.mes === strMes && infoM.ano === anoStr;
     });
 
     const receitasGerais = lancamentosMes.filter(i => i.tipo === 'receita');
