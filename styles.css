@@ -459,6 +459,225 @@ body {
 .badge-danger { background-color: rgba(231, 76, 60, 0.2); color: var(--status-danger); }
 .badge-info { background-color: rgba(52, 152, 219, 0.2); color: var(--status-info); }
 
+/* TABELAS DE GRADE DE MENSALIDADES (PADRONIZAÇÃO TOTAL ATIVOS E DESLIGADOS) */
+.table-mensalidades {
+  width: 100%;
+  min-width: 1220px;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: center;
+  table-layout: fixed;
+}
+
+.table-mensalidades th,
+.table-mensalidades td {
+  padding: 8px 4px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+  box-sizing: border-box;
+}
+
+.table-mensalidades th {
+  background-color: #15181C;
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+.table-mensalidades tbody tr:hover {
+  background-color: var(--bg-card-hover);
+}
+
+/* Colunas Padronizadas */
+.table-mensalidades .col-associado {
+  width: 195px;
+  min-width: 195px;
+  max-width: 195px;
+  text-align: left;
+  padding-left: 12px;
+}
+
+.table-mensalidades .col-mes {
+  width: 58px;
+  min-width: 58px;
+  max-width: 58px;
+  text-align: center;
+  padding: 6px 2px;
+}
+
+.table-mensalidades .col-total {
+  width: 85px;
+  min-width: 85px;
+  max-width: 85px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--accent-gold);
+  font-size: 12px;
+}
+
+.table-mensalidades .col-status {
+  width: 130px;
+  min-width: 130px;
+  max-width: 130px;
+  text-align: center;
+  padding: 6px 4px;
+}
+
+.table-mensalidades .col-acoes {
+  width: 170px;
+  min-width: 170px;
+  max-width: 170px;
+  text-align: center;
+  padding-right: 10px;
+}
+
+/* QUADRADINHOS DAS MENSALIDADES (GRADE MÊS A MÊS) */
+.mes-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 28px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  box-sizing: border-box;
+  transition: var(--transition);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.mes-box-pago {
+  background: rgba(46, 204, 113, 0.16);
+  color: #2ECC71;
+  border: 1px solid rgba(46, 204, 113, 0.45);
+}
+
+.mes-box-parcial {
+  background: rgba(243, 156, 18, 0.16);
+  color: #F39C12;
+  border: 1px solid rgba(243, 156, 18, 0.45);
+}
+
+.mes-box-vencido {
+  background: rgba(231, 76, 60, 0.16);
+  color: #E74C3C;
+  border: 1px solid rgba(231, 76, 60, 0.45);
+}
+
+.mes-box-isento {
+  background: rgba(148, 163, 184, 0.08);
+  color: #94A3B8;
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  font-size: 9px;
+  letter-spacing: 0.2px;
+}
+
+.mes-box-desligado {
+  background: rgba(231, 76, 60, 0.06);
+  color: #8892B0;
+  border: 1px solid rgba(231, 76, 60, 0.22);
+  font-size: 8.5px;
+  letter-spacing: 0.1px;
+}
+
+.mes-box-avencer {
+  color: #4A5568;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* BADGES DE SITUAÇÃO / ADIMPLÊNCIA UNIFORMES */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 120px;
+  height: 28px;
+  padding: 0 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 5px;
+  letter-spacing: 0.2px;
+  text-align: center;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.badge-status-em-dia, .badge-status-quitado {
+  background: rgba(46, 204, 113, 0.18);
+  color: #2ECC71;
+  border: 1px solid rgba(46, 204, 113, 0.45);
+}
+
+.badge-status-inadimplente, .badge-status-pendente {
+  background: rgba(231, 76, 60, 0.18);
+  color: #E74C3C;
+  border: 1px solid rgba(231, 76, 60, 0.45);
+}
+
+/* BOTÕES DE AÇÕES PADRONIZADOS */
+.acoes-btn-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.acoes-btn-group .btn-acao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1px solid transparent;
+  text-decoration: none;
+  height: 26px;
+  box-sizing: border-box;
+}
+
+.btn-acao-baixar {
+  background-color: var(--accent-gold);
+  color: #121417;
+  font-weight: 700;
+}
+
+.btn-acao-baixar:hover {
+  background-color: var(--accent-gold-hover);
+}
+
+.btn-acao-historico {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-color);
+  color: var(--text-main);
+}
+
+.btn-acao-historico:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--text-muted);
+}
+
+.btn-acao-editar {
+  background-color: rgba(212, 175, 55, 0.08);
+  border-color: rgba(212, 175, 55, 0.5);
+  color: var(--accent-gold);
+}
+
+.btn-acao-editar:hover {
+  background-color: rgba(212, 175, 55, 0.2);
+  border-color: var(--accent-gold);
+}
+
 /* MODAIS */
 .modal-backdrop {
   position: fixed;

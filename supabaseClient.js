@@ -202,11 +202,17 @@ function sanitizeMensalidade(item) {
     }
     if (!assocId) assocId = "3"; // ID fallback válido para integridade
 
-    let rawMes = String(item.meses_quitados || item.mes_referencia || 'Jan').trim();
+    let rawMes = String(item.mes_referencia || item.meses_quitados || 'Jan').trim();
     if (rawMes.length > 20) {
-        rawMes = rawMes.substring(0, 20);
+        if (typeof formatarMesesReferenciaCompacto === 'function' && typeof extrairListaMesesQuitados === 'function') {
+            const keys = extrairListaMesesQuitados(item);
+            rawMes = formatarMesesReferenciaCompacto(keys);
+        }
+        if (rawMes.length > 20) {
+            rawMes = rawMes.substring(0, 20);
+        }
     }
-    const cleanObs = item.obs || item.observacoes || item.comprovante_pix || 'Quitacao de mensalidade PIX';
+    const cleanObs = item.observacoes || item.obs || item.comprovante_pix || 'Quitacao de mensalidade PIX';
 
     return {
         id: String(item.id || 'mensalidade_' + Date.now()),
@@ -216,7 +222,7 @@ function sanitizeMensalidade(item) {
         mes_referencia: rawMes,
         valor: parseFloat(item.valor) || 20.00,
         status: String(item.status || 'pago'),
-        data_pagamento: String(item.data || item.data_pagamento || new Date().toLocaleDateString('pt-BR')),
+        data_pagamento: String(item.data_pagamento || item.data || new Date().toLocaleDateString('pt-BR')),
         observacoes: cleanObs
     };
 }

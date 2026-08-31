@@ -18,80 +18,133 @@ const MES_MAP_EXPAND = {
     dez: 'dez', dezembro: 'dez', '12': 'dez'
 };
 
-function extrairListaMesesQuitados(rawInput) {
-    if (!rawInput) return [];
+function formatarMesesReferenciaCompacto(checkedMesesKeys) {
+    if (!checkedMesesKeys || checkedMesesKeys.length === 0) return 'Mensalidade';
+    const todosKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    const nomesMap = { jan:'Jan', fev:'Fev', mar:'Mar', abr:'Abr', mai:'Mai', jun:'Jun', jul:'Jul', ago:'Ago', set:'Set', out:'Out', nov:'Nov', dez:'Dez' };
+    
+    if (checkedMesesKeys.length === 12) return 'Jan-Dez (12m)';
 
-    let str = '';
-    let itemObj = null;
+    const indices = checkedMesesKeys.map(k => todosKeys.indexOf(String(k).toLowerCase())).filter(i => i >= 0).sort((a, b) => a - b);
+    if (indices.length === 0) return 'Mensalidade';
 
-    if (typeof rawInput === 'object') {
-        itemObj = rawInput;
-        // 1. Prioridade: meses_quitados ou mes_referencia
-        str = String(itemObj.meses_quitados || itemObj.mes_referencia || itemObj.meses || itemObj.mes || '').trim();
-        
-        // 2. Se vazio ou genérico, buscar em observações/obs
-        if (!str || str === 'undefined' || str === 'null' || str.toLowerCase() === 'mensalidade' || str.toLowerCase() === 'pix') {
-            const obsTexto = String(itemObj.obs || itemObj.observacoes || '');
-            if (obsTexto && obsTexto.includes('(') && obsTexto.includes(')')) {
-                const m = obsTexto.match(/\(([^)]+)\)/);
-                if (m && m[1]) {
-                    str = m[1].replace(/\/\s*\d{4}/g, '').trim();
-                }
-            }
+    let isContiguous = true;
+    for (let i = 0; i < indices.length - 1; i++) {
+        if (indices[i + 1] !== indices[i] + 1) {
+            isContiguous = false;
+            break;
         }
-    } else {
-        str = String(rawInput).trim();
     }
 
-    if (!str || str === 'undefined' || str === 'null') return [];
+    if (isContiguous && indices.length >= 4) {
+        const first = nomesMap[todosKeys[indices[0]]];
+        const last = nomesMap[todosKeys[indices[indices.length - 1]]];
+        return `${first}-${last} (${indices.length}m)`;
+    }
 
-    const strLower = str.toLowerCase();
+    const fullJoined = indices.map(i => nomesMap[todosKeys[i]]).join(', ');
+    if (fullJoined.length <= 20) return fullJoined;
+
+    if (isContiguous) {
+        const first = nomesMap[todosKeys[indices[0]]];
+        const last = nomesMap[todosKeys[indices[indices.length - 1]]];
+        return `${first}-${last} (${indices.length}m)`;
+    }
+
+    return `${indices.length}m (${indices.slice(0, 2).map(i => nomesMap[todosKeys[i]]).join(',')})`;
+}
+window.formatarMesesReferenciaCompacto = formatarMesesReferenciaCompacto;
+
+function parseStringMeses(str) {
+    if (!str || str === 'undefined' || str === 'null') return [];
+    const strLower = str.toLowerCase().trim();
 
     if (strLower.includes('anual') || strLower.includes('todos') || strLower.includes('12m') || strLower === 'jan-dez' || strLower === 'jan a dez') {
         return [...TODOS_MESES_KEYS];
     }
 
-    // Se tiver vírgulas, ponto e vírgula, espaços ou barras (lista de meses selecionados)
-    if (strLower.includes(',') || strLower.includes(';') || strLower.includes('/')) {
-        const parts = strLower.split(/[,;\/|]+/).map(p => p.trim());
-        const result = [];
-        parts.forEach(p => {
-            const clean = p.replace(/[^a-z0-9]/g, '');
-            if (MES_MAP_EXPAND[clean] && !result.includes(MES_MAP_EXPAND[clean])) {
-                result.push(MES_MAP_EXPAND[clean]);
-            }
-        });
-        if (result.length > 0) return result;
-    }
+    const segments = strLower.split(/[,;\/|]+/).map(s => s.trim()).filter(Boolean);
+    const result = [];
 
-    // Se for um range explícito estrito, SEM indicador de contagem (ex: "jan-mar" ou "fev-jun", mas NÃO "jan-ago (5m)")
-    if (!strLower.includes('(') && !strLower.includes('m)')) {
-        const rangeMatch = strLower.match(/^([a-z]{3})\s*[-a]\s*([a-z]{3})/i);
+    segments.forEach(seg => {
+        const rangeMatch = seg.match(/([a-z]{3})\s*[-a]\s*([a-z]{3})/i);
         if (rangeMatch) {
-            const startKey = MES_MAP_EXPAND[rangeMatch[1]];
-            const endKey = MES_MAP_EXPAND[rangeMatch[2]];
+            const startKey = MES_MAP_EXPAND[rangeMatch[1].toLowerCase()];
+            const endKey = MES_MAP_EXPAND[rangeMatch[2].toLowerCase()];
             if (startKey && endKey) {
                 const startIdx = TODOS_MESES_KEYS.indexOf(startKey);
                 const endIdx = TODOS_MESES_KEYS.indexOf(endKey);
                 if (startIdx >= 0 && endIdx >= startIdx) {
-                    return TODOS_MESES_KEYS.slice(startIdx, endIdx + 1);
+                    for (let i = startIdx; i <= endIdx; i++) {
+                        if (!result.includes(TODOS_MESES_KEYS[i])) {
+                            result.push(TODOS_MESES_KEYS[i]);
+                        }
+                    }
+                    return;
                 }
             }
         }
-    }
 
-    // Tentar extrair chaves de meses reconhecidas
-    const partsGen = strLower.split(/[^a-z0-9]+/).filter(Boolean);
-    const resultGen = [];
-    partsGen.forEach(p => {
-        if (MES_MAP_EXPAND[p] && !resultGen.includes(MES_MAP_EXPAND[p])) {
-            resultGen.push(MES_MAP_EXPAND[p]);
-        }
+        const words = seg.split(/[^a-z0-9]+/).filter(Boolean);
+        words.forEach(w => {
+            const clean = w.replace(/[^a-z0-9]/g, '');
+            if (MES_MAP_EXPAND[clean] && !result.includes(MES_MAP_EXPAND[clean])) {
+                result.push(MES_MAP_EXPAND[clean]);
+            }
+        });
     });
 
-    if (resultGen.length > 0) return resultGen;
+    return result;
+}
 
-    return ['jan'];
+function extrairListaMesesQuitados(rawInput) {
+    if (!rawInput) return [];
+
+    let itemObj = null;
+    let listaFromObs = [];
+    let listaFromMes = [];
+
+    if (typeof rawInput === 'object') {
+        itemObj = rawInput;
+
+        // 1. Extrair de meses_quitados ou mes_referencia
+        const strMes = String(itemObj.meses_quitados || itemObj.mes_referencia || itemObj.meses || itemObj.mes || '').trim();
+        const isTruncated = strMes.endsWith(',') || strMes.endsWith(' ') || strMes.length === 20;
+
+        if (strMes && strMes !== 'undefined' && strMes !== 'null') {
+            listaFromMes = parseStringMeses(strMes);
+        }
+
+        // 2. Extrair de observações / obs (se tiver parênteses como "(Jan, Fev, Mar, Abr, Mai, Jun, Jul/2026)")
+        const obsTexto = String(itemObj.obs || itemObj.observacoes || '');
+        if (obsTexto && obsTexto.includes('(') && obsTexto.includes(')')) {
+            const m = obsTexto.match(/\(([^)]+)\)/);
+            if (m && m[1]) {
+                const cleanMeses = m[1].replace(/\/\s*\d{4}/g, '').trim().toLowerCase();
+                listaFromObs = parseStringMeses(cleanMeses);
+            }
+        }
+
+        // Se mes_referencia não estiver truncado e tiver meses válidos, ele é a fonte primária
+        if (listaFromMes.length > 0 && !isTruncated) {
+            return listaFromMes;
+        }
+
+        // Se estiver truncado ou vazio, usar observações completas
+        if (listaFromObs.length > 0) {
+            return listaFromObs;
+        }
+
+        if (listaFromMes.length > 0) {
+            return listaFromMes;
+        }
+
+        return ['jan'];
+    } else {
+        const str = String(rawInput).trim();
+        const res = parseStringMeses(str);
+        return res.length > 0 ? res : ['jan'];
+    }
 }
 
 function recalcularTodasGridsMensalidades(triggerRender = false) {
@@ -362,7 +415,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
     if (valor >= baseVal) {
         return {
             status: 'pago',
-            badge: `<span class="badge badge-success" style="font-size:10px; padding:2px 4px;" title="Mensalidade quitada: R$ ${valor.toFixed(2).replace('.', ',')}">✅ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
+            badge: `<span class="mes-box mes-box-pago" title="Mensalidade quitada: R$ ${valor.toFixed(2).replace('.', ',')}">✅ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
             vencimento: dataVencimentoStr,
             isVencido: false,
             isIsento: false,
@@ -378,7 +431,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
         const isV = (anoNum < anoAtual || (anoNum === anoAtual && (mIdx < mesAtualNum || (mIdx === mesAtualNum && diaAtual > 15))));
         return {
             status: 'parcial',
-            badge: `<span class="badge badge-warning" style="font-size:10px; padding:2px 4px;" title="Pago parcialmente (Falta R$ ${falta.toFixed(2).replace('.', ',')})">⚠️ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
+            badge: `<span class="mes-box mes-box-parcial" title="Pago parcialmente (Falta R$ ${falta.toFixed(2).replace('.', ',')})">⚠️ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
             vencimento: dataVencimentoStr,
             isVencido: isV,
             isIsento: false,
@@ -395,7 +448,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
 
         return {
             status: 'isento',
-            badge: `<span class="badge" style="font-size:10px; padding:2px 4px; background: rgba(148, 163, 184, 0.2); color: var(--text-muted); border: 1px solid rgba(148, 163, 184, 0.35);" title="${tooltipIsento}">⚪ ISENTO</span>`,
+            badge: `<span class="mes-box mes-box-isento" title="${tooltipIsento}">⚪ ISENTO</span>`,
             vencimento: '-',
             isVencido: false,
             isIsento: true,
@@ -409,7 +462,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
         if (targetScore > scoreDesligamento) {
             return {
                 status: 'desligado',
-                badge: `<span class="badge" style="font-size:10px; padding:2px 4px; background: rgba(231, 76, 60, 0.1); color: var(--text-muted); border: 1px solid rgba(231, 76, 60, 0.2);" title="Desligado em ${dataDesligStr || (mesDesligamento + '/' + anoDesligamento)} (Não exigível)">⚪ DESLIGADO</span>`,
+                badge: `<span class="mes-box mes-box-desligado" title="Desligado em ${dataDesligStr || (mesDesligamento + '/' + anoDesligamento)} (Não exigível)">⚪ DESLIGADO</span>`,
                 vencimento: '-',
                 isVencido: false,
                 isIsento: true,
@@ -440,7 +493,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
     if (isVencido) {
         return {
             status: 'vencido',
-            badge: `<span class="badge badge-danger" style="font-size:10px; padding:2px 4px;" title="Vencido em ${dataVencimentoStr}">🔴 R$ 0,00</span>`,
+            badge: `<span class="mes-box mes-box-vencido" title="Vencido em ${dataVencimentoStr}">🔴 R$ 0,00</span>`,
             vencimento: dataVencimentoStr,
             isVencido: true,
             isIsento: false,
@@ -449,7 +502,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
     } else {
         return {
             status: 'a_vencer',
-            badge: `<span style="color:var(--text-muted); font-size:11px;" title="A vencer em ${dataVencimentoStr}">-</span>`,
+            badge: `<span class="mes-box mes-box-avencer" title="A vencer em ${dataVencimentoStr}">-</span>`,
             vencimento: dataVencimentoStr,
             isVencido: false,
             isIsento: false,
@@ -650,34 +703,34 @@ function renderGestaoMensalidades() {
                 const cellsMeses = mesesKeys.map((k, idx) => {
                     const val = parseFloat(a.gridData[k]) || 0;
                     const info = calcularStatusMensalidade(idx + 1, ano, val, a);
-                    return `<td>${info.badge}</td>`;
+                    return `<td class="col-mes">${info.badge}</td>`;
                 }).join('');
 
                 const statusBadge = a.isEmDia 
-                    ? `<span class="badge badge-success" style="font-size:11px; padding: 4px 8px; background:#2ECC71; color:#fff; font-weight:bold;">🟢 EM DIA</span>` 
-                    : `<span class="badge badge-danger" style="font-size:11px; padding: 4px 8px; background:#E74C3C; color:#fff; font-weight:bold;" title="${a.mesesDevidos} mês(es) em atraso">🔴 INADIMPLENTE (${a.mesesDevidos})</span>`;
+                    ? `<span class="badge-status badge-status-em-dia">🟢 EM DIA</span>` 
+                    : `<span class="badge-status badge-status-inadimplente" title="${a.mesesDevidos} mês(es) em atraso">🔴 INADIMPLENTE (${a.mesesDevidos})</span>`;
 
                 const infoIngresso = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso(a) : { dataFormatada: a.data_cadastro || '-' };
 
                 return `
                     <tr>
-                        <td style="text-align: left;">
-                            <b>${a.nome_guerra || a.nome}</b><br>
-                            <small style="color: var(--text-muted);">${a.cpf}</small><br>
-                            <span style="font-size: 10px; color: var(--accent-gold); opacity: 0.95; display: inline-flex; align-items: center; gap: 3px;" title="Data de Ingresso do Associado">
+                        <td class="col-associado">
+                            <div style="font-weight: 700; color: #FFFFFF; font-size: 13px; line-height: 1.2;">${a.nome_guerra || a.nome}</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.2; margin-top: 2px;">${a.cpf}</div>
+                            <div style="font-size: 10px; color: var(--accent-gold); line-height: 1.2; margin-top: 3px;">
                                 📅 Admissão: <b>${infoIngresso.dataFormatada || a.data_cadastro || '-'}</b>
-                            </span>
+                            </div>
                         </td>
                         ${cellsMeses}
-                        <td style="font-weight: 700; color: var(--accent-gold);">
+                        <td class="col-total">
                             R$ ${a.totalPagoSocio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </td>
-                        <td>${statusBadge}</td>
-                        <td>
-                            <div style="display: flex; gap: 4px; justify-content: center;">
-                                <button class="btn btn-sm btn-gold" style="padding: 2px 6px; font-size: 11px;" onclick="abrirModalDarBaixa('${a.cpf}')">💳 Baixar</button>
-                                <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px;" onclick="verExtratoAssociado('${a.cpf}')">📋 Histórico</button>
-                                <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px; color: var(--accent-gold); border-color: var(--accent-gold);" onclick="verExtratoAssociado('${a.cpf}')">✏️ Editar</button>
+                        <td class="col-status">${statusBadge}</td>
+                        <td class="col-acoes">
+                            <div class="acoes-btn-group">
+                                <button class="btn-acao btn-acao-baixar" onclick="abrirModalDarBaixa('${a.cpf}')" title="Dar baixa em mensalidade">💳 Baixar</button>
+                                <button class="btn-acao btn-acao-historico" onclick="verExtratoAssociado('${a.cpf}')" title="Ver extrato e histórico">📋 Histórico</button>
+                                <button class="btn-acao btn-acao-editar" onclick="verExtratoAssociado('${a.cpf}')" title="Editar lançamentos">✏️ Editar</button>
                             </div>
                         </td>
                     </tr>
@@ -702,36 +755,40 @@ function renderGestaoMensalidades() {
                 const cellsMeses = mesesKeys.map((k, idx) => {
                     const val = parseFloat(socio.gridData[k]) || 0;
                     const info = calcularStatusMensalidade(idx + 1, ano, val, socio);
-                    return `<td>${info.badge}</td>`;
+                    return `<td class="col-mes">${info.badge}</td>`;
                 }).join('');
 
                 const dataDeslig = socio.data_desligamento || 'Data não registrada';
                 const infoIngressoDeslig = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso(socio) : { dataFormatada: socio.data_cadastro || '-' };
 
                 const statusBadge = socio.isEmDia 
-                    ? `<span class="badge badge-success" style="font-size:11px; padding: 4px 8px; background:#2ECC71; color:#fff; font-weight:bold;">🟢 QUITADO (${socio.totalPagoSocio > 0 ? 'R$ ' + socio.totalPagoSocio.toFixed(2).replace('.', ',') : 'Sem débitos'})</span>` 
-                    : `<span class="badge badge-danger" style="font-size:11px; padding: 4px 8px; background:#E74C3C; color:#fff; font-weight:bold;" title="${socio.mesesDevidos} mês(es) pendente(s) antes do desligamento">🔴 PENDENTE (${socio.mesesDevidos}m)</span>`;
+                    ? `<span class="badge-status badge-status-quitado">🟢 QUITADO</span>` 
+                    : `<span class="badge-status badge-status-pendente" title="${socio.mesesDevidos} mês(es) pendente(s) antes do desligamento">🔴 PENDENTE (${socio.mesesDevidos}m)</span>`;
 
                 return `
                     <tr>
-                        <td style="text-align: left;">
-                            <b>${socio.nome_guerra || socio.nome}</b><br>
-                            <small style="color: var(--text-muted);">${socio.cpf}</small><br>
-                            <span style="font-size: 10px; color: var(--accent-gold); opacity: 0.95; display: inline-flex; align-items: center; gap: 3px;" title="Data de Ingresso do Associado">
-                                📅 Admissão: <b>${infoIngressoDeslig.dataFormatada || socio.data_cadastro || '-'}</b>
-                            </span><br>
-                            <span class="badge badge-danger" style="font-size: 9.5px; padding: 2px 6px; margin-top: 3px; display: inline-block;">🚫 DESLIGADO em ${dataDeslig}</span>
+                        <td class="col-associado">
+                            <div style="font-weight: 700; color: #FFFFFF; font-size: 13px; line-height: 1.2;">${socio.nome_guerra || socio.nome}</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.2; margin-top: 2px;">${socio.cpf}</div>
+                            <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 3px;">
+                                <span style="font-size: 10px; color: var(--accent-gold); line-height: 1.1;">
+                                    📅 Adm: <b>${infoIngressoDeslig.dataFormatada || socio.data_cadastro || '-'}</b>
+                                </span>
+                                <span style="font-size: 9.5px; color: #FF6B6B; line-height: 1.1;">
+                                    🚫 Desligado: <b>${dataDeslig}</b>
+                                </span>
+                            </div>
                         </td>
                         ${cellsMeses}
-                        <td style="font-weight: 700; color: var(--accent-gold);">
+                        <td class="col-total">
                             R$ ${socio.totalPagoSocio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </td>
-                        <td>${statusBadge}</td>
-                        <td>
-                            <div style="display: flex; gap: 4px; justify-content: center;">
-                                <button class="btn btn-sm btn-gold" style="padding: 2px 6px; font-size: 11px;" onclick="abrirModalDarBaixa('${socio.cpf}')">💳 Baixar</button>
-                                <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px;" onclick="verExtratoAssociado('${socio.cpf}')">📋 Histórico</button>
-                                <button class="btn btn-sm btn-outline" style="padding: 2px 6px; font-size: 11px; color: var(--accent-gold); border-color: var(--accent-gold);" onclick="verExtratoAssociado('${socio.cpf}')">✏️ Editar</button>
+                        <td class="col-status">${statusBadge}</td>
+                        <td class="col-acoes">
+                            <div class="acoes-btn-group">
+                                <button class="btn-acao btn-acao-baixar" onclick="abrirModalDarBaixa('${socio.cpf}')" title="Dar baixa em mensalidade">💳 Baixar</button>
+                                <button class="btn-acao btn-acao-historico" onclick="verExtratoAssociado('${socio.cpf}')" title="Ver extrato e histórico">📋 Histórico</button>
+                                <button class="btn-acao btn-acao-editar" onclick="verExtratoAssociado('${socio.cpf}')" title="Editar lançamentos">✏️ Editar</button>
                             </div>
                         </td>
                     </tr>
@@ -951,14 +1008,16 @@ async function salvarBaixaMensalidade(e) {
     const dataBR = `${diaD}/${mesD}/${anoD}`;
 
     const mesesNomesMap = { jan:'Jan', fev:'Fev', mar:'Mar', abr:'Abr', mai:'Mai', jun:'Jun', jul:'Jul', ago:'Ago', set:'Set', out:'Out', nov:'Nov', dez:'Dez' };
-    const mesesTexto = checkedMeses.map(m => mesesNomesMap[m]).join(', ');
+    const mesesTexto = checkedMeses.map(m => mesesNomesMap[m] || m).join(', ');
+    const mesRefCompacto = typeof formatarMesesReferenciaCompacto === 'function' ? formatarMesesReferenciaCompacto(checkedMeses) : mesesTexto;
+    const obsTexto = obs || `Quitacao de mensalidade PIX (${mesesTexto}/${anoRef})`;
 
     const itemHistorico = {
         id: 'mensalidade_' + Date.now(),
         cpf: cpf,
         associado_nome: nomeAssociado,
         ano: anoRef,
-        mes_referencia: mesesTexto,
+        mes_referencia: mesRefCompacto,
         meses_quitados: mesesTexto,
         valor: valorTotal,
         data: dataBR,
@@ -966,7 +1025,8 @@ async function salvarBaixaMensalidade(e) {
         data_iso: dataInput,
         forma: 'PIX',
         comprovante_pix: comprovantePix || 'Comprovante PIX recebido',
-        obs: obs || `Quitação de mensalidade PIX (${mesesTexto}/${anoRef})`,
+        obs: obsTexto,
+        observacoes: obsTexto,
         status: 'pago'
     };
 
@@ -1210,9 +1270,10 @@ async function salvarEdicaoBaixaMensalidade(e) {
     const [anoD, mesD, diaD] = dataInput.split('-');
     const dataBR = `${diaD}/${mesD}/${anoD}`;
     const mesesNomesMap = { jan:'Jan', fev:'Fev', mar:'Mar', abr:'Abr', mai:'Mai', jun:'Jun', jul:'Jul', ago:'Ago', set:'Set', out:'Out', nov:'Nov', dez:'Dez' };
-    const mesesTexto = checkedMeses.map(m => mesesNomesMap[m]).join(', ');
+    const mesesTexto = checkedMeses.map(m => mesesNomesMap[m] || m).join(', ');
+    const mesRefCompacto = typeof formatarMesesReferenciaCompacto === 'function' ? formatarMesesReferenciaCompacto(checkedMeses) : mesesTexto;
     const anoRef = historicoGeral[index].ano || '2026';
-    const obsTexto = obs || `Baixa de mensalidade PIX (${mesesTexto}/${anoRef})`;
+    const obsTexto = obs || `Quitacao de mensalidade PIX (${mesesTexto}/${anoRef})`;
 
     historicoGeral[index].valor = valorTotal;
     historicoGeral[index].data = dataBR;
@@ -1220,7 +1281,7 @@ async function salvarEdicaoBaixaMensalidade(e) {
     historicoGeral[index].data_iso = dataInput;
     historicoGeral[index].comprovante_pix = comprovantePix || 'Comprovante PIX confirmado';
     historicoGeral[index].meses_quitados = mesesTexto;
-    historicoGeral[index].mes_referencia = mesesTexto;
+    historicoGeral[index].mes_referencia = mesRefCompacto;
     historicoGeral[index].obs = obsTexto;
     historicoGeral[index].observacoes = obsTexto;
 
