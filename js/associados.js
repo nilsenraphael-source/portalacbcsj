@@ -199,6 +199,8 @@ function salvarEdicaoAssociadoDiretoria(e) {
     renderGestaoAssociados();
     renderAssociadosDesligados();
     renderDiretoriaOverview();
+    if (typeof renderGestaoMensalidades === 'function') renderGestaoMensalidades();
+    if (typeof renderAssociadoOverview === 'function') renderAssociadoOverview();
 }
 
 // GESTÃO DE SOLICITAÇÕES DE DESLIGAMENTO PELA DIRETORIA

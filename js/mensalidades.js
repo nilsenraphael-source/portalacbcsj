@@ -260,17 +260,46 @@ function salvarNovoValorMensalidade(e) {
     renderAssociadoOverview();
 }
 
-// CÁLCULO DE VENCIMENTO DIA 15 E STATUS DE MENSALIDADE
-function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
+// CÁLCULO DE VENCIMENTO DIA 15 E STATUS DE MENSALIDADE COM REGRA DE INGRESSO
+function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngresso) {
     const valor = parseFloat(valorPago) || 0;
-    const baseVal = getValorMensalidadeVigente(mesIndex, anoStr);
-    const hoje = new Date();
-    const anoAtual = hoje.getFullYear();
-    const mesAtualNum = hoje.getMonth() + 1; // 1 a 12
-    const diaAtual = hoje.getDate(); // 1 a 31
+    const mIdx = parseInt(mesIndex, 10) || 1;
+    const anoNum = parseInt(anoStr, 10) || 2026;
+    const baseVal = typeof getValorMensalidadeVigente === 'function' ? getValorMensalidadeVigente(mIdx, anoStr) : 20.00;
+    const dataVencimentoStr = `15/${String(mIdx).padStart(2, '0')}/${anoNum}`;
 
-    const anoNum = parseInt(anoStr, 10);
-    const dataVencimentoStr = `15/${String(mesIndex).padStart(2, '0')}/${anoNum}`;
+    // Regra de Ingresso: cobrança apenas a partir da data de ingresso; meses anteriores = ISENTO
+    const parserIngresso = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso : (d => {
+        if (!d) return { mes: 1, ano: 2020 };
+        const s = typeof d === 'object' ? (d.data_ingresso || d.data_admissao || d.data_cadastro || '') : String(d);
+        const p = s.split(' ')[0].split(/[\/\-]/);
+        if (p.length === 3) {
+            let p1 = parseInt(p[0], 10), p2 = parseInt(p[1], 10), p3 = parseInt(p[2], 10);
+            if (p3 < 100) p3 += 2000;
+            if (p1 > 12) return { mes: p2, ano: p3 };
+            if (p2 > 12) return { mes: p1, ano: p3 };
+            return { mes: p2, ano: p3 };
+        }
+        return { mes: 1, ano: 2020 };
+    });
+
+    const infoIngresso = parserIngresso(socioOuDataIngresso);
+    const targetScore = anoNum * 100 + mIdx;
+    const ingressoScore = infoIngresso.ano * 100 + infoIngresso.mes;
+
+    const isAnteriorIngresso = targetScore < ingressoScore;
+
+    // Se o mês for anterior à data de ingresso do associado e NÃO houver pagamento lançado -> ISENTO
+    if (isAnteriorIngresso && valor <= 0) {
+        return {
+            status: 'isento',
+            badge: `<span class="badge" style="font-size:10px; padding:2px 4px; background: rgba(148, 163, 184, 0.2); color: var(--text-muted); border: 1px solid rgba(148, 163, 184, 0.35);">⚪ ISENTO</span>`,
+            vencimento: '-',
+            isVencido: false,
+            isIsento: true,
+            debitAmount: 0
+        };
+    }
 
     if (valor >= baseVal) {
         return {
@@ -278,26 +307,37 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
             badge: `<span class="badge badge-success" style="font-size:10px; padding:2px 4px;">✅ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
             vencimento: dataVencimentoStr,
             isVencido: false,
+            isIsento: false,
             debitAmount: 0
         };
     } else if (valor > 0) {
-        const falta = baseVal - valor;
-        const isV = (anoNum < anoAtual || (anoNum === anoAtual && (mesIndex < mesAtualNum || (mesIndex === mesAtualNum && diaAtual > 15))));
+        const falta = Math.max(0, baseVal - valor);
+        const hoje = new Date();
+        const anoAtual = hoje.getFullYear();
+        const mesAtualNum = hoje.getMonth() + 1; // 1 a 12
+        const diaAtual = hoje.getDate(); // 1 a 31
+        const isV = (anoNum < anoAtual || (anoNum === anoAtual && (mIdx < mesAtualNum || (mIdx === mesAtualNum && diaAtual > 15))));
         return {
             status: 'parcial',
             badge: `<span class="badge badge-warning" style="font-size:10px; padding:2px 4px;">⚠️ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
             vencimento: dataVencimentoStr,
             isVencido: isV,
+            isIsento: false,
             debitAmount: falta
         };
     } else {
+        const hoje = new Date();
+        const anoAtual = hoje.getFullYear();
+        const mesAtualNum = hoje.getMonth() + 1;
+        const diaAtual = hoje.getDate();
+
         let isVencido = false;
         if (anoNum < anoAtual) {
             isVencido = true;
         } else if (anoNum === anoAtual) {
-            if (mesIndex < mesAtualNum) {
+            if (mIdx < mesAtualNum) {
                 isVencido = true;
-            } else if (mesIndex === mesAtualNum) {
+            } else if (mIdx === mesAtualNum) {
                 if (diaAtual > 15) {
                     isVencido = true;
                 }
@@ -310,6 +350,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
                 badge: `<span class="badge badge-danger" style="font-size:10px; padding:2px 4px;">🔴 R$ 0,00</span>`,
                 vencimento: dataVencimentoStr,
                 isVencido: true,
+                isIsento: false,
                 debitAmount: baseVal
             };
         } else {
@@ -318,6 +359,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago) {
                 badge: `<span style="color:var(--text-muted); font-size:11px;">-</span>`,
                 vencimento: dataVencimentoStr,
                 isVencido: false,
+                isIsento: false,
                 debitAmount: 0
             };
         }
@@ -389,7 +431,7 @@ function renderGestaoMensalidades() {
             const val = parseFloat(itemGrid[key]) || 0;
             totalPagoSocio += val;
 
-            const st = calcularStatusMensalidade(index + 1, ano, val);
+            const st = calcularStatusMensalidade(index + 1, ano, val, socio);
             if (st.isVencido) {
                 mesesDevidos++;
             }
@@ -455,7 +497,7 @@ function renderGestaoMensalidades() {
             container.innerHTML = associadosProcessados.map(a => {
                 const cellsMeses = mesesKeys.map((k, idx) => {
                     const val = parseFloat(a.gridData[k]) || 0;
-                    const info = calcularStatusMensalidade(idx + 1, ano, val);
+                    const info = calcularStatusMensalidade(idx + 1, ano, val, a);
                     return `<td>${info.badge}</td>`;
                 }).join('');
 
@@ -502,7 +544,7 @@ function renderGestaoMensalidades() {
                 const cellsMeses = mesesKeys.map((k, idx) => {
                     const val = parseFloat(itemGrid[k]) || 0;
                     totalPagoSocio += val;
-                    const info = calcularStatusMensalidade(idx + 1, ano, val);
+                    const info = calcularStatusMensalidade(idx + 1, ano, val, socio);
                     return `<td>${info.badge}</td>`;
                 }).join('');
 
@@ -710,6 +752,8 @@ function verExtratoAssociado(cpf) {
 
     const totalPagoTodosAnos = historicoAssociado.reduce((sum, h) => sum + (parseFloat(h.valor) || 0), 0);
 
+    const infoIngresso = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso(a) : { dataFormatada: a.data_cadastro || '-' };
+
     const container = document.getElementById('extratoAssociadoConteudo');
     if (container) {
         container.innerHTML = `
@@ -718,6 +762,11 @@ function verExtratoAssociado(cpf) {
                     <div style="font-size: 11px; color: var(--text-muted);">ASSOCIADO</div>
                     <div style="font-size: 15px; font-weight: bold; color: var(--accent-gold);">${a.nome_guerra || a.nome}</div>
                     <div style="font-size: 11px; color: var(--text-muted);">${a.nome}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 11px; color: var(--text-muted);">DATA DE INGRESSO / ADMISSÃO</div>
+                    <div style="font-size: 15px; font-weight: bold; color: #3498DB;">${infoIngresso.dataFormatada || a.data_cadastro || '-'}</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Cobrança inicia nesta data (meses anteriores = Isento)</div>
                 </div>
                 <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <div style="font-size: 11px; color: var(--text-muted);">TOTAL CONTRIBUÍDO VIA PIX</div>

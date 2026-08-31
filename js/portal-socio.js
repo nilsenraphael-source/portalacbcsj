@@ -526,14 +526,19 @@ function renderAssociadoOverview() {
         const tarifaVigente = typeof getValorMensalidadeVigente === 'function' ? getValorMensalidadeVigente(m.index, ano) : 50;
         totalPagoAno += valPago;
 
-        const info = typeof calcularStatusMensalidade === 'function' ? calcularStatusMensalidade(m.index, ano, valPago) : { status: valPago >= tarifaVigente ? 'pago' : 'pendente', vencimento: `15/${m.index < 10 ? '0'+m.index : m.index}/${ano}`, isVencido: false, debitAmount: Math.max(0, tarifaVigente - valPago) };
+        const info = typeof calcularStatusMensalidade === 'function' 
+            ? calcularStatusMensalidade(m.index, ano, valPago, currentUser) 
+            : { status: valPago >= tarifaVigente ? 'pago' : 'pendente', vencimento: `15/${m.index < 10 ? '0'+m.index : m.index}/${ano}`, isVencido: false, debitAmount: Math.max(0, tarifaVigente - valPago), isIsento: false };
+        
         if (info.isVencido) {
             temDebitoVencido = true;
             totalDebitosPendente += info.debitAmount;
         }
 
         let badgeStatus = '';
-        if (info.status === 'pago') {
+        if (info.isIsento) {
+            badgeStatus = `<span class="badge" style="font-weight: 600; font-size: 11px; padding: 4px 8px; background: rgba(148, 163, 184, 0.2); color: var(--text-muted); border: 1px solid rgba(148, 163, 184, 0.35);">⚪ ISENTO (Anterior ao Ingresso)</span>`;
+        } else if (info.status === 'pago') {
             badgeStatus = `<span class="badge badge-success" style="font-weight: bold; font-size: 11px; padding: 4px 8px;">✅ QUITADO / EM DIA</span>`;
         } else if (info.status === 'parcial') {
             badgeStatus = `<span class="badge badge-warning" style="font-weight: bold; font-size: 11px; padding: 4px 8px;">⚠️ PAGO PARCIAL (Falta R$ ${info.debitAmount.toFixed(2).replace('.', ',')})</span>`;
@@ -544,12 +549,12 @@ function renderAssociadoOverview() {
         }
 
         return `
-            <tr>
+            <tr style="${info.isIsento ? 'opacity: 0.85; background: rgba(255,255,255,0.01);' : ''}">
                 <td><b style="color: var(--text-color);">${m.index < 10 ? '0' + m.index : m.index} - ${m.nome} / ${ano}</b></td>
                 <td><span style="font-size: 12px; font-weight: 600; color: var(--accent-gold);">${info.vencimento}</span></td>
-                <td>R$ ${tarifaVigente.toFixed(2).replace('.', ',')}</td>
+                <td>${info.isIsento ? '<span style="color:var(--text-muted); font-style:italic;">Isento</span>' : 'R$ ' + tarifaVigente.toFixed(2).replace('.', ',')}</td>
                 <td style="font-weight: 700; color: ${valPago >= tarifaVigente ? '#2ECC71' : (valPago > 0 ? '#F39C12' : 'var(--text-muted)')};">
-                    R$ ${valPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    ${info.isIsento && valPago === 0 ? '<span style="color:var(--text-muted);">-</span>' : 'R$ ' + valPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
                 <td>${badgeStatus}</td>
             </tr>
