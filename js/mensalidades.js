@@ -100,7 +100,7 @@ function extrairListaMesesQuitados(rawInput) {
     return ['jan'];
 }
 
-function recalcularTodasGridsMensalidades() {
+function recalcularTodasGridsMensalidades(triggerRender = false) {
     let list = [];
     try {
         list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
@@ -151,7 +151,7 @@ function recalcularTodasGridsMensalidades() {
         }
     });
 
-    if (typeof renderGestaoMensalidades === 'function' && (document.getElementById('tableGestaoMensalidadesBody') || document.getElementById('tableMensalidadesBody'))) {
+    if (triggerRender && typeof renderGestaoMensalidades === 'function' && (document.getElementById('tableGestaoMensalidadesBody') || document.getElementById('tableMensalidadesBody'))) {
         renderGestaoMensalidades();
     }
 }
@@ -303,7 +303,7 @@ function salvarNovoValorMensalidade(e) {
     renderAssociadoOverview();
 }
 
-// CÁLCULO DE VENCIMENTO DIA 15 E STATUS DE MENSALIDADE COM REGRA DE INGRESSO
+// CÁLCULO DE VENCIMENTO DIA 15 E STATUS DE MENSALIDADE COM REGRA DE INGRESSO E DESLIGAMENTO
 function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngresso) {
     const valor = parseFloat(valorPago) || 0;
     const mIdx = parseInt(mesIndex, 10) || 1;
@@ -339,10 +339,62 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
     const targetScore = anoNum * 100 + mIdx;
     const cobrancaScore = (infoIngresso.anoInicioCobranca || infoIngresso.ano) * 100 + (infoIngresso.mesInicioCobranca || infoIngresso.mes);
 
-    const isIsento = targetScore < cobrancaScore;
+    const isIsentoIngresso = targetScore < cobrancaScore;
 
-    // Se o mês for anterior ao início da cobrança e NÃO houver pagamento lançado -> ISENTO
-    if (isIsento && valor <= 0) {
+    // Se o associado for desligado, verificar data de desligamento
+    let isDesligado = false;
+    let mesDesligamento = null;
+    let anoDesligamento = null;
+    let dataDesligStr = '';
+
+    if (socioOuDataIngresso && typeof socioOuDataIngresso === 'object') {
+        if (socioOuDataIngresso.status === 'desligado' || socioOuDataIngresso.data_desligamento) {
+            isDesligado = true;
+            dataDesligStr = socioOuDataIngresso.data_desligamento || '';
+            if (dataDesligStr) {
+                const sDes = String(dataDesligStr).split(' ')[0].split(/[\/\-]/);
+                if (sDes.length === 3) {
+                    let d1 = parseInt(sDes[0], 10), d2 = parseInt(sDes[1], 10), d3 = parseInt(sDes[2], 10);
+                    if (d3 < 100) d3 += 2000;
+                    if (d1 > 12) { mesDesligamento = d2; anoDesligamento = d3; }
+                    else if (d2 > 12) { mesDesligamento = d1; anoDesligamento = d3; }
+                    else { mesDesligamento = d2; anoDesligamento = d3; }
+                }
+            }
+        }
+    }
+
+    // 1. SE HÁ PAGAMENTO EFETUADO (Integral ou Superior) -> SEMPRE PAGO/QUITADO (inclusive para desligados!)
+    if (valor >= baseVal) {
+        return {
+            status: 'pago',
+            badge: `<span class="badge badge-success" style="font-size:10px; padding:2px 4px;" title="Mensalidade quitada: R$ ${valor.toFixed(2).replace('.', ',')}">✅ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
+            vencimento: dataVencimentoStr,
+            isVencido: false,
+            isIsento: false,
+            debitAmount: 0
+        };
+    } else if (valor > 0) {
+        // Pagamento parcial
+        const falta = Math.max(0, baseVal - valor);
+        const hoje = new Date();
+        const anoAtual = hoje.getFullYear();
+        const mesAtualNum = hoje.getMonth() + 1;
+        const diaAtual = hoje.getDate();
+        const isV = (anoNum < anoAtual || (anoNum === anoAtual && (mIdx < mesAtualNum || (mIdx === mesAtualNum && diaAtual > 15))));
+        return {
+            status: 'parcial',
+            badge: `<span class="badge badge-warning" style="font-size:10px; padding:2px 4px;" title="Pago parcialmente (Falta R$ ${falta.toFixed(2).replace('.', ',')})">⚠️ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
+            vencimento: dataVencimentoStr,
+            isVencido: isV,
+            isIsento: false,
+            debitAmount: falta
+        };
+    }
+
+    // 2. SE NÃO HOUVE PAGAMENTO (valor <= 0)
+    // Se o mês for anterior ao início da cobrança -> ISENTO
+    if (isIsentoIngresso) {
         const tooltipIsento = infoIngresso.dia > 15 && targetScore === (infoIngresso.ano * 100 + infoIngresso.mes)
             ? `Isento no mês de admissão (admitido em ${infoIngresso.dataFormatada || infoIngresso.dia + '/' + infoIngresso.mes + '/' + infoIngresso.ano}, após dia 15)`
             : `Isento (Anterior à admissão em ${infoIngresso.dataFormatada || infoIngresso.dia + '/' + infoIngresso.mes + '/' + infoIngresso.ano})`;
@@ -357,68 +409,58 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
         };
     }
 
-    if (valor >= baseVal) {
+    // Se o associado for desligado e o mês for posterior ao desligamento -> DESLIGADO (não exigível)
+    if (isDesligado && anoDesligamento && mesDesligamento) {
+        const scoreDesligamento = anoDesligamento * 100 + mesDesligamento;
+        if (targetScore > scoreDesligamento) {
+            return {
+                status: 'desligado',
+                badge: `<span class="badge" style="font-size:10px; padding:2px 4px; background: rgba(231, 76, 60, 0.1); color: var(--text-muted); border: 1px solid rgba(231, 76, 60, 0.2);" title="Desligado em ${dataDesligStr || (mesDesligamento + '/' + anoDesligamento)} (Não exigível)">⚪ DESLIGADO</span>`,
+                vencimento: '-',
+                isVencido: false,
+                isIsento: true,
+                debitAmount: 0
+            };
+        }
+    }
+
+    // Mensalidade em aberto: verificar se já está vencida (> dia 15)
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtualNum = hoje.getMonth() + 1;
+    const diaAtual = hoje.getDate();
+
+    let isVencido = false;
+    if (anoNum < anoAtual) {
+        isVencido = true;
+    } else if (anoNum === anoAtual) {
+        if (mIdx < mesAtualNum) {
+            isVencido = true;
+        } else if (mIdx === mesAtualNum) {
+            if (diaAtual > 15) {
+                isVencido = true;
+            }
+        }
+    }
+
+    if (isVencido) {
         return {
-            status: 'pago',
-            badge: `<span class="badge badge-success" style="font-size:10px; padding:2px 4px;">✅ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
+            status: 'vencido',
+            badge: `<span class="badge badge-danger" style="font-size:10px; padding:2px 4px;" title="Vencido em ${dataVencimentoStr}">🔴 R$ 0,00</span>`,
+            vencimento: dataVencimentoStr,
+            isVencido: true,
+            isIsento: false,
+            debitAmount: baseVal
+        };
+    } else {
+        return {
+            status: 'a_vencer',
+            badge: `<span style="color:var(--text-muted); font-size:11px;" title="A vencer em ${dataVencimentoStr}">-</span>`,
             vencimento: dataVencimentoStr,
             isVencido: false,
             isIsento: false,
             debitAmount: 0
         };
-    } else if (valor > 0) {
-        const falta = Math.max(0, baseVal - valor);
-        const hoje = new Date();
-        const anoAtual = hoje.getFullYear();
-        const mesAtualNum = hoje.getMonth() + 1; // 1 a 12
-        const diaAtual = hoje.getDate(); // 1 a 31
-        const isV = (anoNum < anoAtual || (anoNum === anoAtual && (mIdx < mesAtualNum || (mIdx === mesAtualNum && diaAtual > 15))));
-        return {
-            status: 'parcial',
-            badge: `<span class="badge badge-warning" style="font-size:10px; padding:2px 4px;">⚠️ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
-            vencimento: dataVencimentoStr,
-            isVencido: isV,
-            isIsento: false,
-            debitAmount: falta
-        };
-    } else {
-        const hoje = new Date();
-        const anoAtual = hoje.getFullYear();
-        const mesAtualNum = hoje.getMonth() + 1;
-        const diaAtual = hoje.getDate();
-
-        let isVencido = false;
-        if (anoNum < anoAtual) {
-            isVencido = true;
-        } else if (anoNum === anoAtual) {
-            if (mIdx < mesAtualNum) {
-                isVencido = true;
-            } else if (mIdx === mesAtualNum) {
-                if (diaAtual > 15) {
-                    isVencido = true;
-                }
-            }
-        }
-
-        if (isVencido) {
-            return {
-                status: 'vencido',
-                badge: `<span class="badge badge-danger" style="font-size:10px; padding:2px 4px;">🔴 R$ 0,00</span>`,
-                vencimento: dataVencimentoStr,
-                isVencido: true,
-                isIsento: false,
-                debitAmount: baseVal
-            };
-        } else {
-            return {
-                status: 'a_vencer',
-                badge: `<span style="color:var(--text-muted); font-size:11px;">-</span>`,
-                vencimento: dataVencimentoStr,
-                isVencido: false,
-                isIsento: false,
-                debitAmount: 0
-            };
-        }
     }
 }
 
@@ -453,7 +495,7 @@ function renderGestaoMensalidades() {
     ativos.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
     desligados.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
 
-    recalcularTodasGridsMensalidades();
+    recalcularTodasGridsMensalidades(false);
     const storageKey = `acbcsj_mensalidades_grid_${ano}`;
     let grid = [];
     try {
@@ -466,6 +508,12 @@ function renderGestaoMensalidades() {
 
     const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
+    const totaisMesAtivos = { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+    const totaisMesDesligados = { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+    const totaisMesConsolidado = { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+
+    let totalPagoAtivos = 0;
+    let totalPagoDesligados = 0;
     let emDiaCount = 0;
     let pendentesCount = 0;
 
@@ -480,6 +528,8 @@ function renderGestaoMensalidades() {
         mesesKeys.forEach((key, index) => {
             const val = parseFloat(itemGrid[key]) || 0;
             totalPagoSocio += val;
+            totaisMesAtivos[key] += val;
+            totaisMesConsolidado[key] += val;
 
             const st = calcularStatusMensalidade(index + 1, ano, val, socio);
             if (st.isVencido) {
@@ -487,6 +537,7 @@ function renderGestaoMensalidades() {
             }
         });
 
+        totalPagoAtivos += totalPagoSocio;
         const isEmDia = mesesDevidos === 0;
         if (isEmDia) emDiaCount++; else pendentesCount++;
 
@@ -499,52 +550,101 @@ function renderGestaoMensalidades() {
         };
     });
 
-    // Total arrecadado no ano pelo regime de caixa (data em que o pagamento entrou)
+    let desligadosComPagamentoCount = 0;
+    let desligadosProcessados = desligados.map(socio => {
+        const sCpf = (socio.cpf || '').replace(/\D/g, '');
+        const itemGrid = (Array.isArray(grid) ? grid.find(g => (g.cpf || '').replace(/\D/g, '') === sCpf) : null) 
+            || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+
+        let totalPagoSocio = 0;
+
+        mesesKeys.forEach((key, index) => {
+            const val = parseFloat(itemGrid[key]) || 0;
+            totalPagoSocio += val;
+            totaisMesDesligados[key] += val;
+            totaisMesConsolidado[key] += val;
+        });
+
+        totalPagoDesligados += totalPagoSocio;
+        if (totalPagoSocio > 0) desligadosComPagamentoCount++;
+
+        return {
+            ...socio,
+            gridData: itemGrid,
+            totalPagoSocio
+        };
+    });
+
+    // Total arrecadado no ano (Ativos + Desligados)
+    const totalGeralMensalidadesPagas = totalPagoAtivos + totalPagoDesligados;
+
     let historicoGeral = [];
     try {
         historicoGeral = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
     } catch(e) { historicoGeral = []; }
 
-    let totalArrecadadoAno = 0;
+    let historicoGeralTotal = 0;
     historicoGeral.forEach(item => {
         const infoM = (typeof extrairInfoMensalidade === 'function') 
             ? extrairInfoMensalidade(item, ano) 
             : { ano: item.ano || '2026', mes: '01' };
-        if (infoM.ano === ano) {
-            totalArrecadadoAno += (parseFloat(item.valor) || 0);
+        if (infoM.ano === ano || String(item.ano) === String(ano)) {
+            historicoGeralTotal += (parseFloat(item.valor) || 0);
         }
     });
 
+    const totalFinalArrecadado = Math.max(totalGeralMensalidadesPagas, historicoGeralTotal);
+
     const elArrecadado = document.getElementById('metricTotalArrecadadoMensalidades');
+    const elSubtextArrecadado = document.getElementById('metricSubtextTotalArrecadadoMensalidades');
     const elEmDia = document.getElementById('metricAssociadosEmDia');
     const elPendentes = document.getElementById('metricAssociadosPendentes');
 
-    if (elArrecadado) elArrecadado.textContent = `R$ ${totalArrecadadoAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    if (elArrecadado) elArrecadado.textContent = `R$ ${totalFinalArrecadado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    if (elSubtextArrecadado) {
+        elSubtextArrecadado.innerHTML = `🟢 Ativos: <b>R$ ${totalPagoAtivos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b> | 🚫 Desligados: <b>R$ ${totalPagoDesligados.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b>`;
+    }
     if (elEmDia) elEmDia.textContent = `${emDiaCount} associado${emDiaCount === 1 ? '' : 's'}`;
     if (elPendentes) elPendentes.textContent = `${pendentesCount} associado${pendentesCount === 1 ? '' : 's'}`;
 
+    let displayAtivos = [...associadosProcessados];
+    let displayDesligados = [...desligadosProcessados];
+
     if (searchTerm) {
-        associadosProcessados = associadosProcessados.filter(a => {
+        const fnMatch = a => {
             const ng = (a.nome_guerra || '').toLowerCase();
             const nc = (a.nome || '').toLowerCase();
             const cpf = (a.cpf || '').replace(/\D/g, '');
             return ng.includes(searchTerm) || nc.includes(searchTerm) || cpf.includes(searchTerm);
-        });
+        };
+        displayAtivos = displayAtivos.filter(fnMatch);
+        displayDesligados = displayDesligados.filter(fnMatch);
     }
 
     if (filterStatus === 'em_dia') {
-        associadosProcessados = associadosProcessados.filter(a => a.isEmDia);
+        displayAtivos = displayAtivos.filter(a => a.isEmDia);
+        displayDesligados = [];
     } else if (filterStatus === 'atrasado') {
-        associadosProcessados = associadosProcessados.filter(a => !a.isEmDia);
+        displayAtivos = displayAtivos.filter(a => !a.isEmDia);
+        displayDesligados = [];
+    } else if (filterStatus === 'ativos') {
+        displayDesligados = [];
+    } else if (filterStatus === 'desligados') {
+        displayAtivos = [];
+    } else if (filterStatus === 'com_pagamento') {
+        displayAtivos = displayAtivos.filter(a => a.totalPagoSocio > 0);
+        displayDesligados = displayDesligados.filter(d => d.totalPagoSocio > 0);
     }
 
-    associadosProcessados.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
+    displayAtivos.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
+    displayDesligados.sort((a, b) => (a.nome_guerra || a.nome || '').localeCompare(b.nome_guerra || b.nome || '', 'pt-BR', { sensitivity: 'base' }));
+
     const container = document.getElementById('tableGestaoMensalidadesBody');
     if (container) {
-        if (associadosProcessados.length === 0) {
-            container.innerHTML = `<tr><td colspan="16" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum associado encontrado para os filtros selecionados.</td></tr>`;
+        if (displayAtivos.length === 0) {
+            container.innerHTML = `<tr><td colspan="16" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum associado ativo encontrado para os filtros selecionados.</td></tr>`;
         } else {
-            container.innerHTML = associadosProcessados.map(a => {
+            container.innerHTML = displayAtivos.map(a => {
                 const cellsMeses = mesesKeys.map((k, idx) => {
                     const val = parseFloat(a.gridData[k]) || 0;
                     const info = calcularStatusMensalidade(idx + 1, ano, val, a);
@@ -584,13 +684,41 @@ function renderGestaoMensalidades() {
         }
     }
 
+    const footGestao = document.getElementById('tableGestaoMensalidadesFoot');
+    if (footGestao) {
+        const cellsTotaisAtivos = mesesKeys.map(k => `<td style="font-weight: bold; font-size: 11px; color: #2ECC71;">R$ ${totaisMesAtivos[k].toFixed(2).replace('.', ',')}</td>`).join('');
+        const cellsTotaisDesligados = mesesKeys.map(k => `<td style="font-weight: bold; font-size: 11px; color: #E74C3C;">R$ ${totaisMesDesligados[k].toFixed(2).replace('.', ',')}</td>`).join('');
+        const cellsTotaisConsolidado = mesesKeys.map(k => `<td style="font-weight: 800; font-size: 11.5px; color: var(--accent-gold);">R$ ${totaisMesConsolidado[k].toFixed(2).replace('.', ',')}</td>`).join('');
+
+        footGestao.innerHTML = `
+            <tr style="background: rgba(46, 204, 113, 0.08); border-top: 2px solid rgba(46, 204, 113, 0.3);">
+                <td style="text-align: left; font-weight: bold; color: #2ECC71;">🟢 Subtotal Ativos (${ativos.length}):</td>
+                ${cellsTotaisAtivos}
+                <td style="font-weight: bold; color: #2ECC71; font-size: 12px;">R$ ${totalPagoAtivos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td colspan="2" style="font-size: 11px; color: var(--text-muted); text-align: center;">${emDiaCount} em dia / ${pendentesCount} pendentes</td>
+            </tr>
+            <tr style="background: rgba(231, 76, 60, 0.08); border-top: 1px dashed rgba(231, 76, 60, 0.3);">
+                <td style="text-align: left; font-weight: bold; color: #E74C3C;">🚫 Subtotal Desligados (${desligados.length}):</td>
+                ${cellsTotaisDesligados}
+                <td style="font-weight: bold; color: #E74C3C; font-size: 12px;">R$ ${totalPagoDesligados.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td colspan="2" style="font-size: 11px; color: var(--text-muted); text-align: center;">${desligadosComPagamentoCount} c/ arrecadação no ano</td>
+            </tr>
+            <tr style="background: rgba(212, 175, 55, 0.15); border-top: 2px solid var(--accent-gold);">
+                <td style="text-align: left; font-weight: 800; color: var(--accent-gold); font-size: 12px;">🏆 TOTAL GERAL ARRECADADO:</td>
+                ${cellsTotaisConsolidado}
+                <td style="font-weight: 800; color: var(--accent-gold); font-size: 13px;">R$ ${totalFinalArrecadado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td colspan="2" style="font-weight: bold; font-size: 11px; color: var(--accent-gold); text-align: center;">100% Contabilizado (Ativos + Desligados)</td>
+            </tr>
+        `;
+    }
+
     // PROCESSA ASSOCIADOS DESLIGADOS NA PARTE INFERIOR
     const containerDesligados = document.getElementById('tableMensalidadesDesligadosBody');
     if (containerDesligados) {
-        if (desligados.length === 0) {
-            containerDesligados.innerHTML = `<tr><td colspan="16" style="text-align: center; color: var(--text-muted); padding: 15px;">Nenhum associado desligado registrado no sistema.</td></tr>`;
+        if (displayDesligados.length === 0) {
+            containerDesligados.innerHTML = `<tr><td colspan="16" style="text-align: center; color: var(--text-muted); padding: 15px;">Nenhum associado desligado encontrado para os filtros selecionados.</td></tr>`;
         } else {
-            containerDesligados.innerHTML = desligados.map(socio => {
+            containerDesligados.innerHTML = displayDesligados.map(socio => {
                 const sCpf = (socio.cpf || '').replace(/\D/g, '');
                 const itemGrid = (Array.isArray(grid) ? grid.find(g => (g.cpf || '').replace(/\D/g, '') === sCpf) : null) 
                     || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
@@ -606,8 +734,12 @@ function renderGestaoMensalidades() {
                 const dataDeslig = socio.data_desligamento || 'Data não registrada';
                 const infoIngressoDeslig = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso(socio) : { dataFormatada: socio.data_cadastro || '-' };
 
+                const badgeContribuicao = totalPagoSocio > 0 
+                    ? `<span class="badge badge-success" style="font-size: 10px;" title="Contribuiu com R$ ${totalPagoSocio.toFixed(2).replace('.', ',')} no exercício">✅ Contribuiu no Ano</span>` 
+                    : `<span class="badge badge-secondary" style="font-size: 10px;">Sem pagamentos</span>`;
+
                 return `
-                    <tr style="background: rgba(231, 76, 60, 0.05);">
+                    <tr style="background: rgba(231, 76, 60, 0.04);">
                         <td style="text-align: left;">
                             <b>${socio.nome_guerra || socio.nome}</b><br>
                             <small style="color: var(--text-muted);">${socio.cpf}</small><br>
@@ -620,7 +752,7 @@ function renderGestaoMensalidades() {
                         <td style="font-weight: 700; color: var(--accent-gold);">
                             R$ ${totalPagoSocio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </td>
-                        <td><span class="badge badge-secondary" style="font-size: 10px;">DESLIGADO</span></td>
+                        <td>${badgeContribuicao}</td>
                         <td>
                             <div style="display: flex; gap: 4px; justify-content: center;">
                                 <button class="btn btn-sm btn-gold" style="padding: 2px 6px; font-size: 11px;" onclick="abrirModalDarBaixa('${socio.cpf}')">💳 Baixar</button>
@@ -632,6 +764,19 @@ function renderGestaoMensalidades() {
                 `;
             }).join('');
         }
+    }
+
+    const footDesligados = document.getElementById('tableMensalidadesDesligadosFoot');
+    if (footDesligados) {
+        const cellsTotaisDesligados = mesesKeys.map(k => `<td style="font-weight: bold; font-size: 11px; color: #E74C3C;">R$ ${totaisMesDesligados[k].toFixed(2).replace('.', ',')}</td>`).join('');
+        footDesligados.innerHTML = `
+            <tr style="background: rgba(231, 76, 60, 0.1); border-top: 2px solid #E74C3C;">
+                <td style="text-align: left; font-weight: bold; color: #FF6B6B;">Total Arrecadado de Desligados (${desligados.length}):</td>
+                ${cellsTotaisDesligados}
+                <td style="font-weight: 800; color: var(--accent-gold); font-size: 12px;">R$ ${totalPagoDesligados.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td colspan="2" style="font-size: 11px; color: var(--text-muted); text-align: center;">Contabilizado no total geral</td>
+            </tr>
+        `;
     }
 }
 
