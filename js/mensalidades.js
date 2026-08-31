@@ -807,22 +807,34 @@ function verExtratoAssociado(cpf) {
                             </tr>
                         </thead>
                         <tbody>
-                            ${historicoAssociado.map(h => `
-                                <tr>
-                                    <td><b>${h.data || h.data_pagamento}</b></td>
-                                    <td><span class="badge badge-info">${h.ano}</span></td>
-                                    <td><b>${h.meses_quitados}</b></td>
-                                    <td style="font-weight: 700; color: #2ECC71;">+ R$ ${(parseFloat(h.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                                    <td><span class="badge badge-success">PIX</span> <small>${h.comprovante_pix || ''}</small></td>
-                                    <td>${h.obs || '-'}</td>
-                                    <td>
-                                        <div style="display: flex; gap: 4px;">
-                                            <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 6px;" onclick="abrirModalEditarBaixa('${h.id}')">✏️ Editar</button>
-                                            <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 6px; color: #E74C3C; border-color: #E74C3C;" onclick="excluirBaixaMensalidade('${h.id}')">🗑️ Excluir</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `).join('')}
+                            ${historicoAssociado.map(h => {
+                                const mesesTexto = (typeof extrairTextoMesesQuitados === 'function') 
+                                    ? extrairTextoMesesQuitados(h) 
+                                    : ((h.meses_quitados && h.meses_quitados !== 'undefined' && h.meses_quitados !== 'null') 
+                                        ? h.meses_quitados 
+                                        : ((h.mes_referencia && h.mes_referencia !== 'undefined' && h.mes_referencia !== 'null') ? h.mes_referencia : 'Mensalidade'));
+                                
+                                const dataExib = h.data || h.data_pagamento || (h.data_iso ? h.data_iso.split('T')[0].split('-').reverse().join('/') : '-');
+                                const obsExib = (h.obs && h.obs !== 'undefined' && h.obs !== 'null') ? h.obs : ((h.observacoes && h.observacoes !== 'undefined' && h.observacoes !== 'null') ? h.observacoes : '-');
+                                const compPix = (h.comprovante_pix && h.comprovante_pix !== 'undefined' && h.comprovante_pix !== 'null') ? h.comprovante_pix : '';
+
+                                return `
+                                    <tr>
+                                        <td><b>${dataExib}</b></td>
+                                        <td><span class="badge badge-info">${h.ano || '2026'}</span></td>
+                                        <td><b>${mesesTexto}</b></td>
+                                        <td style="font-weight: 700; color: #2ECC71;">+ R$ ${(parseFloat(h.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                        <td><span class="badge badge-success">PIX</span> <small>${compPix !== 'PIX' ? compPix : ''}</small></td>
+                                        <td>${obsExib}</td>
+                                        <td>
+                                            <div style="display: flex; gap: 4px;">
+                                                <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 6px;" onclick="abrirModalEditarBaixa('${h.id}')">✏️ Editar</button>
+                                                <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 6px; color: #E74C3C; border-color: #E74C3C;" onclick="excluirBaixaMensalidade('${h.id}')">🗑️ Excluir</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -896,10 +908,13 @@ function abrirModalEditarBaixa(id) {
     document.getElementById('editBaixaComprovantePix').value = item.comprovante_pix || item.observacoes || '';
     document.getElementById('editBaixaObs').value = item.obs || item.observacoes || '';
 
-    const listaMeses = (item.meses_quitados || item.mes_referencia || '').split(',').map(m => m.trim().toLowerCase());
+    const mesesTexto = typeof extrairTextoMesesQuitados === 'function' 
+        ? extrairTextoMesesQuitados(item) 
+        : (item.meses_quitados || item.mes_referencia || '');
+    const listaMeses = String(mesesTexto).split(/[,;\-]+/).map(m => m.trim().toLowerCase());
     const checkboxes = document.querySelectorAll('input[name="editBaixaMeses"]');
     checkboxes.forEach(cb => {
-        cb.checked = listaMeses.some(m => m.startsWith(cb.value));
+        cb.checked = listaMeses.some(m => m.startsWith(cb.value) || cb.value.startsWith(m));
     });
 
     openModal('modalEditarBaixaMensalidade');

@@ -343,16 +343,36 @@ const dbService = {
 
     // MENSALIDADES (BAIXAS)
     async getMensalidades() {
+        const normalizarLista = (lista) => {
+            if (!Array.isArray(lista)) return [];
+            return lista.map(item => {
+                const mesesTexto = (item.meses_quitados && item.meses_quitados !== 'undefined' && item.meses_quitados !== 'null')
+                    ? item.meses_quitados
+                    : (item.mes_referencia && item.mes_referencia !== 'undefined' && item.mes_referencia !== 'null' ? item.mes_referencia : (typeof extrairTextoMesesQuitados === 'function' ? extrairTextoMesesQuitados(item) : 'Jan'));
+                
+                return {
+                    ...item,
+                    meses_quitados: mesesTexto,
+                    mes_referencia: item.mes_referencia || mesesTexto,
+                    data: item.data || item.data_pagamento || '',
+                    data_pagamento: item.data_pagamento || item.data || '',
+                    obs: item.obs || item.observacoes || '-',
+                    comprovante_pix: item.comprovante_pix || 'PIX'
+                };
+            });
+        };
+
         const client = getSupabaseClient();
         if (client) {
             try {
                 const { data, error } = await client.from('mensalidades').select('*');
                 if (!error && data && Array.isArray(data)) {
-                    localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(data));
+                    const norm = normalizarLista(data);
+                    localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(norm));
                     if (typeof recalcularTodasGridsMensalidades === 'function') {
                         recalcularTodasGridsMensalidades();
                     }
-                    return data;
+                    return norm;
                 }
             } catch (e) {
                 console.error("Erro no Supabase getMensalidades:", e);
@@ -361,14 +381,16 @@ const dbService = {
         try {
             const data = await supabaseRest('mensalidades?select=*');
             if (Array.isArray(data)) {
-                localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(data));
+                const norm = normalizarLista(data);
+                localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(norm));
                 if (typeof recalcularTodasGridsMensalidades === 'function') {
                     recalcularTodasGridsMensalidades();
                 }
-                return data;
+                return norm;
             }
         } catch(e) {}
-        return JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+        const local = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+        return normalizarLista(local);
     },
 
     async addMensalidade(item) {
