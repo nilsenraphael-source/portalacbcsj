@@ -374,7 +374,6 @@ function renderGestaoMensalidades() {
 
     const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
-    let totalArrecadadoAno = 0;
     let emDiaCount = 0;
     let pendentesCount = 0;
 
@@ -389,7 +388,6 @@ function renderGestaoMensalidades() {
         mesesKeys.forEach((key, index) => {
             const val = parseFloat(itemGrid[key]) || 0;
             totalPagoSocio += val;
-            totalArrecadadoAno += val;
 
             const st = calcularStatusMensalidade(index + 1, ano, val);
             if (st.isVencido) {
@@ -407,6 +405,23 @@ function renderGestaoMensalidades() {
             mesesDevidos,
             isEmDia
         };
+    });
+
+    // Total arrecadado no ano pelo regime de caixa (data em que o pagamento entrou)
+    let historicoGeral = [];
+    try {
+        historicoGeral = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+    } catch(e) { historicoGeral = []; }
+
+    let totalArrecadadoAno = 0;
+    historicoGeral.forEach(item => {
+        const dInfo = (typeof extrairMesEAno === 'function') 
+            ? extrairMesEAno(item.data, item.data_iso) 
+            : { ano: item.ano || '2026', mes: '01' };
+        const itemAno = dInfo.ano || (item.data_iso ? item.data_iso.substring(0, 4) : (item.data ? item.data.split('/')[2] : item.ano || '2026'));
+        if (itemAno === ano) {
+            totalArrecadadoAno += (parseFloat(item.valor) || 0);
+        }
     });
 
     const elArrecadado = document.getElementById('metricTotalArrecadadoMensalidades');

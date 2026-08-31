@@ -1,5 +1,5 @@
-﻿// ==========================================
-// PORTAL ACBCSJ - GESTÃƒO FINANCEIRA & BALANCETES
+// ==========================================
+// PORTAL ACBCSJ - GESTÃO FINANCEIRA & BALANCETES
 // ==========================================
 
 function renderBalancetesAssociado() {
@@ -9,14 +9,13 @@ function renderBalancetesAssociado() {
     const lblsAno = document.querySelectorAll('.lblAnoTransparencia');
     lblsAno.forEach(el => el.textContent = ano);
 
-    // 1. Carrega dados de Associados, Financeiro e Grid de Mensalidades para o Ano selecionado
+    // 1. Carrega dados de Associados, Financeiro e Histórico de Mensalidades para o Ano selecionado
     const listAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const ativos = listAssociados.filter(a => a.status === 'ativo' || !a.status);
     const qtdAssociadosAtivos = ativos.length || 1;
 
     const financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-    const gridKey = `acbcsj_mensalidades_grid_${ano}`;
-    const grid = JSON.parse(localStorage.getItem(gridKey)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
+    const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
     const mesesInfo = [
         { index: 1, key: 'jan', nome: 'Jan' },
@@ -39,16 +38,21 @@ function renderBalancetesAssociado() {
     const mensalidadesPrevistasPorMes = Array(12).fill(0);
     const mensalidadesArrecadadasPorMes = Array(12).fill(0);
 
-    // Calcula mensalidades acumuladas da Grid do Ano por Mês
+    // Calcula mensalidades arrecadadas no caixa mês a mês (pela data de pagamento / entrada no sistema)
     mesesInfo.forEach((m, idx) => {
-        let somaQuitadaMes = 0;
-        grid.forEach(socio => {
-            somaQuitadaMes += (parseFloat(socio[m.key]) || 0);
+        const strMes = String(m.index).padStart(2, '0');
+        let somaArrecadadaNoMes = 0;
+        listMensalidades.forEach(itemMens => {
+            const dInfo = extrairMesEAno(itemMens.data, itemMens.data_iso);
+            const mAno = dInfo.ano || (itemMens.data_iso ? itemMens.data_iso.substring(0, 4) : (itemMens.data ? itemMens.data.split('/')[2] : itemMens.ano || '2026'));
+            if (mAno === ano && dInfo.mes === strMes) {
+                somaArrecadadaNoMes += (parseFloat(itemMens.valor) || 0);
+            }
         });
-        mensalidadesArrecadadasPorMes[idx] = somaQuitadaMes;
+        mensalidadesArrecadadasPorMes[idx] = somaArrecadadaNoMes;
 
         // Tarifa base vigente para este mês/ano
-        const tarifaVigenteMes = getValorMensalidadeVigente(m.index, ano);
+        const tarifaVigenteMes = typeof getValorMensalidadeVigente === 'function' ? getValorMensalidadeVigente(m.index, ano) : 20.00;
         mensalidadesPrevistasPorMes[idx] = qtdAssociadosAtivos * tarifaVigenteMes;
     });
 
@@ -95,10 +99,13 @@ function renderBalancetesAssociado() {
     }
     if (elEfi) elEfi.textContent = `${percEficiencia}%`;
 
+    // Total de receitas por mês (Gerais + Mensalidades PIX)
+    const totalReceitasPorMes = receitasPorMes.map((recGeral, i) => recGeral + mensalidadesArrecadadasPorMes[i]);
+
     // 2. Renderiza Gráfico 1: Receitas vs Despesas Mês a Mês (Barras)
     const ctxBarComp = document.getElementById('chartBalanceteMensalComparativo');
     if (ctxBarComp && typeof Chart !== 'undefined') {
-        if (chartBalanceteMensalComparativo) chartBalanceteMensalComparativo.destroy();
+        if (typeof chartBalanceteMensalComparativo !== 'undefined' && chartBalanceteMensalComparativo) chartBalanceteMensalComparativo.destroy();
         chartBalanceteMensalComparativo = new Chart(ctxBarComp, {
             type: 'bar',
             data: {
@@ -106,7 +113,7 @@ function renderBalancetesAssociado() {
                 datasets: [
                     {
                         label: 'Receitas (Entradas)',
-                        data: receitasPorMes,
+                        data: totalReceitasPorMes,
                         backgroundColor: '#2ECC71',
                         borderRadius: 4
                     },
@@ -135,7 +142,7 @@ function renderBalancetesAssociado() {
     // 3. Renderiza Gráfico 2: Mensalidades - Previsto vs Recebido (Barras)
     const ctxBarMensal = document.getElementById('chartMensalidadesPrevistoVsArrecadado');
     if (ctxBarMensal && typeof Chart !== 'undefined') {
-        if (chartMensalidadesPrevistoVsArrecadado) chartMensalidadesPrevistoVsArrecadado.destroy();
+        if (typeof chartMensalidadesPrevistoVsArrecadado !== 'undefined' && chartMensalidadesPrevistoVsArrecadado) chartMensalidadesPrevistoVsArrecadado.destroy();
         chartMensalidadesPrevistoVsArrecadado = new Chart(ctxBarMensal, {
             type: 'bar',
             data: {
@@ -172,7 +179,7 @@ function renderBalancetesAssociado() {
     // 4. Renderiza Gráfico 3: Rosca Proporcional do Ano (Entradas vs Saídas)
     const ctxDoughnut = document.getElementById('chartBalancete');
     if (ctxDoughnut && typeof Chart !== 'undefined') {
-        if (chartBalanceteDoughnut) chartBalanceteDoughnut.destroy();
+        if (typeof chartBalanceteDoughnut !== 'undefined' && chartBalanceteDoughnut) chartBalanceteDoughnut.destroy();
         chartBalanceteDoughnut = new Chart(ctxDoughnut, {
             type: 'doughnut',
             data: {
@@ -200,18 +207,19 @@ function renderBalancetesAssociado() {
         
         tbodyTransp.innerHTML = nomesMesesCompletos.map((mNome, idx) => {
             const mIndexStr = String(idx + 1).padStart(2, '0');
-            const rec = receitasPorMes[idx];
+            const recGeral = receitasPorMes[idx];
+            const arrMensal = mensalidadesArrecadadasPorMes[idx];
+            const totalRecMes = recGeral + arrMensal;
             const des = despesasPorMes[idx];
-            const mesSaldo = rec - des;
+            const mesSaldo = totalRecMes - des;
             
             const prevMensal = mensalidadesPrevistasPorMes[idx];
-            const arrMensal = mensalidadesArrecadadasPorMes[idx];
             const percMensal = prevMensal > 0 ? Math.round((arrMensal / prevMensal) * 100) : 100;
 
             return `
                 <tr>
                     <td><b>${mIndexStr} - ${mNome} / ${ano}</b></td>
-                    <td style="color: #2ECC71; font-weight: 600;">R$ ${rec.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td style="color: #2ECC71; font-weight: 600;">R$ ${recGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                     <td>
                         <b>R$ ${arrMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b>
                         <small style="color: var(--text-muted);"> / R$ ${prevMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${percMensal}%)</small>
@@ -230,7 +238,6 @@ function renderBalancetesAssociado() {
         }).join('');
     }
 }
-
 
 // GESTÃO FINANCEIRA, RECEITAS, DESPESAS E MENSALIDADES (PLANILHA MENSAL.XLSX)
 // ==========================================
@@ -430,10 +437,6 @@ function renderGestaoFinanceira() {
     document.querySelectorAll('.lblAnoFinanceiro').forEach(el => el.textContent = anoSelected);
 
     const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-    const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-
-    const storageKeyGrid = `acbcsj_mensalidades_grid_${anoSelected}`;
-    const gridMensalidades = JSON.parse(localStorage.getItem(storageKeyGrid)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
 
     // 1. CONSTRÓI LISTA COMBINADA DE TODOS OS LANÇAMENTOS (FINANCEIRO + MENSALIDADES)
     let combinedList = [];
@@ -449,24 +452,25 @@ function renderGestaoFinanceira() {
             ano: dateInfo.ano || anoSelected,
             descricao: item.descricao || 'Sem descrição',
             categoria: item.categoria || 'Geral',
-            tipo: item.tipo || 'despesa', // receita ou despesa
+            tipo: item.tipo || 'despesa',
             valor: parseFloat(item.valor) || 0,
             comprovante_nome: item.comprovante_nome || '',
             origem: 'financeiro'
         });
     });
 
-    // B) Lançamentos de Mensalidades PIX
+    // B) Lançamentos de Mensalidades PIX (Contabilizados pela data em que entraram no caixa)
     listMensalidades.forEach(m => {
         const dateInfo = extrairMesEAno(m.data, m.data_iso);
-        const anoItem = m.ano || dateInfo.ano || anoSelected;
+        const anoEntrada = dateInfo.ano || m.ano || anoSelected;
         combinedList.push({
             id: m.id || ('mens_' + Math.random()),
             data: m.data || '-',
             data_iso: m.data_iso || '',
             mes: dateInfo.mes,
-            ano: anoItem,
-            descricao: `💳 Mensalidade PIX — ${m.associado_nome || 'Associado'} (${m.meses_quitados || ''}/${anoItem})`,
+            ano: anoEntrada,
+            ano_referencia: m.ano,
+            descricao: `💳 Mensalidade PIX — ${m.associado_nome || 'Associado'} (${m.meses_quitados || ''}/${m.ano || anoEntrada})`,
             categoria: 'Mensalidades Associados',
             tipo: 'receita',
             valor: parseFloat(m.valor) || 0,
@@ -482,18 +486,16 @@ function renderGestaoFinanceira() {
     for (let i = 1; i <= 12; i++) {
         const strMes = String(i).padStart(2, '0');
         const nomeMes = mesesNomes[i - 1];
-        const mKey = mesesKeys[i - 1];
 
         // Sum Receitas Gerais (excluindo mensalidades)
         let recsGerais = combinedList
             .filter(item => item.origem === 'financeiro' && item.tipo === 'receita' && item.ano === anoSelected && item.mes === strMes)
             .reduce((sum, item) => sum + item.valor, 0);
 
-        // Sum Mensalidades PIX (diretamente da grade anual de mensalidades para o mes correspondente)
-        let mensPix = 0;
-        gridMensalidades.forEach(socio => {
-            mensPix += (parseFloat(socio[mKey]) || 0);
-        });
+        // Sum Mensalidades PIX
+        let mensPix = combinedList
+            .filter(item => item.origem === 'mensalidade' && item.tipo === 'receita' && item.ano === anoSelected && item.mes === strMes)
+            .reduce((sum, item) => sum + item.valor, 0);
 
         // Sum Despesas Gerais
         let despsGerais = combinedList
@@ -647,23 +649,27 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
     const strMes = String(mesIndex).padStart(2, '0');
     const nomeMes = mesesNomes[mesIndex - 1];
 
-    const list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-    const storageKeyGrid = `acbcsj_mensalidades_grid_${anoStr}`;
-    const gridMensalidades = JSON.parse(localStorage.getItem(storageKeyGrid)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
-    const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-    const mKey = mesesKeys[mesIndex - 1];
+    const listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
-    // Receitas e Despesas do mês usando o parser universal de datas
-    const lancamentosMes = list.filter(item => {
+    // Receitas e Despesas gerais do mês usando o parser universal de datas
+    const lancamentosMes = listFinanceiro.filter(item => {
         const dateInfo = extrairMesEAno(item.data, item.data_iso);
         return dateInfo.mes === strMes && (dateInfo.ano === anoStr || !dateInfo.ano);
+    });
+
+    // Mensalidades efetivamente recebidas neste mês/ano pela data de lançamento
+    const mensalidadesMes = listMensalidades.filter(m => {
+        const dateInfo = extrairMesEAno(m.data, m.data_iso);
+        const mAno = dateInfo.ano || (m.data_iso ? m.data_iso.substring(0, 4) : (m.data ? m.data.split('/')[2] : m.ano || '2026'));
+        return dateInfo.mes === strMes && mAno === anoStr;
     });
 
     const receitasGerais = lancamentosMes.filter(i => i.tipo === 'receita');
     const despesasGerais = lancamentosMes.filter(i => i.tipo === 'despesa');
 
     const totalRecsGerais = receitasGerais.reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
-    const totalMensalidades = gridMensalidades.reduce((s, g) => s + (parseFloat(g[mKey]) || 0), 0);
+    const totalMensalidades = mensalidadesMes.reduce((s, m) => s + (parseFloat(m.valor) || 0), 0);
     const totalDespesas = despesasGerais.reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
 
     const totalReceitas = totalRecsGerais + totalMensalidades;
@@ -691,7 +697,7 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
                 <tbody>
                     <tr>
                         <td><b>Mensalidades de Associados (PIX)</b></td>
-                        <td>Total Arrecadado na Grade de Mensalidades (${nomeMes}/${anoStr})</td>
+                        <td>Total Arrecadado no Caixa via PIX em (${nomeMes}/${anoStr}) [${mensalidadesMes.length} baixa(s)]</td>
                         <td style="text-align: right; color: #3498DB; font-weight: bold;">R$ ${totalMensalidades.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                     </tr>
                     ${receitasGerais.map(r => `

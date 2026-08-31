@@ -266,6 +266,35 @@ function navigateTab(tabId) {
     if (tabId === 'mensagens-diretoria') renderMensagensDiretoria();
 }
 
+// PARSER UNIVERSAL ROBUSTO DE DATA (EXTRAI MÊS '01'-'12' E ANO 'YYYY')
+function extrairMesEAno(dataStr, dataIso) {
+    let str = (dataIso || dataStr || '').trim();
+    if (!str) return { mes: '', ano: '' };
+
+    // Se tiver espaço ou T (ex: 2026-08-31T12:00 ou 31/08/2026 14:30), pegar apenas a parte da data
+    str = str.split('T')[0].split(' ')[0].trim();
+
+    // Formato YYYY-MM-DD ou YYYY/MM/DD
+    if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}/.test(str)) {
+        const parts = str.split(/[-/]/);
+        return {
+            ano: parts[0].trim(),
+            mes: String(parts[1]).padStart(2, '0')
+        };
+    }
+
+    // Formato DD/MM/YYYY ou DD-MM-YYYY
+    if (/^\d{1,2}[-/]\d{1,2}[-/]\d{4}/.test(str)) {
+        const parts = str.split(/[-/]/);
+        return {
+            ano: parts[2].trim(),
+            mes: String(parts[1]).padStart(2, '0')
+        };
+    }
+
+    return { mes: '', ano: '' };
+}
+
 // LÓGICA DA DIRETORIA: PAINEL GERAL E TABELAS
 function renderDiretoriaOverview() {
     const associados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
@@ -313,16 +342,15 @@ function renderDiretoriaOverview() {
     const elBadgePreCadastros = document.getElementById('badgeContadorPreCadastros');
     if (elBadgePreCadastros) elBadgePreCadastros.textContent = `${pendentes.length} pendente(s)`;
 
-    // 5. Saldo em Caixa (Vermelho quando negativo, verde quando positivo/zerado)
-    const gridKey = anoFiltro === 'todos' ? 'acbcsj_mensalidades_grid_2026' : `acbcsj_mensalidades_grid_${anoFiltro}`;
-    const gridMensalidades = JSON.parse(localStorage.getItem(gridKey)) || JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
-    const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-    
+    // 5. Saldo em Caixa (Contabilizado pela data em que o valor entrou no sistema/caixa)
+    const historicoMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
     let totalMensalidadesArrecadadas = 0;
-    gridMensalidades.forEach(socio => {
-        mesesKeys.forEach(k => {
-            totalMensalidadesArrecadadas += (parseFloat(socio[k]) || 0);
-        });
+    historicoMensalidades.forEach(m => {
+        const parsed = extrairMesEAno(m.data, m.data_iso);
+        const mAno = parsed.ano || (m.data_iso ? m.data_iso.substring(0, 4) : (m.data ? m.data.split('/')[2] : m.ano || '2026'));
+        if (anoFiltro === 'todos' || mAno === anoFiltro) {
+            totalMensalidadesArrecadadas += (parseFloat(m.valor) || 0);
+        }
     });
 
     const totalReceitasGerais = financeiro.filter(f => {
