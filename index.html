@@ -455,6 +455,145 @@
                             </table>
                         </div>
                     </div>
+                <!-- ABA: RELATÓRIOS, INDICADORES & GRÁFICOS (DIRETORIA) -->
+                <div id="tab-relatorios-diretoria" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+                        <div>
+                            <h2 class="page-title">📈 Painel Executivo de Gráficos & Relatórios</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Levantamento analítico de mensalidades, adimplência de integrantes e demonstrativo financeiro da ACBCSJ.</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <label style="font-size: 13px; font-weight: bold; color: var(--accent-gold);">📅 Exercício / Ano:</label>
+                                <select id="relatoriosFiltroAno" class="form-control" style="width: 100px; font-weight: bold; color: var(--accent-gold); margin: 0; padding: 4px 8px;" onchange="renderRelatoriosDiretoria()">
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026" selected>2026</option>
+                                    <option value="2027">2027</option>
+                                    <option value="2028">2028</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-gold" style="font-size: 12px; font-weight: bold; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px;" onclick="imprimirRelatorioDiretoria()">
+                                🖨️ Imprimir Relatório Executivo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CARDS DE METRICAS PRINCIPAIS -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 25px;">
+                        <div class="card" style="margin: 0; background: linear-gradient(135deg, rgba(52,152,219,0.12) 0%, rgba(52,152,219,0.02) 100%); border: 1px solid rgba(52,152,219,0.35);">
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">ARRECADAÇÃO DE MENSALIDADES (<span class="lblAnoRelatorio">2026</span>)</div>
+                            <div id="relMetricTotalMensalidades" style="font-size: 22px; font-weight: bold; color: #3498DB; margin-top: 4px;">R$ 0,00</div>
+                            <div id="relSubtextMensalidades" style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Meta prevista: R$ 0,00</div>
+                        </div>
+                        <div class="card" style="margin: 0; background: linear-gradient(135deg, rgba(46,204,113,0.12) 0%, rgba(46,204,113,0.02) 100%); border: 1px solid rgba(46,204,113,0.35);">
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">MÉDIA DE INTEGRANTES PAGANTES</div>
+                            <div id="relMetricMediaPagantes" style="font-size: 22px; font-weight: bold; color: #2ECC71; margin-top: 4px;">0 / mês</div>
+                            <div id="relSubtextPagantes" style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">De um total de 0 associados cobráveis</div>
+                        </div>
+                        <div class="card" style="margin: 0; background: linear-gradient(135deg, rgba(241,196,15,0.12) 0%, rgba(241,196,15,0.02) 100%); border: 1px solid rgba(241,196,15,0.35);">
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">RECEITAS TOTAIS DO CAIXA</div>
+                            <div id="relMetricTotalReceitas" style="font-size: 22px; font-weight: bold; color: var(--accent-gold); margin-top: 4px;">R$ 0,00</div>
+                            <div id="relSubtextReceitas" style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Mensalidades + Outras Receitas</div>
+                        </div>
+                        <div class="card" style="margin: 0; background: linear-gradient(135deg, rgba(231,76,60,0.12) 0%, rgba(231,76,60,0.02) 100%); border: 1px solid rgba(231,76,60,0.35);">
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">DESPESAS & RESULTADO LÍQUIDO</div>
+                            <div id="relMetricResultado" style="font-size: 22px; font-weight: bold; color: #2ECC71; margin-top: 4px;">R$ 0,00</div>
+                            <div id="relSubtextDespesas" style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Despesas Totais: R$ 0,00</div>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 1: LEVANTAMENTO ANALÍTICO DE MENSALIDADES -->
+                    <div class="card" style="margin-bottom: 25px; border-left: 4px solid #3498DB;">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title" style="color: #3498DB;">💳 Levantamento de Mensalidades — Análise Quantitativa e Financeira</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Acompanhamento de metas: quantos associados deveriam pagar vs quantos pagaram e valores previstos vs recebidos mês a mês.</p>
+                            </div>
+                        </div>
+
+                        <!-- GRÁFICOS DE MENSALIDADES -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; padding: 15px;">
+                            <!-- GRÁFICO 1: QUANTIDADE DE ASSOCIADOS PAGANTES (PREVISTO VS REALIZADO) -->
+                            <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <h4 style="font-size: 13px; font-weight: bold; color: #FFFFFF;">👥 Quantidade de Integrantes (Esperados vs. Pagaram)</h4>
+                                </div>
+                                <div style="position: relative; height: 260px; width: 100%;">
+                                    <canvas id="chartRelatorioMensalidadesQtd"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- GRÁFICO 2: VALORES EM R$ (PREVISTO A RECEBER VS RECEBIDO) -->
+                            <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <h4 style="font-size: 13px; font-weight: bold; color: #FFFFFF;">💰 Valores Financeiros R$ (Previsto a Receber vs. Arrecadado)</h4>
+                                </div>
+                                <div style="position: relative; height: 260px; width: 100%;">
+                                    <canvas id="chartRelatorioMensalidadesValor"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GRÁFICO 3: TENDÊNCIA E TAXA DE ADIMPLÊNCIA MÊS A MÊS -->
+                        <div style="padding: 0 15px 15px 15px;">
+                            <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <h4 style="font-size: 13px; font-weight: bold; color: #FFFFFF; margin-bottom: 10px;">📈 Taxa de Adimplência Mensal (% de Eficiência da Arrecadação)</h4>
+                                <div style="position: relative; height: 220px; width: 100%;">
+                                    <canvas id="chartRelatorioMensalidadesTaxa"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TABELA ANALÍTICA DE PARÂMETROS DE MENSALIDADES MÊS A MÊS -->
+                        <div style="padding: 0 15px 15px 15px;">
+                            <h4 style="font-size: 13px; font-weight: bold; color: var(--accent-gold); margin-bottom: 10px;">📋 Tabela Detalhada de Parâmetros de Mensalidades (<span class="lblAnoRelatorio">2026</span>)</h4>
+                            <div class="table-responsive">
+                                <table class="custom-table" style="font-size: 12px; text-align: center;">
+                                    <thead>
+                                        <tr>
+                                            <th style="text-align: left;">Mês</th>
+                                            <th>Cobráveis (Meta)</th>
+                                            <th>Pagantes (Real)</th>
+                                            <th>Pendentes / Atraso</th>
+                                            <th>Valor Previsto</th>
+                                            <th>Valor Recebido</th>
+                                            <th>Déficit / Atraso</th>
+                                            <th>% Eficiência</th>
+                                            <th>Situação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableRelatorioMensalidadesParametrosBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 2: GRÁFICOS FINANCEIROS GERAIS DA ASSOCIAÇÃO -->
+                    <div class="card" style="margin-bottom: 25px; border-left: 4px solid #2ECC71;">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title" style="color: #2ECC71;">📊 Demonstrativo Financeiro Geral da Associação</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Comparativo entre todas as receitas arrecadadas e despesas pagas no exercício.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; padding: 15px;">
+                            <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <h4 style="font-size: 13px; font-weight: bold; color: #FFFFFF; margin-bottom: 10px;">📊 Receitas vs Despesas Mês a Mês</h4>
+                                <div style="position: relative; height: 260px; width: 100%;">
+                                    <canvas id="chartRelatorioReceitasDespesas"></canvas>
+                                </div>
+                            </div>
+
+                            <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <h4 style="font-size: 13px; font-weight: bold; color: #FFFFFF; margin-bottom: 10px;">🍩 Proporção Anual do Caixa</h4>
+                                <div style="position: relative; height: 260px; width: 100%; display: flex; justify-content: center; align-items: center;">
+                                    <canvas id="chartRelatorioDistribuicao"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ABA 3: GESTÃO FINANCEIRA (DIRETORIA) -->
@@ -2017,5 +2156,6 @@
     <script src="js/financeiro.js?v=20260831_10"></script>
     <script src="js/portal-socio.js?v=20260831_10"></script>
     <script src="js/mensalidades.js?v=20260831_10"></script>
+    <script src="js/relatorios.js?v=20260831_10"></script>
 </body>
 </html>

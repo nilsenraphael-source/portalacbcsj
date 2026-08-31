@@ -215,6 +215,7 @@ function renderSidebarMenu() {
             <div class="nav-item" onclick="navigateTab('gestao-associados')">👥 Controle de Associados</div>
             <div class="nav-item" onclick="navigateTab('associados-desligados')">📋 Associados Desligados</div>
             <div class="nav-item" onclick="navigateTab('gestao-mensalidades')">💳 Controle de Mensalidades</div>
+            <div class="nav-item" onclick="navigateTab('relatorios-diretoria')">📈 Relatórios & Gráficos</div>
             <div class="nav-item" onclick="navigateTab('gestao-financeira')">💰 Lançamentos Financeiros</div>
             <div class="nav-item" onclick="navigateTab('documentos-associado')">📑 Documentos & Atas</div>
             <div class="nav-item" onclick="navigateTab('mensagens-diretoria')">📬 Caixa de Mensagens</div>
@@ -237,7 +238,7 @@ function navigateTab(tabId) {
         const cleanCpf = (currentUser.cpf || '').replace(/\D/g, '');
         const currentDbState = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
         if (currentDbState && currentDbState.status === 'desligado') {
-            alert('ðŸš« ACESSO REVOGADO!\n\nSeu cadastro consta como DESLIGADO da AssociaÃ§Ã£o.');
+            alert('🚫 ACESSO REVOGADO!\n\nSeu cadastro consta como DESLIGADO da Associação.');
             logout();
             return;
         }
@@ -258,6 +259,9 @@ function navigateTab(tabId) {
     if (tabId === 'gestao-associados') renderGestaoAssociados();
     if (tabId === 'associados-desligados') renderAssociadosDesligados();
     if (tabId === 'gestao-mensalidades') renderGestaoMensalidades();
+    if (tabId === 'relatorios-diretoria') {
+        if (typeof renderRelatoriosDiretoria === 'function') renderRelatoriosDiretoria();
+    }
     if (tabId === 'gestao-financeira') renderGestaoFinanceira();
     if (tabId === 'overview-associado') renderAssociadoOverview();
     if (tabId === 'comunicados-associado') renderComunicadosHistoricoAssociado();
