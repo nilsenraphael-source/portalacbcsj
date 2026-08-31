@@ -505,11 +505,16 @@ function renderGestaoMensalidades() {
                     ? `<span class="badge badge-success" style="font-size:11px; padding: 4px 8px; background:#2ECC71; color:#fff; font-weight:bold;">🟢 EM DIA</span>` 
                     : `<span class="badge badge-danger" style="font-size:11px; padding: 4px 8px; background:#E74C3C; color:#fff; font-weight:bold;" title="${a.mesesDevidos} mês(es) em atraso">🔴 INADIMPLENTE (${a.mesesDevidos})</span>`;
 
+                const infoIngresso = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso(a) : { dataFormatada: a.data_cadastro || '-' };
+
                 return `
                     <tr>
                         <td style="text-align: left;">
                             <b>${a.nome_guerra || a.nome}</b><br>
-                            <small style="color: var(--text-muted);">${a.cpf}</small>
+                            <small style="color: var(--text-muted);">${a.cpf}</small><br>
+                            <span style="font-size: 10px; color: var(--accent-gold); opacity: 0.95; display: inline-flex; align-items: center; gap: 3px;" title="Data de Ingresso do Associado">
+                                📅 Admissão: <b>${infoIngresso.dataFormatada || a.data_cadastro || '-'}</b>
+                            </span>
                         </td>
                         ${cellsMeses}
                         <td style="font-weight: 700; color: var(--accent-gold);">
@@ -549,12 +554,16 @@ function renderGestaoMensalidades() {
                 }).join('');
 
                 const dataDeslig = socio.data_desligamento || 'Data não registrada';
+                const infoIngressoDeslig = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso(socio) : { dataFormatada: socio.data_cadastro || '-' };
 
                 return `
                     <tr style="background: rgba(231, 76, 60, 0.05);">
                         <td style="text-align: left;">
                             <b>${socio.nome_guerra || socio.nome}</b><br>
                             <small style="color: var(--text-muted);">${socio.cpf}</small><br>
+                            <span style="font-size: 10px; color: var(--accent-gold); opacity: 0.95; display: inline-flex; align-items: center; gap: 3px;" title="Data de Ingresso do Associado">
+                                📅 Admissão: <b>${infoIngressoDeslig.dataFormatada || socio.data_cadastro || '-'}</b>
+                            </span><br>
                             <span class="badge badge-danger" style="font-size: 9px; margin-top: 2px;">🚫 DESLIGADO em ${dataDeslig}</span>
                         </td>
                         ${cellsMeses}
