@@ -694,20 +694,28 @@
 
                 <!-- ABA 5: BALANCETES E CONTAS (TRANSPARÊNCIA ASSOCIADO) -->
                 <div id="tab-balancetes-associado" class="tab-content" style="display: none;">
-                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
                         <div>
                             <h2 class="page-title">Transparência & Prestação de Contas</h2>
                             <p style="font-size: 13px; color: var(--text-muted);">Acompanhe o balanço financeiro detalhado, gráficos de arrecadação de mensalidades e balancetes da ACBCSJ.</p>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <label style="font-size: 13px; font-weight: bold; color: var(--text-muted);">Exercício:</label>
-                            <select id="selAnoTransparencia" class="form-control" style="width: 110px; font-weight: bold; color: var(--accent-gold);" onchange="renderBalancetesAssociado()">
-                                <option value="2024">2024</option>
-                                <option value="2025">2025</option>
-                                <option value="2026" selected>2026</option>
-                                <option value="2027">2027</option>
-                                <option value="2028">2028</option>
-                            </select>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <label style="font-size: 13px; font-weight: bold; color: var(--text-muted);">Exercício:</label>
+                                <select id="selAnoTransparencia" class="form-control" style="width: 100px; font-weight: bold; color: var(--accent-gold);" onchange="renderBalancetesAssociado()">
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026" selected>2026</option>
+                                    <option value="2027">2027</option>
+                                    <option value="2028">2028</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-gold" style="font-size: 12px; font-weight: bold; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px;" onclick="gerarBalanceteAnualCompleto()">
+                                📑 Balancete Anual Completo
+                            </button>
+                            <button type="button" class="btn btn-outline" style="font-size: 12px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px;" onclick="exportarBalanceteAnualCSV()">
+                                📊 Baixar Planilha (CSV)
+                            </button>
                         </div>
                     </div>
 
@@ -739,8 +747,8 @@
                                 <h3 class="card-title">📊 Receitas vs Despesas Mês a Mês</h3>
                                 <p style="font-size: 12px; color: var(--text-muted);">Comparativo entre totais arrecadados e despesas pagas por mês.</p>
                             </div>
-                            <div style="padding: 15px;">
-                                <canvas id="chartBalanceteMensalComparativo" style="max-height: 260px;"></canvas>
+                            <div style="padding: 15px; position: relative; height: 260px; width: 100%;">
+                                <canvas id="chartBalanceteMensalComparativo"></canvas>
                             </div>
                         </div>
 
@@ -750,8 +758,8 @@
                                 <h3 class="card-title">💳 Arrecadação de Mensalidades (Previsto vs Recebido)</h3>
                                 <p style="font-size: 12px; color: var(--text-muted);">Estimativa de mensalidades dos associados ativos vs valor efetivamente arrecadado.</p>
                             </div>
-                            <div style="padding: 15px;">
-                                <canvas id="chartMensalidadesPrevistoVsArrecadado" style="max-height: 260px;"></canvas>
+                            <div style="padding: 15px; position: relative; height: 260px; width: 100%;">
+                                <canvas id="chartMensalidadesPrevistoVsArrecadado"></canvas>
                             </div>
                         </div>
                     </div>
@@ -762,15 +770,18 @@
                             <div class="card-header">
                                 <h3 class="card-title">🍩 Distribuição Anual</h3>
                             </div>
-                            <div style="padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 260px;">
-                                <canvas id="chartBalancete" style="max-width: 250px; max-height: 250px;"></canvas>
+                            <div style="padding: 15px; position: relative; height: 260px; width: 100%; display: flex; justify-content: center; align-items: center;">
+                                <canvas id="chartBalancete"></canvas>
                             </div>
                         </div>
 
                         <div class="card" style="margin: 0;">
-                            <div class="card-header">
-                                <h3 class="card-title">📑 Balancetes Mensais Oficiais — Exercício <span class="lblAnoTransparencia">2026</span></h3>
-                                <p style="font-size: 12px; color: var(--text-muted);">Demonstrativos mensais consolidados com suporte para emissão de relatório oficial em PDF.</p>
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                <div>
+                                    <h3 class="card-title">📑 Balancetes Mensais Oficiais — Exercício <span class="lblAnoTransparencia">2026</span></h3>
+                                    <p style="font-size: 12px; color: var(--text-muted);">Demonstrativos mensais consolidados com suporte para emissão de relatório oficial em PDF.</p>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline" onclick="imprimirOuBaixarBalanceteAnual()">🖨️ Imprimir Ano</button>
                             </div>
                             <div class="table-responsive">
                                 <table class="custom-table" style="font-size: 12px;">
@@ -781,7 +792,7 @@
                                             <th>Mensalidades (Recebido / Previsto)</th>
                                             <th>Despesas (Saídas)</th>
                                             <th>Saldo Mês</th>
-                                            <th>Balancete Oficial</th>
+                                            <th>Ações / Balancete</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tableBalancetesMensaisTransparencia"></tbody>
@@ -1869,7 +1880,7 @@
 
     <!-- MODAL DE IMPRESSÃO / VISUALIZAÇÃO DE BALANCETE MENSAL -->
     <div id="modalBalanceteMensal" class="modal-backdrop">
-        <div class="modal-content modal-content-lg" style="max-width: 850px;">
+        <div class="modal-content modal-content-lg" style="max-width: 880px;">
             <div class="modal-header">
                 <div>
                     <h3 class="card-title" style="color: var(--accent-gold);">📄 Balancete Mensal Oficial — ACBCSJ</h3>
@@ -1878,13 +1889,33 @@
                 <button class="modal-close" onclick="closeModal('modalBalanceteMensal')">&times;</button>
             </div>
 
-            <div id="conteudoBalanceteMensal" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px;">
+            <div id="conteudoBalanceteMensal" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; max-height: 70vh; overflow-y: auto;">
                 <!-- Preenchido via JS -->
             </div>
 
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <div id="botoesBalanceteMensal" style="display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
                 <button type="button" class="btn btn-outline" onclick="closeModal('modalBalanceteMensal')">Fechar</button>
-                <button type="button" class="btn btn-gold" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE BALANCETE ANUAL COMPLETO CONSOLIDADO -->
+    <div id="modalBalanceteAnual" class="modal-backdrop">
+        <div class="modal-content modal-content-lg" style="max-width: 960px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: var(--accent-gold);">📑 Balancete Anual Completo — Exercício <span class="lblAnoTransparencia">2026</span></h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Relatório contábil consolidado de receitas, mensalidades, despesas e resultado operacional da ACBCSJ.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalBalanceteAnual')">&times;</button>
+            </div>
+
+            <div id="conteudoBalanceteAnual" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; max-height: 70vh; overflow-y: auto;">
+                <!-- Preenchido via JS -->
+            </div>
+
+            <div id="botoesBalanceteAnual" style="display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalBalanceteAnual')">Fechar</button>
             </div>
         </div>
     </div>
@@ -1957,14 +1988,14 @@
     </div>
 
     <!-- SCRIPTS JS MODULARES -->
-    <script src="supabaseClient.js?v=20260831_2"></script>
-    <script src="js/core.js?v=20260831_2"></script>
-    <script src="js/auth.js?v=20260831_2"></script>
-    <script src="js/associados.js?v=20260831_2"></script>
-    <script src="js/documentos.js?v=20260831_2"></script>
-    <script src="js/mensagens.js?v=20260831_2"></script>
-    <script src="js/financeiro.js?v=20260831_2"></script>
-    <script src="js/portal-socio.js?v=20260831_2"></script>
-    <script src="js/mensalidades.js?v=20260831_2"></script>
+    <script src="supabaseClient.js?v=20260831_3"></script>
+    <script src="js/core.js?v=20260831_3"></script>
+    <script src="js/auth.js?v=20260831_3"></script>
+    <script src="js/associados.js?v=20260831_3"></script>
+    <script src="js/documentos.js?v=20260831_3"></script>
+    <script src="js/mensagens.js?v=20260831_3"></script>
+    <script src="js/financeiro.js?v=20260831_3"></script>
+    <script src="js/portal-socio.js?v=20260831_3"></script>
+    <script src="js/mensalidades.js?v=20260831_3"></script>
 </body>
 </html>
