@@ -70,8 +70,9 @@ function renderBalancetesAssociado() {
         // Tarifa base vigente e associados admitidos até este mês/ano
         const tarifaVigenteMes = typeof getValorMensalidadeVigente === 'function' ? getValorMensalidadeVigente(m.index, ano) : 20.00;
         const qtdAdmitidosAteMes = ativos.filter(a => {
-            const ing = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso(a) : { ano: 2020, mes: 1 };
-            return (parseInt(ano, 10) * 100 + m.index) >= (ing.ano * 100 + ing.mes);
+            const ing = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso(a) : { ano: 2020, mes: 1, anoInicioCobranca: 2020, mesInicioCobranca: 1 };
+            const cobrancaScore = (ing.anoInicioCobranca || ing.ano) * 100 + (ing.mesInicioCobranca || ing.mes);
+            return (parseInt(ano, 10) * 100 + m.index) >= cobrancaScore;
         }).length || 1;
         mensalidadesPrevistasPorMes[idx] = qtdAdmitidosAteMes * tarifaVigenteMes;
     });
@@ -931,8 +932,9 @@ function gerarBalanceteAnualCompleto(anoStr) {
         const saldoMes = totalEntradas - despesas;
         const tarifaVigenteMes = typeof getValorMensalidadeVigente === 'function' ? getValorMensalidadeVigente(idx + 1, anoStr) : 20.00;
         const qtdAdmitidosAteMes = ativos.filter(a => {
-            const ing = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso(a) : { ano: 2020, mes: 1 };
-            return (parseInt(anoStr, 10) * 100 + (idx + 1)) >= (ing.ano * 100 + ing.mes);
+            const ing = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso(a) : { ano: 2020, mes: 1, anoInicioCobranca: 2020, mesInicioCobranca: 1 };
+            const cobrancaScore = (ing.anoInicioCobranca || ing.ano) * 100 + (ing.mesInicioCobranca || ing.mes);
+            return (parseInt(anoStr, 10) * 100 + (idx + 1)) >= cobrancaScore;
         }).length || 1;
         const prevMensal = qtdAdmitidosAteMes * tarifaVigenteMes;
 

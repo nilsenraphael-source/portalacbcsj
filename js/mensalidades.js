@@ -311,32 +311,45 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
     const baseVal = typeof getValorMensalidadeVigente === 'function' ? getValorMensalidadeVigente(mIdx, anoStr) : 20.00;
     const dataVencimentoStr = `15/${String(mIdx).padStart(2, '0')}/${anoNum}`;
 
-    // Regra de Ingresso: cobrança apenas a partir da data de ingresso; meses anteriores = ISENTO
+    // Regra de Ingresso (Corte no dia 15 de vencimento):
+    // Se admitido até o dia 15 -> cobrança inicia no mês de admissão
+    // Se admitido APÓS o dia 15 -> ISENTO também do mês de admissão (cobrança inicia no mês seguinte)
     const parserIngresso = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso : (d => {
-        if (!d) return { mes: 1, ano: 2020 };
+        if (!d) return { mes: 1, ano: 2020, dia: 1, mesInicioCobranca: 1, anoInicioCobranca: 2020 };
         const s = typeof d === 'object' ? (d.data_ingresso || d.data_admissao || d.data_cadastro || '') : String(d);
         const p = s.split(' ')[0].split(/[\/\-]/);
+        let dia = 1, mes = 1, ano = 2020;
         if (p.length === 3) {
             let p1 = parseInt(p[0], 10), p2 = parseInt(p[1], 10), p3 = parseInt(p[2], 10);
             if (p3 < 100) p3 += 2000;
-            if (p1 > 12) return { mes: p2, ano: p3 };
-            if (p2 > 12) return { mes: p1, ano: p3 };
-            return { mes: p2, ano: p3 };
+            if (p1 > 12) { dia = p1; mes = p2; ano = p3; }
+            else if (p2 > 12) { dia = p2; mes = p1; ano = p3; }
+            else { dia = p1; mes = p2; ano = p3; }
         }
-        return { mes: 1, ano: 2020 };
+        let mesInicio = mes;
+        let anoInicio = ano;
+        if (dia > 15) {
+            mesInicio = mes + 1;
+            if (mesInicio > 12) { mesInicio = 1; anoInicio += 1; }
+        }
+        return { mes, ano, dia, mesInicioCobranca: mesInicio, anoInicioCobranca: anoInicio };
     });
 
     const infoIngresso = parserIngresso(socioOuDataIngresso);
     const targetScore = anoNum * 100 + mIdx;
-    const ingressoScore = infoIngresso.ano * 100 + infoIngresso.mes;
+    const cobrancaScore = (infoIngresso.anoInicioCobranca || infoIngresso.ano) * 100 + (infoIngresso.mesInicioCobranca || infoIngresso.mes);
 
-    const isAnteriorIngresso = targetScore < ingressoScore;
+    const isIsento = targetScore < cobrancaScore;
 
-    // Se o mês for anterior à data de ingresso do associado e NÃO houver pagamento lançado -> ISENTO
-    if (isAnteriorIngresso && valor <= 0) {
+    // Se o mês for anterior ao início da cobrança e NÃO houver pagamento lançado -> ISENTO
+    if (isIsento && valor <= 0) {
+        const tooltipIsento = infoIngresso.dia > 15 && targetScore === (infoIngresso.ano * 100 + infoIngresso.mes)
+            ? `Isento no mês de admissão (admitido em ${infoIngresso.dataFormatada || infoIngresso.dia + '/' + infoIngresso.mes + '/' + infoIngresso.ano}, após dia 15)`
+            : `Isento (Anterior à admissão em ${infoIngresso.dataFormatada || infoIngresso.dia + '/' + infoIngresso.mes + '/' + infoIngresso.ano})`;
+
         return {
             status: 'isento',
-            badge: `<span class="badge" style="font-size:10px; padding:2px 4px; background: rgba(148, 163, 184, 0.2); color: var(--text-muted); border: 1px solid rgba(148, 163, 184, 0.35);">⚪ ISENTO</span>`,
+            badge: `<span class="badge" style="font-size:10px; padding:2px 4px; background: rgba(148, 163, 184, 0.2); color: var(--text-muted); border: 1px solid rgba(148, 163, 184, 0.35);" title="${tooltipIsento}">⚪ ISENTO</span>`,
             vencimento: '-',
             isVencido: false,
             isIsento: true,
@@ -812,7 +825,7 @@ function verExtratoAssociado(cpf) {
                 <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <div style="font-size: 11px; color: var(--text-muted);">DATA DE INGRESSO / ADMISSÃO</div>
                     <div style="font-size: 15px; font-weight: bold; color: #3498DB;">${infoIngresso.dataFormatada || a.data_cadastro || '-'}</div>
-                    <div style="font-size: 11px; color: var(--text-muted);">Cobrança inicia nesta data (meses anteriores = Isento)</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">${infoIngresso.dia > 15 ? `Admissão após dia 15: isento de ${String(infoIngresso.mes).padStart(2, '0')}/${infoIngresso.ano}, cobrança inicia em ${String(infoIngresso.mesInicioCobranca).padStart(2, '0')}/${infoIngresso.anoInicioCobranca}` : `Admissão até dia 15: cobrança inicia em ${String(infoIngresso.mesInicioCobranca).padStart(2, '0')}/${infoIngresso.anoInicioCobranca}`}</div>
                 </div>
                 <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <div style="font-size: 11px; color: var(--text-muted);">TOTAL CONTRIBUÍDO VIA PIX</div>
