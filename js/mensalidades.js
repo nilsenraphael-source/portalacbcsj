@@ -715,10 +715,10 @@ function renderGestaoMensalidades() {
                 return `
                     <tr>
                         <td class="col-associado">
-                            <div style="font-weight: 700; color: #FFFFFF; font-size: 13px; line-height: 1.2;">${a.nome_guerra || a.nome}</div>
-                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.2; margin-top: 2px;">${a.cpf}</div>
-                            <div style="font-size: 10px; color: var(--accent-gold); line-height: 1.2; margin-top: 3px;">
-                                📅 Admissão: <b>${infoIngresso.dataFormatada || a.data_cadastro || '-'}</b>
+                            <div style="font-weight: 700; color: #FFFFFF; font-size: 12px; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${a.nome_guerra || a.nome}">${a.nome_guerra || a.nome}</div>
+                            <div style="font-size: 10px; color: var(--text-muted); line-height: 1.1; margin-top: 1px;">${a.cpf}</div>
+                            <div style="font-size: 9px; color: var(--accent-gold); line-height: 1.1; margin-top: 2px;">
+                                📅 Adm: <b>${infoIngresso.dataFormatada || a.data_cadastro || '-'}</b>
                             </div>
                         </td>
                         ${cellsMeses}
@@ -768,14 +768,14 @@ function renderGestaoMensalidades() {
                 return `
                     <tr>
                         <td class="col-associado">
-                            <div style="font-weight: 700; color: #FFFFFF; font-size: 13px; line-height: 1.2;">${socio.nome_guerra || socio.nome}</div>
-                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.2; margin-top: 2px;">${socio.cpf}</div>
-                            <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 3px;">
-                                <span style="font-size: 10px; color: var(--accent-gold); line-height: 1.1;">
+                            <div style="font-weight: 700; color: #FFFFFF; font-size: 12px; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${socio.nome_guerra || socio.nome}">${socio.nome_guerra || socio.nome}</div>
+                            <div style="font-size: 10px; color: var(--text-muted); line-height: 1.1; margin-top: 1px;">${socio.cpf}</div>
+                            <div style="display: flex; flex-direction: column; gap: 1px; margin-top: 2px;">
+                                <span style="font-size: 9px; color: var(--accent-gold); line-height: 1;">
                                     📅 Adm: <b>${infoIngressoDeslig.dataFormatada || socio.data_cadastro || '-'}</b>
                                 </span>
-                                <span style="font-size: 9.5px; color: #FF6B6B; line-height: 1.1;">
-                                    🚫 Desligado: <b>${dataDeslig}</b>
+                                <span style="font-size: 8.5px; color: #FF6B6B; line-height: 1;">
+                                    🚫 Desl: <b>${dataDeslig}</b>
                                 </span>
                             </div>
                         </td>
