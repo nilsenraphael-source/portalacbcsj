@@ -415,7 +415,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
     if (valor >= baseVal) {
         return {
             status: 'pago',
-            badge: `<span class="mes-box mes-box-pago" title="Mensalidade quitada: R$ ${valor.toFixed(2).replace('.', ',')}">✅ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
+            badge: `<div class="mes-box mes-box-pago" title="Mensalidade quitada: R$ ${valor.toFixed(2).replace('.', ',')}"><span class="mes-box-top">☑ R$</span><span class="mes-box-bottom">${valor.toFixed(2).replace('.', ',')}</span></div>`,
             vencimento: dataVencimentoStr,
             isVencido: false,
             isIsento: false,
@@ -431,7 +431,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
         const isV = (anoNum < anoAtual || (anoNum === anoAtual && (mIdx < mesAtualNum || (mIdx === mesAtualNum && diaAtual > 15))));
         return {
             status: 'parcial',
-            badge: `<span class="mes-box mes-box-parcial" title="Pago parcialmente (Falta R$ ${falta.toFixed(2).replace('.', ',')})">⚠️ R$ ${valor.toFixed(2).replace('.', ',')}</span>`,
+            badge: `<div class="mes-box mes-box-parcial" title="Pago parcialmente (Falta R$ ${falta.toFixed(2).replace('.', ',')})"><span class="mes-box-top">⚠️ R$</span><span class="mes-box-bottom">${valor.toFixed(2).replace('.', ',')}</span></div>`,
             vencimento: dataVencimentoStr,
             isVencido: isV,
             isIsento: false,
@@ -448,7 +448,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
 
         return {
             status: 'isento',
-            badge: `<span class="mes-box mes-box-isento" title="${tooltipIsento}">⚪ ISENTO</span>`,
+            badge: `<div class="mes-box mes-box-isento" title="${tooltipIsento}"><span class="mes-box-top">⚪</span><span class="mes-box-bottom">ISENTO</span></div>`,
             vencimento: '-',
             isVencido: false,
             isIsento: true,
@@ -462,7 +462,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
         if (targetScore > scoreDesligamento) {
             return {
                 status: 'desligado',
-                badge: `<span class="mes-box mes-box-desligado" title="Desligado em ${dataDesligStr || (mesDesligamento + '/' + anoDesligamento)} (Não exigível)">⚪ DESLIGADO</span>`,
+                badge: `<div class="mes-box mes-box-desligado" title="Desligado em ${dataDesligStr || (mesDesligamento + '/' + anoDesligamento)} (Não exigível)"><span class="mes-box-top">⚪</span><span class="mes-box-bottom">DESLIGADO</span></div>`,
                 vencimento: '-',
                 isVencido: false,
                 isIsento: true,
@@ -493,7 +493,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
     if (isVencido) {
         return {
             status: 'vencido',
-            badge: `<span class="mes-box mes-box-vencido" title="Vencido em ${dataVencimentoStr}">🔴 R$ 0,00</span>`,
+            badge: `<div class="mes-box mes-box-vencido" title="Vencido em ${dataVencimentoStr}"><span class="mes-box-top">🔴 R$</span><span class="mes-box-bottom">0,00</span></div>`,
             vencimento: dataVencimentoStr,
             isVencido: true,
             isIsento: false,
@@ -502,7 +502,7 @@ function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngre
     } else {
         return {
             status: 'a_vencer',
-            badge: `<span class="mes-box mes-box-avencer" title="A vencer em ${dataVencimentoStr}">-</span>`,
+            badge: `<div class="mes-box mes-box-avencer" title="A vencer em ${dataVencimentoStr}">-</div>`,
             vencimento: dataVencimentoStr,
             isVencido: false,
             isIsento: false,

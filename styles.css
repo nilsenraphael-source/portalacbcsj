@@ -534,61 +534,91 @@ body {
   padding-right: 10px;
 }
 
-/* QUADRADINHOS DAS MENSALIDADES (GRADE MÊS A MÊS) */
+/* QUADRADINHOS DAS MENSALIDADES (GRADE MÊS A MÊS - MODELO 2 LINHAS) */
 .mes-box {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 28px;
-  border-radius: 5px;
-  font-size: 10px;
-  font-weight: 700;
+  width: 50px;
+  height: 35px;
+  border-radius: 6px;
   text-align: center;
   box-sizing: border-box;
   transition: var(--transition);
   user-select: none;
-  white-space: nowrap;
+  padding: 3px 2px;
+  gap: 1px;
+}
+
+.mes-box .mes-box-top {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.mes-box .mes-box-bottom {
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.2px;
 }
 
 .mes-box-pago {
   background: rgba(46, 204, 113, 0.16);
   color: #2ECC71;
-  border: 1px solid rgba(46, 204, 113, 0.45);
+  border: 1px solid rgba(46, 204, 113, 0.4);
 }
 
 .mes-box-parcial {
   background: rgba(243, 156, 18, 0.16);
   color: #F39C12;
-  border: 1px solid rgba(243, 156, 18, 0.45);
+  border: 1px solid rgba(243, 156, 18, 0.4);
 }
 
 .mes-box-vencido {
   background: rgba(231, 76, 60, 0.16);
   color: #E74C3C;
-  border: 1px solid rgba(231, 76, 60, 0.45);
+  border: 1px solid rgba(231, 76, 60, 0.4);
 }
 
 .mes-box-isento {
-  background: rgba(148, 163, 184, 0.08);
+  background: rgba(148, 163, 184, 0.10);
   color: #94A3B8;
   border: 1px dashed rgba(148, 163, 184, 0.35);
+}
+
+.mes-box-isento .mes-box-bottom {
   font-size: 9px;
-  letter-spacing: 0.2px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
 }
 
 .mes-box-desligado {
-  background: rgba(231, 76, 60, 0.06);
+  background: rgba(231, 76, 60, 0.08);
   color: #8892B0;
-  border: 1px solid rgba(231, 76, 60, 0.22);
-  font-size: 8.5px;
+  border: 1px solid rgba(231, 76, 60, 0.25);
+}
+
+.mes-box-desligado .mes-box-bottom {
+  font-size: 8px;
+  font-weight: 700;
   letter-spacing: 0.1px;
 }
 
 .mes-box-avencer {
-  color: #4A5568;
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 15px;
   font-weight: 600;
+  width: 50px;
+  height: 35px;
 }
 
 /* BADGES DE SITUAÇÃO / ADIMPLÊNCIA UNIFORMES */
