@@ -1086,6 +1086,195 @@
                     </div>
                 </div>
 
+                <!-- ABA: ESCALA MILITAR (PLANTÃO 24x72 - TODAS AS GUS) -->
+                <div id="tab-escala-militar" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+                        <div>
+                            <h2 class="page-title">🚒 Escala Operacional Militar (24x72)</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Acompanhamento perpétuo de plantão e escala das 4 Guarnições (GUs) da corporação.</p>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <div style="display: flex; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; padding: 2px;">
+                                <button id="btnViewCalendarioEscala" class="btn btn-sm btn-gold" style="font-size: 11px; padding: 4px 10px;" onclick="alternarVisualizacaoEscala('calendario')">📅 Calendário</button>
+                                <button id="btnViewListaEscala" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 4px 10px; border: none;" onclick="alternarVisualizacaoEscala('lista')">📋 Lista / Tabela</button>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="imprimirEscalaMilitar()">🖨️ Imprimir</button>
+                        </div>
+                    </div>
+
+                    <!-- BANNER DO PLANTÃO DE HOJE E PRÓXIMOS DIAS -->
+                    <div id="cardPlantaoHojeDestaque" class="card" style="margin-bottom: 20px; border-left: 5px solid #2ECC71; background: linear-gradient(135deg, rgba(46, 204, 113, 0.15) 0%, rgba(28, 32, 38, 0.95) 100%);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <span class="badge badge-gold" style="font-size: 10px; font-weight: 800;">🚨 PLANTÃO ATIVO AGORA</span>
+                                    <span id="lblPlantaoHojeData" style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Terça-feira, 01 de Setembro de 2026</span>
+                                </div>
+                                <h3 id="lblPlantaoHojeNome" style="font-size: 22px; font-weight: 800; color: #2ECC71; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                                    🟢 GU VERDE (Uitajuci)
+                                </h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">
+                                    ⏰ Regime 24h de Serviço (08:00h às 08:00h do dia seguinte) • 72h de Folga
+                                </p>
+                            </div>
+
+                            <!-- PRÓXIMAS GUS -->
+                            <div style="display: flex; flex-direction: column; gap: 6px; min-width: 280px;">
+                                <div style="font-size: 11px; color: var(--accent-gold); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    ⏭️ Próximos Plantões:
+                                </div>
+                                <div id="containerProximasGus" style="display: flex; flex-direction: column; gap: 4px;">
+                                    <!-- Preenchido via JS em renderPlantaoHoje() -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LEGENDA INTERATIVA DAS 4 GUARNIÇÕES -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                        <div id="cardLegendaGu_verde" class="metric-card" style="border-left: 4px solid #2ECC71; cursor: pointer; transition: all 0.2s;" onclick="filtrarPorGuEscala('verde')" title="Clique para filtrar/destacar">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 16px;">🟢</span>
+                                <span class="badge" style="font-size: 10px; background: rgba(46, 204, 113, 0.2); color: #2ECC71; border: 1px solid rgba(46, 204, 113, 0.4);">24x72</span>
+                            </div>
+                            <div style="font-size: 15px; font-weight: 800; color: #2ECC71; margin-top: 4px;">GU VERDE</div>
+                            <div style="font-size: 12px; color: var(--text-main); font-weight: 600;">👨‍🚒 Coordenação: Uitajuci</div>
+                        </div>
+
+                        <div id="cardLegendaGu_vermelha" class="metric-card" style="border-left: 4px solid #E74C3C; cursor: pointer; transition: all 0.2s;" onclick="filtrarPorGuEscala('vermelha')" title="Clique para filtrar/destacar">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 16px;">🔴</span>
+                                <span class="badge" style="font-size: 10px; background: rgba(231, 76, 60, 0.2); color: #FF6B6B; border: 1px solid rgba(231, 76, 60, 0.4);">24x72</span>
+                            </div>
+                            <div style="font-size: 15px; font-weight: 800; color: #FF6B6B; margin-top: 4px;">GU VERMELHA</div>
+                            <div style="font-size: 12px; color: var(--text-main); font-weight: 600;">👨‍🚒 Coordenação: Búrigo</div>
+                        </div>
+
+                        <div id="cardLegendaGu_azul" class="metric-card" style="border-left: 4px solid #3498DB; cursor: pointer; transition: all 0.2s;" onclick="filtrarPorGuEscala('azul')" title="Clique para filtrar/destacar">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 16px;">🔵</span>
+                                <span class="badge" style="font-size: 10px; background: rgba(52, 152, 219, 0.2); color: #5DADE2; border: 1px solid rgba(52, 152, 219, 0.4);">24x72</span>
+                            </div>
+                            <div style="font-size: 15px; font-weight: 800; color: #5DADE2; margin-top: 4px;">GU AZUL</div>
+                            <div style="font-size: 12px; color: var(--text-main); font-weight: 600;">👨‍🚒 Coordenação: Moraes</div>
+                        </div>
+
+                        <div id="cardLegendaGu_amarela" class="metric-card" style="border-left: 4px solid #F1C40F; cursor: pointer; transition: all 0.2s;" onclick="filtrarPorGuEscala('amarela')" title="Clique para filtrar/destacar">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 16px;">🟡</span>
+                                <span class="badge" style="font-size: 10px; background: rgba(241, 196, 15, 0.2); color: #F1C40F; border: 1px solid rgba(241, 196, 15, 0.4);">24x72</span>
+                            </div>
+                            <div style="font-size: 15px; font-weight: 800; color: #F1C40F; margin-top: 4px;">GU AMARELA</div>
+                            <div style="font-size: 12px; color: var(--text-main); font-weight: 600;">👨‍🚒 Coordenação: Lapa</div>
+                        </div>
+                    </div>
+
+                    <!-- NAVEGAÇÃO DE MÊS E ANO -->
+                    <div class="card" style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button class="btn btn-outline btn-sm" onclick="escalaMesAnterior()" title="Mês Anterior">◀ Anterior</button>
+                                <h3 id="lblMesAnoTituloEscala" style="font-size: 18px; color: var(--accent-gold); font-weight: 800; min-width: 190px; text-align: center;">Setembro de 2026</h3>
+                                <button class="btn btn-outline btn-sm" onclick="escalaMesSeguinte()" title="Mês Seguinte">Seguinte ▶</button>
+                                <button class="btn btn-gold btn-sm" onclick="escalaIrParaHoje()">Hoje</button>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <label style="font-size: 12px; font-weight: bold; color: var(--text-muted);">Mês:</label>
+                                    <select id="selMesEscalaMilitar" class="form-control" style="width: 125px; padding: 4px 8px; font-size: 12px;" onchange="mudarMesEscala(this.value)">
+                                        <option value="0">01 - Janeiro</option>
+                                        <option value="1">02 - Fevereiro</option>
+                                        <option value="2">03 - Março</option>
+                                        <option value="3">04 - Abril</option>
+                                        <option value="4">05 - Maio</option>
+                                        <option value="5">06 - Junho</option>
+                                        <option value="6">07 - Julho</option>
+                                        <option value="7">08 - Agosto</option>
+                                        <option value="8" selected>09 - Setembro</option>
+                                        <option value="9">10 - Outubro</option>
+                                        <option value="10">11 - Novembro</option>
+                                        <option value="11">12 - Dezembro</option>
+                                    </select>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <label style="font-size: 12px; font-weight: bold; color: var(--text-muted);">Ano:</label>
+                                    <select id="selAnoEscalaMilitar" class="form-control" style="width: 95px; padding: 4px 8px; font-size: 12px; font-weight: bold; color: var(--accent-gold);" onchange="mudarAnoEscala(this.value)">
+                                        <option value="2024">2024</option>
+                                        <option value="2025">2025</option>
+                                        <option value="2026" selected>2026</option>
+                                        <option value="2027">2027</option>
+                                        <option value="2028">2028</option>
+                                        <option value="2029">2029</option>
+                                        <option value="2030">2030</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODO 1: GRADE DO CALENDÁRIO -->
+                    <div id="containerVisualizacaoCalendario" class="card" style="margin-bottom: 25px; padding: 15px;">
+                        <!-- CABEÇALHO DOS DIAS DA SEMANA -->
+                        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px; text-align: center; font-weight: 800; font-size: 12px;">
+                            <div style="padding: 6px; background: rgba(231, 76, 60, 0.15); color: #FF6B6B; border-radius: 4px; border: 1px solid rgba(231, 76, 60, 0.3);">DOMINGO</div>
+                            <div style="padding: 6px; background: rgba(255, 255, 255, 0.04); color: var(--text-main); border-radius: 4px; border: 1px solid var(--border-color);">SEGUNDA</div>
+                            <div style="padding: 6px; background: rgba(255, 255, 255, 0.04); color: var(--text-main); border-radius: 4px; border: 1px solid var(--border-color);">TERÇA</div>
+                            <div style="padding: 6px; background: rgba(255, 255, 255, 0.04); color: var(--text-main); border-radius: 4px; border: 1px solid var(--border-color);">QUARTA</div>
+                            <div style="padding: 6px; background: rgba(255, 255, 255, 0.04); color: var(--text-main); border-radius: 4px; border: 1px solid var(--border-color);">QUINTA</div>
+                            <div style="padding: 6px; background: rgba(255, 255, 255, 0.04); color: var(--text-main); border-radius: 4px; border: 1px solid var(--border-color);">SEXTA</div>
+                            <div style="padding: 6px; background: rgba(52, 152, 219, 0.15); color: #5DADE2; border-radius: 4px; border: 1px solid rgba(52, 152, 219, 0.3);">SÁBADO</div>
+                        </div>
+
+                        <!-- CÉLULAS DO CALENDÁRIO (GRID 7 COLUNAS) -->
+                        <div id="gridCalendarioEscala" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;">
+                            <!-- Preenchido dinamicamente via JS em renderGradeCalendario() -->
+                        </div>
+                    </div>
+
+                    <!-- MODO 2: VISUALIZAÇÃO EM LISTA / TABELA -->
+                    <div id="containerVisualizacaoLista" class="card" style="display: none; margin-bottom: 25px;">
+                        <div class="card-header">
+                            <h3 class="card-title">📋 Lista Cronológica de Plantões do Mês</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 12px;">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Dia da Semana</th>
+                                        <th>Guarnição Escalada</th>
+                                        <th>Responsável / Chefe</th>
+                                        <th>Horário do Plantão</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableListaEscalaBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- FERRAMENTA DE CONSULTA RÁPIDA DE QUALQUER DATA -->
+                    <div class="card" style="border-top: 3px solid var(--accent-gold);">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title" style="color: var(--accent-gold);">🔍 Consulta Rápida de Plantão por Data</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Verifique qual Guarnição estará de serviço em qualquer dia específico (passado ou futuro).</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label style="font-size: 13px; font-weight: 600;">Selecione uma Data:</label>
+                                <input type="date" id="inputConsultaDataEscala" class="form-control" style="width: 170px;" onchange="consultarDataEscala()">
+                            </div>
+                            <button class="btn btn-gold btn-sm" onclick="consultarDataEscala()">Consultar Guarnição</button>
+                        </div>
+                        <div id="resultadoConsultaDataEscala">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- ABA 6: DOCUMENTOS E CONVITES -->
                 <div id="tab-documentos-associado" class="tab-content" style="display: none;">
                     <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
@@ -2286,16 +2475,33 @@
         </div>
     </div>
 
+    <!-- MODAL DETALHES DO DIA DA ESCALA MILITAR -->
+    <div id="modalDetalheDiaEscala" class="modal-overlay" style="display: none;">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 id="modalDetalheEscalaTitulo" class="modal-title">🚒 Detalhes da Escala Militar</h3>
+                <button type="button" class="modal-close" onclick="closeModal('modalDetalheDiaEscala')">×</button>
+            </div>
+            <div id="modalDetalheEscalaConteudo" style="padding: 10px 0;">
+                <!-- Preenchido via JS em abrirModalDetalheDiaEscala() -->
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalDetalheDiaEscala')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPTS JS MODULARES -->
-    <script src="supabaseClient.js?v=20260901_06"></script>
-    <script src="js/core.js?v=20260901_06"></script>
-    <script src="js/auth.js?v=20260901_06"></script>
-    <script src="js/associados.js?v=20260901_06"></script>
-    <script src="js/documentos.js?v=20260901_06"></script>
-    <script src="js/mensagens.js?v=20260901_06"></script>
-    <script src="js/financeiro.js?v=20260901_06"></script>
-    <script src="js/portal-socio.js?v=20260901_06"></script>
-    <script src="js/mensalidades.js?v=20260901_06"></script>
-    <script src="js/relatorios.js?v=20260901_06"></script>
+    <script src="supabaseClient.js?v=20260901_07"></script>
+    <script src="js/core.js?v=20260901_07"></script>
+    <script src="js/auth.js?v=20260901_07"></script>
+    <script src="js/associados.js?v=20260901_07"></script>
+    <script src="js/documentos.js?v=20260901_07"></script>
+    <script src="js/mensagens.js?v=20260901_07"></script>
+    <script src="js/financeiro.js?v=20260901_07"></script>
+    <script src="js/portal-socio.js?v=20260901_07"></script>
+    <script src="js/mensalidades.js?v=20260901_07"></script>
+    <script src="js/relatorios.js?v=20260901_07"></script>
+    <script src="js/escala.js?v=20260901_07"></script>
 </body>
 </html>

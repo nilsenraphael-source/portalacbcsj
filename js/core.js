@@ -111,6 +111,7 @@ function refreshCurrentView() {
     else if (tabId === 'associados-desligados') renderAssociadosDesligados();
     else if (tabId === 'gestao-mensalidades') renderGestaoMensalidades();
     else if (tabId === 'minhas-mensalidades-diretor') { if (typeof renderMinhasMensalidadesDiretor === 'function') renderMinhasMensalidadesDiretor(); }
+    else if (tabId === 'escala-militar') { if (typeof renderEscalaMilitar === 'function') renderEscalaMilitar(); }
     else if (tabId === 'relatorios-diretoria') { if (typeof renderRelatoriosDiretoria === 'function') renderRelatoriosDiretoria(); }
     else if (tabId === 'gestao-financeira') renderGestaoFinanceira();
     else if (tabId === 'overview-associado') renderAssociadoOverview();
@@ -218,6 +219,7 @@ function renderSidebarMenu() {
             <div class="nav-item" onclick="navigateTab('associados-desligados')">📋 Associados Desligados</div>
             <div class="nav-item" onclick="navigateTab('gestao-mensalidades')">💳 Controle de Mensalidades</div>
             <div class="nav-item" onclick="navigateTab('minhas-mensalidades-diretor')">👤 Minhas Mensalidades</div>
+            <div class="nav-item" onclick="navigateTab('escala-militar')">🚒 Escala Militar</div>
             <div class="nav-item" onclick="navigateTab('relatorios-diretoria')">📈 Relatórios & Gráficos</div>
             <div class="nav-item" onclick="navigateTab('gestao-financeira')">💰 Lançamentos Financeiros</div>
             <div class="nav-item" onclick="navigateTab('documentos-associado')">📑 Documentos & Atas</div>
@@ -226,6 +228,7 @@ function renderSidebarMenu() {
     } else {
         menuNav.innerHTML = `
             <div class="nav-item active" onclick="navigateTab('overview-associado')">🏠 Meu Painel</div>
+            <div class="nav-item" onclick="navigateTab('escala-militar')">🚒 Escala Militar</div>
             <div class="nav-item" onclick="navigateTab('comunicados-associado')">📢 Comunicados & Avisos</div>
             <div class="nav-item" onclick="navigateTab('balancetes-associado')">📈 Balancetes & Contas</div>
             <div class="nav-item" onclick="navigateTab('documentos-associado')">📁 Documentos & Convites</div>
@@ -264,6 +267,9 @@ function navigateTab(tabId) {
     if (tabId === 'gestao-mensalidades') renderGestaoMensalidades();
     if (tabId === 'minhas-mensalidades-diretor') {
         if (typeof renderMinhasMensalidadesDiretor === 'function') renderMinhasMensalidadesDiretor();
+    }
+    if (tabId === 'escala-militar') {
+        if (typeof renderEscalaMilitar === 'function') renderEscalaMilitar();
     }
     if (tabId === 'relatorios-diretoria') {
         if (typeof renderRelatoriosDiretoria === 'function') renderRelatoriosDiretoria();

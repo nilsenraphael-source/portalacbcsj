@@ -842,3 +842,61 @@ body {
   transition: var(--transition);
 }
 
+/* ESTILOS DA ESCALA MILITAR / CALENDÁRIO */
+.calendar-day-cell {
+  border-radius: 8px;
+  padding: 8px;
+  min-height: 95px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.calendar-day-cell:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+}
+
+.gu-mini-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .calendar-day-cell {
+    min-height: 75px;
+    padding: 6px;
+  }
+  .calendar-day-cell .day-number {
+    font-size: 13px !important;
+  }
+  .gu-shift-card {
+    padding: 4px 6px !important;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #tab-escala-militar, #tab-escala-militar * {
+    visibility: visible;
+  }
+  #tab-escala-militar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .sidebar-nav, .app-header, button, select {
+    display: none !important;
+  }
+}
+
+
