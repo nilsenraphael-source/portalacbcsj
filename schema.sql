@@ -89,6 +89,21 @@ CREATE TABLE IF NOT EXISTS public.mensagens (
     data_envio TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 7. TABELA DE SENHAS E ACESSOS (COFRE DA DIRETORIA)
+CREATE TABLE IF NOT EXISTS public.senhas_acessos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    site VARCHAR(150) NOT NULL,
+    url TEXT,
+    login VARCHAR(255) NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    quem_criou VARCHAR(150),
+    status VARCHAR(50) DEFAULT 'ativo', -- 'ativo', 'desuso', 'revisao', 'bloqueado'
+    categoria VARCHAR(100) DEFAULT 'Geral', -- 'E-mail', 'Compras / Marketplace', 'Redes Sociais', 'Sistemas & Softwares', 'Bancário / Financeiro', 'Outros'
+    observacoes TEXT,
+    criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- POLÍTICAS DE USO GERAL
 ALTER TABLE public.associados ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.financeiro_lancamentos ENABLE ROW LEVEL SECURITY;
@@ -96,6 +111,7 @@ ALTER TABLE public.mensalidades ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.documentos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.programacao_anual ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mensagens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.senhas_acessos ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Acesso público associados" ON public.associados FOR ALL USING (true);
 CREATE POLICY "Acesso público financeiro" ON public.financeiro_lancamentos FOR ALL USING (true);
@@ -103,3 +119,5 @@ CREATE POLICY "Acesso público mensalidades" ON public.mensalidades FOR ALL USIN
 CREATE POLICY "Acesso público documentos" ON public.documentos FOR ALL USING (true);
 CREATE POLICY "Acesso público programacao" ON public.programacao_anual FOR ALL USING (true);
 CREATE POLICY "Acesso público mensagens" ON public.mensagens FOR ALL USING (true);
+CREATE POLICY "Acesso público senhas_acessos" ON public.senhas_acessos FOR ALL USING (true);
+

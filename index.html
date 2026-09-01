@@ -1327,6 +1327,95 @@
                     <div id="listMensagensDiretoria"></div>
                 </div>
 
+                <!-- ABA: SENHAS E ACESSOS (DIRETORIA) -->
+                <div id="tab-senhas-acessos" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+                        <div>
+                            <h2 class="page-title">🔐 Cofre de Senhas & Acessos da Diretoria</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Gerenciamento seguro e centralizado de logins, senhas, contas de e-mail e acessos da ACBCSJ.</p>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <button type="button" class="btn btn-outline btn-sm" id="btnToggleAllSenhas" onclick="toggleMostrarTodasSenhas()">
+                                👁️ Revelar Todas as Senhas
+                            </button>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="exportarBackupSenhas()" title="Baixar planilha de backup de todas as credenciais">
+                                📥 Exportar CSV
+                            </button>
+                            <button type="button" class="btn btn-gold btn-sm" onclick="abrirModalNovoAcessoSenha()">
+                                ➕ + Novo Acesso / Senha
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CARDS DE RESUMO / MÉTRICAS -->
+                    <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 20px;">
+                        <div class="metric-card">
+                            <div class="title">TOTAL DE ACESSOS</div>
+                            <div id="metricTotalSenhas" class="value" style="color: var(--accent-gold);">0 contas</div>
+                            <div class="subtext" style="color: var(--text-muted);">Cadastradas no cofre</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="title">CONTAS ATIVAS</div>
+                            <div id="metricSenhasAtivas" class="value" style="color: #2ECC71;">0 ativas</div>
+                            <div class="subtext" style="color: var(--status-success);">Em uso regular</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="title">EM DESUSO / ARQUIVO</div>
+                            <div id="metricSenhasDesuso" class="value" style="color: #E74C3C;">0 em desuso</div>
+                            <div class="subtext" style="color: var(--text-muted);">Contas antigas/inativas</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="title">CATEGORIAS</div>
+                            <div id="metricSenhasCategorias" class="value" style="color: #3498DB;">0 tipos</div>
+                            <div class="subtext" style="color: var(--text-muted);">Classificações ativas</div>
+                        </div>
+                    </div>
+
+                    <!-- BARRA DE PESQUISA, FILTROS E ALTERNADOR DE VISUALIZAÇÃO -->
+                    <div class="card" style="margin-bottom: 20px; padding: 14px 18px; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <!-- CAMPO DE BUSCA -->
+                            <div style="flex: 1; min-width: 240px; position: relative;">
+                                <input type="text" id="searchSenhasInput" class="form-control" style="margin: 0; padding-left: 36px;" placeholder="🔍 Buscar por site, login, quem criou, senha ou observação..." oninput="onSearchSenhasInput(this.value)">
+                                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; opacity: 0.6; pointer-events: none;">🔍</span>
+                            </div>
+
+                            <!-- FILTROS -->
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                                <select id="filterCategoriaSenhas" class="form-control" style="margin: 0; width: 170px; font-size: 13px;" onchange="onFilterCategoriaSenhas(this.value)">
+                                    <option value="todas" selected>📂 Todas Categorias</option>
+                                    <option value="E-mail">✉️ E-mail</option>
+                                    <option value="Compras / Marketplace">🛒 Compras / Marketplace</option>
+                                    <option value="Redes Sociais">📱 Redes Sociais</option>
+                                    <option value="Sistemas & Softwares">💻 Sistemas & Softwares</option>
+                                    <option value="Bancário / Financeiro">🏦 Bancário / Financeiro</option>
+                                    <option value="Geral">📁 Geral / Outros</option>
+                                </select>
+
+                                <select id="filterStatusSenhas" class="form-control" style="margin: 0; width: 140px; font-size: 13px;" onchange="onFilterStatusSenhas(this.value)">
+                                    <option value="todos" selected>🏷️ Todos Status</option>
+                                    <option value="ativo">🟢 Apenas Ativos</option>
+                                    <option value="desuso">🔴 Em Desuso</option>
+                                    <option value="revisao">🟡 Em Revisão</option>
+                                </select>
+
+                                <!-- BOTÕES DE MODO DE VISUALIZAÇÃO -->
+                                <div style="display: flex; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; padding: 2px;">
+                                    <button type="button" id="btnViewTableSenhas" class="btn btn-sm btn-gold" style="padding: 4px 10px; font-size: 12px; border: none;" onclick="alternarModoVisualizacaoSenhas('table')" title="Exibir em Tabela">
+                                        📋 Tabela
+                                    </button>
+                                    <button type="button" id="btnViewCardsSenhas" class="btn btn-sm btn-outline" style="padding: 4px 10px; font-size: 12px; border: none;" onclick="alternarModoVisualizacaoSenhas('cards')" title="Exibir em Cards">
+                                        🔲 Cards
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CONTAINER DINÂMICO DE SENHAS (TABELA OU CARDS) -->
+                    <div id="containerSenhasAcessos"></div>
+                </div>
+
             </main>
         </div>
     </div>
@@ -2491,17 +2580,103 @@
         </div>
     </div>
 
+    <!-- MODAL DE CADASTRO / EDIÇÃO DE SENHA E ACESSO (DIRETORIA) -->
+    <div id="modalSenhaAcesso" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" id="modalSenhaAcessoTitulo" style="color: var(--accent-gold);">🔐 Cadastrar Novo Acesso / Senha</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Armazene contas institucionais, serviços web e credenciais administrativas com segurança.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalSenhaAcesso')">&times;</button>
+            </div>
+
+            <form id="formSenhaAcesso" onsubmit="salvarSenhaAcesso(event)">
+                <input type="hidden" id="senhaAcessoId">
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label for="senhaAcessoSite">Site / Nome da Conta ou Serviço <span class="req-star">*</span></label>
+                        <input type="text" id="senhaAcessoSite" class="form-control" placeholder="Ex: MERCADO LIVRE, GMAIL, SHOPEE, INSTAGRAM..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="senhaAcessoCategoria">Categoria <span class="req-star">*</span></label>
+                        <select id="senhaAcessoCategoria" class="form-control" required>
+                            <option value="E-mail" selected>✉️ E-mail</option>
+                            <option value="Compras / Marketplace">🛒 Compras / Marketplace</option>
+                            <option value="Redes Sociais">📱 Redes Sociais</option>
+                            <option value="Sistemas & Softwares">💻 Sistemas & Softwares</option>
+                            <option value="Bancário / Financeiro">🏦 Bancário / Financeiro</option>
+                            <option value="Geral">📁 Geral / Outros</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="senhaAcessoUrl">Link / URL de Acesso ao Site <small style="color: var(--text-muted); font-weight: normal;">(Opcional - link direto para login)</small></label>
+                    <input type="text" id="senhaAcessoUrl" class="form-control" placeholder="Ex: https://mail.google.com ou https://www.mercadolivre.com.br">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label for="senhaAcessoLogin">Login / E-mail / Usuário <span class="req-star">*</span></label>
+                        <input type="text" id="senhaAcessoLogin" class="form-control" placeholder="Ex: bcassociacao@gmail.com ou user123" required>
+                    </div>
+
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label for="senhaAcessoSenha" style="margin: 0;">Senha de Acesso <span class="req-star">*</span></label>
+                            <div style="display: flex; gap: 6px;">
+                                <button type="button" class="btn btn-outline btn-sm" id="btnToggleSenhaModal" style="font-size: 11px; padding: 2px 6px;" onclick="toggleVisibilidadeSenhaModal()">👁️ Mostrar</button>
+                                <button type="button" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 2px 6px; color: var(--accent-gold);" onclick="gerarSenhaAleatoria()" title="Gerar uma nova senha segura aleatória">🎲 Gerar</button>
+                            </div>
+                        </div>
+                        <input type="password" id="senhaAcessoSenha" class="form-control font-mono" placeholder="Digite a senha de acesso" required>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label for="senhaAcessoQuemCriou">Quem Criou / Responsável <small style="color: var(--text-muted); font-weight: normal;">(Ex: YANKA, RAMPINELI...)</small></label>
+                        <input type="text" id="senhaAcessoQuemCriou" class="form-control" placeholder="Ex: RAMPINELI, YANKA, SEI LÁ...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="senhaAcessoStatus">Status da Conta <span class="req-star">*</span></label>
+                        <select id="senhaAcessoStatus" class="form-control" required>
+                            <option value="ativo" selected>🟢 Ativo (Em uso regular)</option>
+                            <option value="desuso">🔴 Em Desuso (Conta antiga/inativa)</option>
+                            <option value="revisao">🟡 Em Revisão / Trocar Senha</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="senhaAcessoObservacoes">Observações / Instruções de Acesso <small style="color: var(--text-muted); font-weight: normal;">(Opcional)</small></label>
+                    <textarea id="senhaAcessoObservacoes" class="form-control" rows="2" placeholder="Ex: Acessar pelo Gmail 2, código 2FA enviado para o telefone X, login vinculado..."></textarea>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modalSenhaAcesso')">Cancelar</button>
+                    <button type="submit" class="btn btn-gold">💾 Salvar Acesso</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- SCRIPTS JS MODULARES -->
-    <script src="supabaseClient.js?v=20260901_07"></script>
-    <script src="js/core.js?v=20260901_07"></script>
-    <script src="js/auth.js?v=20260901_07"></script>
-    <script src="js/associados.js?v=20260901_07"></script>
-    <script src="js/documentos.js?v=20260901_07"></script>
-    <script src="js/mensagens.js?v=20260901_07"></script>
-    <script src="js/financeiro.js?v=20260901_07"></script>
-    <script src="js/portal-socio.js?v=20260901_07"></script>
-    <script src="js/mensalidades.js?v=20260901_07"></script>
-    <script src="js/relatorios.js?v=20260901_07"></script>
-    <script src="js/escala.js?v=20260901_07"></script>
+    <script src="supabaseClient.js?v=20260901_08"></script>
+    <script src="js/core.js?v=20260901_08"></script>
+    <script src="js/auth.js?v=20260901_08"></script>
+    <script src="js/associados.js?v=20260901_08"></script>
+    <script src="js/documentos.js?v=20260901_08"></script>
+    <script src="js/mensagens.js?v=20260901_08"></script>
+    <script src="js/financeiro.js?v=20260901_08"></script>
+    <script src="js/portal-socio.js?v=20260901_08"></script>
+    <script src="js/mensalidades.js?v=20260901_08"></script>
+    <script src="js/relatorios.js?v=20260901_08"></script>
+    <script src="js/escala.js?v=20260901_08"></script>
+    <script src="js/senhas.js?v=20260901_08"></script>
 </body>
 </html>

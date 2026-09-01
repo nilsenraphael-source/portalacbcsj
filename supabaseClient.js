@@ -244,6 +244,23 @@ function sanitizeMensagem(item) {
     };
 }
 
+function sanitizeSenhaAcesso(item) {
+    if (!item) return null;
+    return {
+        id: String(item.id || 'pwd_' + Date.now()),
+        site: String(item.site || '').trim().toUpperCase(),
+        url: item.url || null,
+        login: String(item.login || '').trim(),
+        senha: String(item.senha || '').trim(),
+        quem_criou: String(item.quem_criou || '').trim().toUpperCase() || 'DIRETORIA',
+        status: String(item.status || 'ativo').trim().toLowerCase(),
+        categoria: String(item.categoria || 'Geral').trim(),
+        observacoes: item.observacoes || null,
+        criado_em: item.criado_em || new Date().toISOString(),
+        atualizado_em: item.atualizado_em || new Date().toISOString()
+    };
+}
+
 // BANCO DE DADOS 100% BASEADO NO SUPABASE
 const dbService = {
     // ASSOCIADOS
@@ -651,6 +668,77 @@ const dbService = {
         return true;
     },
 
+    // SENHAS E ACESSOS (COFRE DIRETORIA)
+    async getSenhasAcessos() {
+        const client = getSupabaseClient();
+        if (client) {
+            try {
+                const { data, error } = await client.from('senhas_acessos').select('*');
+                if (!error && data && data.length > 0) {
+                    localStorage.setItem('acbcsj_senhas_acessos', JSON.stringify(data));
+                    return data;
+                }
+            } catch (e) {
+                console.error("Erro no Supabase getSenhasAcessos:", e);
+            }
+        }
+        try {
+            const data = await supabaseRest('senhas_acessos?select=*');
+            if (Array.isArray(data) && data.length > 0) {
+                localStorage.setItem('acbcsj_senhas_acessos', JSON.stringify(data));
+                return data;
+            }
+        } catch(e) {}
+        return JSON.parse(localStorage.getItem('acbcsj_senhas_acessos')) || [];
+    },
+
+    async saveSenhaAcesso(item) {
+        const clean = sanitizeSenhaAcesso(item);
+        if (!clean) return false;
+
+        let list = JSON.parse(localStorage.getItem('acbcsj_senhas_acessos')) || [];
+        const idx = list.findIndex(s => s.id === clean.id);
+        if (idx >= 0) list[idx] = clean;
+        else list.unshift(clean);
+        localStorage.setItem('acbcsj_senhas_acessos', JSON.stringify(list));
+
+        const client = getSupabaseClient();
+        if (client) {
+            try {
+                const { error } = await client.from('senhas_acessos').upsert([clean]);
+                if (error) console.error("Erro ao salvar senha no Supabase:", error.message);
+                else {
+                    console.log("✅ Senha/Acesso salvo no Supabase:", clean.site, clean.login);
+                    return true;
+                }
+            } catch (e) {
+                console.error("Erro ao salvar senha no Supabase:", e);
+            }
+        }
+        await supabaseRestUpsert('senhas_acessos', clean);
+        return true;
+    },
+
+    async deleteSenhaAcesso(id) {
+        let list = JSON.parse(localStorage.getItem('acbcsj_senhas_acessos')) || [];
+        list = list.filter(s => s.id !== id);
+        localStorage.setItem('acbcsj_senhas_acessos', JSON.stringify(list));
+
+        const client = getSupabaseClient();
+        if (client) {
+            try {
+                const { error } = await client.from('senhas_acessos').delete().eq('id', id);
+                if (error) console.error("Erro ao excluir senha do Supabase:", error.message);
+                else console.log("🗑️ Senha excluída do Supabase:", id);
+            } catch (e) {
+                console.error("Erro ao excluir senha do Supabase:", e);
+            }
+        } else {
+            await supabaseRestDelete('senhas_acessos', `id=eq.${id}`);
+        }
+        return true;
+    },
+
     // BUSCAR TUDO EXCLUSIVAMENTE DO SUPABASE
     async syncFromSupabase() {
         this.updateOnlineBadge(null, "Sincronizando...");
@@ -696,6 +784,13 @@ const dbService = {
                             ? dbService.normalizarMensalidades(data)
                             : data;
                         safeSetLocalStorage('acbcsj_mensalidades_historico', norm);
+                        countTotal += data.length;
+                        sucessos++;
+                    }
+                }),
+                supabaseRest('senhas_acessos?select=*').then(data => {
+                    if (data && Array.isArray(data) && data.length > 0) {
+                        safeSetLocalStorage('acbcsj_senhas_acessos', data);
                         countTotal += data.length;
                         sucessos++;
                     }
@@ -766,6 +861,12 @@ const dbService = {
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'mensagens' }, () => {
                     console.log("⚡ Realtime: Tabela 'mensagens' alterada.");
                     dbService.getMensagens().then(() => { if (typeof refreshCurrentView === 'function') refreshCurrentView(); });
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'senhas_acessos' }, () => {
+                    console.log("⚡ Realtime: Tabela 'senhas_acessos' alterada.");
+                    if (typeof dbService.getSenhasAcessos === 'function') {
+                        dbService.getSenhasAcessos().then(() => { if (typeof refreshCurrentView === 'function') refreshCurrentView(); });
+                    }
                 })
                 .subscribe();
 

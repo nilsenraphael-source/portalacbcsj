@@ -119,6 +119,7 @@ function refreshCurrentView() {
     else if (tabId === 'balancetes-associado') renderBalancetesAssociado();
     else if (tabId === 'documentos-associado') renderDocumentos();
     else if (tabId === 'mensagens-diretoria') renderMensagensDiretoria();
+    else if (tabId === 'senhas-acessos') { if (typeof renderSenhasAcessos === 'function') renderSenhasAcessos(); }
 }
 window.refreshCurrentView = refreshCurrentView;
 
@@ -224,6 +225,7 @@ function renderSidebarMenu() {
             <div class="nav-item" onclick="navigateTab('gestao-financeira')">💰 Lançamentos Financeiros</div>
             <div class="nav-item" onclick="navigateTab('documentos-associado')">📑 Documentos & Atas</div>
             <div class="nav-item" onclick="navigateTab('mensagens-diretoria')">📬 Caixa de Mensagens</div>
+            <div class="nav-item" onclick="navigateTab('senhas-acessos')">🔐 Senhas & Acessos</div>
         `;
     } else {
         menuNav.innerHTML = `
@@ -280,6 +282,9 @@ function navigateTab(tabId) {
     if (tabId === 'balancetes-associado') renderBalancetesAssociado();
     if (tabId === 'documentos-associado' || tabId === 'documentos-diretoria') renderDocumentos();
     if (tabId === 'mensagens-diretoria') renderMensagensDiretoria();
+    if (tabId === 'senhas-acessos') {
+        if (typeof renderSenhasAcessos === 'function') renderSenhasAcessos();
+    }
 }
 
 // PARSER UNIVERSAL ROBUSTO DE DATA (EXTRAI MÊS '01'-'12' E ANO 'YYYY')
