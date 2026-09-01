@@ -2,8 +2,8 @@
 // PORTAL ACBCSJ - GESTÃO DE MENSALIDADES
 // ==========================================
 
-const TODOS_MESES_KEYS = window.TODOS_MESES_KEYS || ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-const MES_MAP_EXPAND = window.MES_MAP_EXPAND || {
+var TODOS_MESES_KEYS = window.TODOS_MESES_KEYS || ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+var MES_MAP_EXPAND = window.MES_MAP_EXPAND || {
     jan: 'jan', janeiro: 'jan', '01': 'jan', '1': 'jan',
     fev: 'fev', fevereiro: 'fev', '02': 'fev', '2': 'fev',
     mar: 'mar', marco: 'mar', 'março': 'mar', '03': 'mar', '3': 'mar',
