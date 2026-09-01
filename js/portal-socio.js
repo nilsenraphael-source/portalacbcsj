@@ -766,3 +766,208 @@ function renderComunicadosHistoricoAssociado() {
         `;
     }).join('');
 }
+
+// ==========================================
+// CONTROLE DE MENSALIDADES DO DIRETOR (INDIVIDUAL POR CPF)
+// ==========================================
+function renderMinhasMensalidadesDiretor() {
+    if (!currentUser) return;
+
+    // 1. Obter associado completo do banco local ou currentUser
+    const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
+    let list = [];
+    try {
+        list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    } catch(e) { list = []; }
+
+    const socioObj = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanUserCpf) || currentUser;
+
+    // 2. Ano selecionado
+    const selAno = document.getElementById('selAnoMinhasMensalidadesDiretor');
+    const ano = selAno ? selAno.value : '2026';
+
+    const lbls = document.querySelectorAll('.lblAnoMinhasMensalidadesDiretor');
+    lbls.forEach(el => el.textContent = ano);
+
+    // 3. Preencher identificação do Diretor
+    const containerInfo = document.getElementById('infoDiretorMinhasMensalidades');
+    if (containerInfo) {
+        const infoIngresso = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso(socioObj) : { dataFormatada: socioObj.data_cadastro || '-' };
+        containerInfo.innerHTML = `
+            <div><b>👤 Nome Completo:</b> <span style="color: #FFFFFF; font-weight: 600;">${socioObj.nome || '-'}</span></div>
+            <div><b>🏷️ Nome de Guerra:</b> <span style="color: var(--accent-gold); font-weight: 700;">${socioObj.nome_guerra || socioObj.nome || '-'}</span></div>
+            <div><b>🆔 CPF:</b> <span style="font-family: monospace; font-weight: 600;">${socioObj.cpf || '-'}</span></div>
+            <div><b>🚒 OBM / Posto:</b> ${socioObj.obm || 'São José'}</div>
+            <div><b>📅 Data de Admissão:</b> <b>${infoIngresso.dataFormatada || socioObj.data_cadastro || '-'}</b></div>
+            <div><b>💼 Função / Cargo:</b> ${socioObj.profissao || 'Diretoria ACBCSJ'}</div>
+        `;
+    }
+
+    // 4. Buscar dados da grade anual
+    const storageKey = `acbcsj_mensalidades_grid_${ano}`;
+    let grid = [];
+    try {
+        grid = JSON.parse(localStorage.getItem(storageKey)) || [];
+    } catch(e) { grid = []; }
+
+    if (!Array.isArray(grid) || grid.length === 0) {
+        grid = JSON.parse(localStorage.getItem('acbcsj_mensalidades_grid')) || [];
+    }
+
+    const rowGrid = (Array.isArray(grid) ? grid.find(g => (g.cpf || '').replace(/\D/g, '') === cleanUserCpf) : null)
+        || { jan: 0, fev: 0, mar: 0, abr: 0, mai: 0, jun: 0, jul: 0, ago: 0, set: 0, out: 0, nov: 0, dez: 0 };
+
+    const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+    let totalPagoAno = 0;
+    let totalDebitosPendente = 0;
+    let mesesAtrasadosCount = 0;
+
+    // Buscar lançamentos específicos de histórico do usuário
+    let historicoGeral = [];
+    try {
+        historicoGeral = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+    } catch(e) { historicoGeral = []; }
+
+    const meusLancamentos = historicoGeral.filter(h => (h.cpf || '').replace(/\D/g, '') === cleanUserCpf);
+
+    const rowsHtml = mesesKeys.map((key, idx) => {
+        const mesNum = idx + 1;
+        const valPago = parseFloat(rowGrid[key]) || 0;
+        const tarifaVigente = typeof getValorMensalidadeVigente === 'function' ? getValorMensalidadeVigente(mesNum, ano) : 20;
+        totalPagoAno += valPago;
+
+        const info = typeof calcularStatusMensalidade === 'function'
+            ? calcularStatusMensalidade(mesNum, ano, valPago, socioObj)
+            : { status: valPago >= tarifaVigente ? 'pago' : 'vencido', vencimento: `15/${String(mesNum).padStart(2,'0')}/${ano}`, isVencido: false, isIsento: false, debitAmount: 0 };
+
+        if (info.isVencido) {
+            mesesAtrasadosCount++;
+            totalDebitosPendente += (info.debitAmount || tarifaVigente);
+        }
+
+        // Tentar encontrar lançamento correspondente para data de pagamento
+        const lancCorrespondente = meusLancamentos.find(h => {
+            if (String(h.ano || '') !== String(ano)) return false;
+            const lista = typeof extrairListaMesesQuitados === 'function' ? extrairListaMesesQuitados(h) : [];
+            return lista.includes(key);
+        });
+
+        const dataPagtoExibicao = lancCorrespondente ? (lancCorrespondente.data || lancCorrespondente.data_pagamento || '-') : (valPago > 0 ? 'Quitado' : '-');
+
+        let statusBadge = '';
+        if (info.isIsento) {
+            statusBadge = `<span class="badge" style="font-weight: 600; font-size: 11px; padding: 4px 8px; background: rgba(148, 163, 184, 0.15); color: #94A3B8; border: 1px dashed rgba(148, 163, 184, 0.4);">⚪ ISENTO</span>`;
+        } else if (info.status === 'pago') {
+            statusBadge = `<span class="badge badge-success" style="font-weight: bold; font-size: 11px; padding: 4px 8px;">✅ QUITADO (R$ ${valPago.toFixed(2).replace('.', ',')})</span>`;
+        } else if (info.status === 'parcial') {
+            statusBadge = `<span class="badge badge-warning" style="font-weight: bold; font-size: 11px; padding: 4px 8px;">⚠️ PAGO PARCIAL (Falta R$ ${info.debitAmount.toFixed(2).replace('.', ',')})</span>`;
+        } else if (info.isVencido) {
+            statusBadge = `<span class="badge badge-danger" style="font-weight: bold; font-size: 11px; padding: 4px 8px;">🔴 VENCIDO (Em atraso)</span>`;
+        } else {
+            statusBadge = `<span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted); font-size: 11px; padding: 4px 8px;">⏳ A VENCER</span>`;
+        }
+
+        return `
+            <tr style="${info.isIsento ? 'opacity: 0.85; background: rgba(255,255,255,0.01);' : ''}">
+                <td><b style="color: #FFFFFF; font-size: 13px;">${String(mesNum).padStart(2, '0')} - ${mesesNomes[idx]} / ${ano}</b></td>
+                <td><span style="font-size: 12px; font-weight: 600; color: var(--accent-gold);">${info.vencimento}</span></td>
+                <td>${info.isIsento ? '<span style="color:var(--text-muted); font-style:italic;">Isento</span>' : 'R$ ' + tarifaVigente.toFixed(2).replace('.', ',')}</td>
+                <td style="font-weight: 700; color: ${valPago >= tarifaVigente ? '#2ECC71' : (valPago > 0 ? '#F39C12' : 'var(--text-muted)')}; font-size: 13px;">
+                    ${info.isIsento && valPago === 0 ? '<span style="color:var(--text-muted);">-</span>' : 'R$ ' + valPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </td>
+                <td>${statusBadge}</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 11px; color: var(--text-muted); margin-right: 4px;">📅 ${dataPagtoExibicao}</span>
+                        <button class="btn btn-sm btn-outline" style="font-size: 10px; padding: 2px 6px;" onclick="abrirModalDarBaixa('${socioObj.cpf}')" title="Lançar / Atualizar">💳 Baixar</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    const containerTable = document.getElementById('tableMinhasMensalidadesDiretorBody');
+    if (containerTable) {
+        containerTable.innerHTML = rowsHtml;
+    }
+
+    // 5. Atualizar Métricas Superiores
+    const elCardStatus = document.getElementById('cardStatusAdimplenciaDiretor');
+    const elMetricStatus = document.getElementById('metricStatusAdimplenciaDiretor');
+    const elSubtextStatus = document.getElementById('metricSubtextStatusAdimplenciaDiretor');
+    const elMetricTotalPago = document.getElementById('metricTotalPagoMinhasMensalidadesDiretor');
+    const elMetricTotalPendente = document.getElementById('metricTotalPendenteMinhasMensalidadesDiretor');
+    const elSubtextPendente = document.getElementById('metricSubtextPendenteMinhasMensalidadesDiretor');
+    const elMetricTarifaVigente = document.getElementById('metricTarifaVigenteMinhasMensalidadesDiretor');
+
+    const infoTarifa = typeof getInfoVigenciaMensalidadeAtual === 'function' ? getInfoVigenciaMensalidadeAtual() : { valor: 20.00 };
+    if (elMetricTarifaVigente) {
+        elMetricTarifaVigente.textContent = `R$ ${parseFloat(infoTarifa.valor || 20).toFixed(2).replace('.', ',')}`;
+    }
+
+    if (elMetricTotalPago) {
+        elMetricTotalPago.textContent = `R$ ${totalPagoAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+
+    if (elMetricTotalPendente) {
+        elMetricTotalPendente.textContent = `R$ ${totalDebitosPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+
+    if (elSubtextPendente) {
+        elSubtextPendente.textContent = `${mesesAtrasadosCount} mês(es) em atraso`;
+    }
+
+    if (elMetricStatus && elCardStatus) {
+        if (mesesAtrasadosCount > 0) {
+            elCardStatus.style.borderLeftColor = '#E74C3C';
+            elMetricStatus.innerHTML = `🔴 INADIMPLENTE`;
+            elMetricStatus.style.color = '#E74C3C';
+            if (elSubtextStatus) elSubtextStatus.textContent = `${mesesAtrasadosCount} mensalidade(s) vencida(s)`;
+        } else {
+            elCardStatus.style.borderLeftColor = '#2ECC71';
+            elMetricStatus.innerHTML = `🟢 EM DIA`;
+            elMetricStatus.style.color = '#2ECC71';
+            if (elSubtextStatus) elSubtextStatus.textContent = `100% das mensalidades quitadas`;
+        }
+    }
+
+    // 6. Extrato detalhado de recibos PIX do Diretor
+    const containerExtrato = document.getElementById('tableExtratoMinhasMensalidadesDiretorBody');
+    if (containerExtrato) {
+        if (meusLancamentos.length === 0) {
+            containerExtrato.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 18px;">Nenhum lançamento de pagamento via PIX registrado no seu CPF até o momento.</td></tr>`;
+        } else {
+            // Ordenar por data decrescente
+            const sortedLancamentos = [...meusLancamentos].sort((a, b) => {
+                const dA = String(a.data_iso || a.data_pagamento || a.data || '').split('/').reverse().join('-');
+                const dB = String(b.data_iso || b.data_pagamento || b.data || '').split('/').reverse().join('-');
+                return dB.localeCompare(dA);
+            });
+
+            containerExtrato.innerHTML = sortedLancamentos.map(l => {
+                const mesesTxt = l.meses_quitados || l.mes_referencia || 'Mensalidade';
+                const valorFmt = parseFloat(l.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                const obsTxt = l.obs || l.observacoes || l.comprovante_pix || '-';
+
+                return `
+                    <tr>
+                        <td><b>📅 ${l.data || l.data_pagamento || '-'}</b></td>
+                        <td><span class="badge badge-info" style="font-size: 11px;">${l.ano || '2026'}</span></td>
+                        <td><b style="color: var(--accent-gold); font-size: 12px;">${mesesTxt}</b></td>
+                        <td style="font-weight: 700; color: #2ECC71; font-size: 13px;">R$ ${valorFmt}</td>
+                        <td><small style="color: var(--text-muted);">${obsTxt}</small></td>
+                        <td>
+                            <div style="display: flex; gap: 4px;">
+                                <button class="btn btn-sm btn-outline" style="font-size: 10px; padding: 2px 6px;" onclick="verExtratoAssociado('${socioObj.cpf}')" title="Ver no Extrato">📄 Extrato</button>
+                                <button class="btn btn-sm btn-outline" style="font-size: 10px; padding: 2px 6px; color: var(--accent-gold);" onclick="abrirModalEditarBaixa('${l.id}')" title="Editar este lançamento">✏️ Editar</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+}
+window.renderMinhasMensalidadesDiretor = renderMinhasMensalidadesDiretor;

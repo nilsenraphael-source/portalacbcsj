@@ -110,6 +110,8 @@ function refreshCurrentView() {
     else if (tabId === 'gestao-associados') renderGestaoAssociados();
     else if (tabId === 'associados-desligados') renderAssociadosDesligados();
     else if (tabId === 'gestao-mensalidades') renderGestaoMensalidades();
+    else if (tabId === 'minhas-mensalidades-diretor') { if (typeof renderMinhasMensalidadesDiretor === 'function') renderMinhasMensalidadesDiretor(); }
+    else if (tabId === 'relatorios-diretoria') { if (typeof renderRelatoriosDiretoria === 'function') renderRelatoriosDiretoria(); }
     else if (tabId === 'gestao-financeira') renderGestaoFinanceira();
     else if (tabId === 'overview-associado') renderAssociadoOverview();
     else if (tabId === 'comunicados-associado') renderComunicadosHistoricoAssociado();
@@ -202,7 +204,7 @@ function renderUserHeader() {
     badge.className = `user-role-badge role-${currentUser.perfil}`;
 }
 
-// MENU LATERAL DINÃ‚MICO CONFORME PERFIL
+// MENU LATERAL DINÂMICO CONFORME PERFIL
 
 function renderSidebarMenu() {
     const menuNav = document.getElementById('sidebarNav');
@@ -215,6 +217,7 @@ function renderSidebarMenu() {
             <div class="nav-item" onclick="navigateTab('gestao-associados')">👥 Controle de Associados</div>
             <div class="nav-item" onclick="navigateTab('associados-desligados')">📋 Associados Desligados</div>
             <div class="nav-item" onclick="navigateTab('gestao-mensalidades')">💳 Controle de Mensalidades</div>
+            <div class="nav-item" onclick="navigateTab('minhas-mensalidades-diretor')">👤 Minhas Mensalidades</div>
             <div class="nav-item" onclick="navigateTab('relatorios-diretoria')">📈 Relatórios & Gráficos</div>
             <div class="nav-item" onclick="navigateTab('gestao-financeira')">💰 Lançamentos Financeiros</div>
             <div class="nav-item" onclick="navigateTab('documentos-associado')">📑 Documentos & Atas</div>
@@ -259,6 +262,9 @@ function navigateTab(tabId) {
     if (tabId === 'gestao-associados') renderGestaoAssociados();
     if (tabId === 'associados-desligados') renderAssociadosDesligados();
     if (tabId === 'gestao-mensalidades') renderGestaoMensalidades();
+    if (tabId === 'minhas-mensalidades-diretor') {
+        if (typeof renderMinhasMensalidadesDiretor === 'function') renderMinhasMensalidadesDiretor();
+    }
     if (tabId === 'relatorios-diretoria') {
         if (typeof renderRelatoriosDiretoria === 'function') renderRelatoriosDiretoria();
     }

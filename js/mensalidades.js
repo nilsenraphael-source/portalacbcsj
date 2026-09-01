@@ -1098,6 +1098,9 @@ async function salvarBaixaMensalidade(e) {
     if (typeof renderAssociadoOverview === 'function') {
         renderAssociadoOverview();
     }
+    if (typeof renderMinhasMensalidadesDiretor === 'function') {
+        renderMinhasMensalidadesDiretor();
+    }
 }
 
 // VER EXTRATO DO ASSOCIADO E OPÇÕES DE EDIÇÃO
@@ -1356,6 +1359,9 @@ async function salvarEdicaoBaixaMensalidade(e) {
     if (typeof renderAssociadoOverview === 'function') {
         renderAssociadoOverview();
     }
+    if (typeof renderMinhasMensalidadesDiretor === 'function') {
+        renderMinhasMensalidadesDiretor();
+    }
     if (historicoGeral[index].cpf) verExtratoAssociado(historicoGeral[index].cpf);
 }
 
@@ -1379,6 +1385,9 @@ function excluirBaixaMensalidade(id) {
         renderGestaoFinanceira();
         if (typeof renderAssociadoOverview === 'function') {
             renderAssociadoOverview();
+        }
+        if (typeof renderMinhasMensalidadesDiretor === 'function') {
+            renderMinhasMensalidadesDiretor();
         }
         verExtratoAssociado(item.cpf);
     }

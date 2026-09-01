@@ -457,6 +457,116 @@
                     </div>
                 </div>
 
+                <!-- ABA DE MINHAS MENSALIDADES (CONTROLE INDIVIDUAL DO DIRETOR POR CPF) -->
+                <div id="tab-minhas-mensalidades-diretor" class="tab-content" style="display: none;">
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+                        <div>
+                            <h2 class="page-title">👤 Minhas Mensalidades (Controle do Diretor)</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Acompanhamento individual das suas contribuições e quitações de mensalidade vinculadas ao seu CPF.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="font-size: 13px; font-weight: 600; color: var(--accent-gold);">Exercício / Ano:</label>
+                            <select id="selAnoMinhasMensalidadesDiretor" class="form-control" style="width: 110px; padding: 6px 10px; font-weight: bold; color: var(--accent-gold);" onchange="renderMinhasMensalidadesDiretor()">
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026" selected>2026</option>
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                            </select>
+                            <button class="btn btn-gold" onclick="abrirModalDarBaixa(currentUser ? currentUser.cpf : '')">💳 + Lançar Pagamento (PIX)</button>
+                        </div>
+                    </div>
+
+                    <!-- CARTÃO DE IDENTIFICAÇÃO DO DIRETOR -->
+                    <div class="card" style="margin-bottom: 20px; border-left: 4px solid var(--accent-gold);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                            <h3 class="card-title" style="color: var(--accent-gold); font-size: 15px;">📋 Meus Dados Cadastrais & Vínculo com a Associação</h3>
+                            <span class="badge badge-warning" style="font-weight: bold; font-size: 11px;">INTEGRANTE DA DIRETORIA</span>
+                        </div>
+                        <div id="infoDiretorMinhasMensalidades" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 13px;">
+                            <!-- Preenchido via JS em renderMinhasMensalidadesDiretor() -->
+                        </div>
+                    </div>
+
+                    <!-- MÉTRICAS DE ADIMPLÊNCIA DO DIRETOR -->
+                    <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: 20px;">
+                        <div id="cardStatusAdimplenciaDiretor" class="metric-card" style="border-left: 4px solid #2ECC71;">
+                            <div class="title">SITUAÇÃO CADASTRAL</div>
+                            <div id="metricStatusAdimplenciaDiretor" class="value" style="font-size: 18px; color: #2ECC71;">🟢 EM DIA</div>
+                            <div id="metricSubtextStatusAdimplenciaDiretor" class="subtext" style="color: var(--text-muted);">100% das mensalidades quitadas</div>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #2ECC71;">
+                            <div class="title">TOTAL QUITADO NO ANO (<span class="lblAnoMinhasMensalidadesDiretor">2026</span>)</div>
+                            <div id="metricTotalPagoMinhasMensalidadesDiretor" class="value" style="color: #2ECC71;">R$ 0,00</div>
+                            <div class="subtext" style="color: var(--text-muted);">Soma de pagamentos confirmados</div>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #E74C3C;">
+                            <div class="title">MENSALIDADES EM ATRASO</div>
+                            <div id="metricTotalPendenteMinhasMensalidadesDiretor" class="value" style="color: #E74C3C;">R$ 0,00</div>
+                            <div id="metricSubtextPendenteMinhasMensalidadesDiretor" class="subtext" style="color: #E74C3C;">0 mês(es) em aberto</div>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid var(--accent-gold);">
+                            <div class="title">VALOR VIGENTE MENSALIDADE</div>
+                            <div id="metricTarifaVigenteMinhasMensalidadesDiretor" class="value" style="color: var(--accent-gold);">R$ 20,00</div>
+                            <div class="subtext" style="color: var(--text-muted);">Vencimento todo dia 15</div>
+                        </div>
+                    </div>
+
+                    <!-- GRADE DETALHADA MÊS A MÊS DO DIRETOR -->
+                    <div class="card" style="margin-bottom: 25px;">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 class="card-title">📅 Demonstrativo Mensal das Minhas Mensalidades (<span class="lblAnoMinhasMensalidadesDiretor">2026</span>)</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Detalhamento de cada competência de janeiro a dezembro com vencimentos e recibos.</p>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="abrirModalDarBaixa(currentUser ? currentUser.cpf : '')">💳 Lançar Pagamento</button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 12px;">
+                                <thead>
+                                    <tr>
+                                        <th>Mês de Referência</th>
+                                        <th>Vencimento</th>
+                                        <th>Tarifa Vigente (R$)</th>
+                                        <th>Valor Quitado (R$)</th>
+                                        <th>Situação</th>
+                                        <th>Ações / Histórico</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableMinhasMensalidadesDiretorBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- HISTÓRICO DE LANÇAMENTOS E BAIXAS VIA PIX DO DIRETOR -->
+                    <div class="card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 class="card-title" style="color: var(--accent-gold);">📋 Extrato de Lançamentos & Recibos PIX</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Todos os lançamentos de pagamento registrados no seu CPF.</p>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="verExtratoAssociado(currentUser ? currentUser.cpf : '')">📄 Ver Extrato Completo</button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 12px;">
+                                <thead>
+                                    <tr>
+                                        <th>Data Pagamento</th>
+                                        <th>Exercício</th>
+                                        <th>Meses Quitados</th>
+                                        <th>Valor Pago (R$)</th>
+                                        <th>Comprovante / Obs</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableExtratoMinhasMensalidadesDiretorBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- ABA: RELATÓRIOS, INDICADORES & GRÁFICOS (DIRETORIA) -->
                 <div id="tab-relatorios-diretoria" class="tab-content" style="display: none;">
                     <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
@@ -2149,15 +2259,15 @@
     </div>
 
     <!-- SCRIPTS JS MODULARES -->
-    <script src="supabaseClient.js?v=20260901_04"></script>
-    <script src="js/core.js?v=20260901_04"></script>
-    <script src="js/auth.js?v=20260901_04"></script>
-    <script src="js/associados.js?v=20260901_04"></script>
-    <script src="js/documentos.js?v=20260901_04"></script>
-    <script src="js/mensagens.js?v=20260901_04"></script>
-    <script src="js/financeiro.js?v=20260901_04"></script>
-    <script src="js/portal-socio.js?v=20260901_04"></script>
-    <script src="js/mensalidades.js?v=20260901_04"></script>
-    <script src="js/relatorios.js?v=20260901_04"></script>
+    <script src="supabaseClient.js?v=20260901_05"></script>
+    <script src="js/core.js?v=20260901_05"></script>
+    <script src="js/auth.js?v=20260901_05"></script>
+    <script src="js/associados.js?v=20260901_05"></script>
+    <script src="js/documentos.js?v=20260901_05"></script>
+    <script src="js/mensagens.js?v=20260901_05"></script>
+    <script src="js/financeiro.js?v=20260901_05"></script>
+    <script src="js/portal-socio.js?v=20260901_05"></script>
+    <script src="js/mensalidades.js?v=20260901_05"></script>
+    <script src="js/relatorios.js?v=20260901_05"></script>
 </body>
 </html>
