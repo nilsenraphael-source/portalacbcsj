@@ -398,32 +398,35 @@ const dbService = {
     },
 
     // MENSALIDADES (BAIXAS)
-    async getMensalidades() {
-        const normalizarLista = (lista) => {
-            if (!Array.isArray(lista)) return [];
-            return lista.map(item => {
-                const mesesTexto = (item.meses_quitados && item.meses_quitados !== 'undefined' && item.meses_quitados !== 'null')
+    normalizarMensalidades(lista) {
+        if (!Array.isArray(lista)) return [];
+        return lista.map(item => {
+            const mesesTexto = (typeof extrairTextoMesesQuitados === 'function')
+                ? extrairTextoMesesQuitados(item)
+                : ((item.meses_quitados && item.meses_quitados !== 'undefined' && item.meses_quitados !== 'null')
                     ? item.meses_quitados
-                    : (item.mes_referencia && item.mes_referencia !== 'undefined' && item.mes_referencia !== 'null' ? item.mes_referencia : (typeof extrairTextoMesesQuitados === 'function' ? extrairTextoMesesQuitados(item) : 'Jan'));
-                
-                return {
-                    ...item,
-                    meses_quitados: mesesTexto,
-                    mes_referencia: item.mes_referencia || mesesTexto,
-                    data: item.data || item.data_pagamento || '',
-                    data_pagamento: item.data_pagamento || item.data || '',
-                    obs: item.obs || item.observacoes || '-',
-                    comprovante_pix: item.comprovante_pix || 'PIX'
-                };
-            });
-        };
+                    : (item.mes_referencia && item.mes_referencia !== 'undefined' && item.mes_referencia !== 'null' ? item.mes_referencia : 'Jan'));
+            
+            return {
+                ...item,
+                meses_quitados: mesesTexto,
+                mes_referencia: item.mes_referencia || mesesTexto,
+                data: item.data || item.data_pagamento || '',
+                data_pagamento: item.data_pagamento || item.data || '',
+                obs: item.obs || item.observacoes || '-',
+                observacoes: item.observacoes || item.obs || '-',
+                comprovante_pix: item.comprovante_pix || item.observacoes || 'PIX'
+            };
+        });
+    },
 
+    async getMensalidades() {
         const client = getSupabaseClient();
         if (client) {
             try {
                 const { data, error } = await client.from('mensalidades').select('*');
                 if (!error && data && Array.isArray(data)) {
-                    const norm = normalizarLista(data);
+                    const norm = this.normalizarMensalidades(data);
                     localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(norm));
                     if (typeof recalcularTodasGridsMensalidades === 'function') {
                         recalcularTodasGridsMensalidades();
@@ -437,7 +440,7 @@ const dbService = {
         try {
             const data = await supabaseRest('mensalidades?select=*');
             if (Array.isArray(data)) {
-                const norm = normalizarLista(data);
+                const norm = this.normalizarMensalidades(data);
                 localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify(norm));
                 if (typeof recalcularTodasGridsMensalidades === 'function') {
                     recalcularTodasGridsMensalidades();
@@ -692,7 +695,10 @@ const dbService = {
                 }),
                 supabaseRest('mensalidades?select=*').then(data => {
                     if (data && Array.isArray(data)) {
-                        safeSetLocalStorage('acbcsj_mensalidades_historico', data);
+                        const norm = (typeof dbService !== 'undefined' && dbService.normalizarMensalidades)
+                            ? dbService.normalizarMensalidades(data)
+                            : data;
+                        safeSetLocalStorage('acbcsj_mensalidades_historico', norm);
                         countTotal += data.length;
                         sucessos++;
                     }

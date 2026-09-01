@@ -358,6 +358,180 @@ function extrairInfoMensalidade(m, anoPadrao = '2026') {
     };
 }
 
+// ==========================================
+// TRATAMENTO UNIVERSAL DE MESES E MENSALIDADES
+// ==========================================
+const TODOS_MESES_KEYS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const MES_MAP_EXPAND = {
+    jan: 'jan', janeiro: 'jan', '01': 'jan', '1': 'jan',
+    fev: 'fev', fevereiro: 'fev', '02': 'fev', '2': 'fev',
+    mar: 'mar', marco: 'mar', 'março': 'mar', '03': 'mar', '3': 'mar',
+    abr: 'abr', abril: 'abr', '04': 'abr', '4': 'abr',
+    mai: 'mai', maio: 'mai', '05': 'mai', '5': 'mai',
+    jun: 'jun', junho: 'jun', '06': 'jun', '6': 'jun',
+    jul: 'jul', julho: 'jul', '07': 'jul', '7': 'jul',
+    ago: 'ago', agosto: 'ago', '08': 'ago', '8': 'ago',
+    set: 'set', setembro: 'set', '09': 'set', '9': 'set',
+    out: 'out', outubro: 'out', '10': 'out',
+    nov: 'nov', novembro: 'nov', '11': 'nov',
+    dez: 'dez', dezembro: 'dez', '12': 'dez'
+};
+window.TODOS_MESES_KEYS = TODOS_MESES_KEYS;
+window.MES_MAP_EXPAND = MES_MAP_EXPAND;
+
+function formatarMesesReferenciaCompacto(checkedMesesKeys) {
+    if (!checkedMesesKeys || checkedMesesKeys.length === 0) return 'Mensalidade';
+    const nomesMap = { jan:'Jan', fev:'Fev', mar:'Mar', abr:'Abr', mai:'Mai', jun:'Jun', jul:'Jul', ago:'Ago', set:'Set', out:'Out', nov:'Nov', dez:'Dez' };
+    
+    if (checkedMesesKeys.length === 12) return 'Jan-Dez (12m)';
+
+    const indices = checkedMesesKeys
+        .map(k => TODOS_MESES_KEYS.indexOf(String(k).toLowerCase()))
+        .filter(i => i >= 0)
+        .sort((a, b) => a - b);
+    
+    const uniqueIndices = [...new Set(indices)];
+    if (uniqueIndices.length === 0) return 'Mensalidade';
+
+    // Agrupa intervalos contíguos: ex: [0,1,2,3,4, 7] -> [[0,1,2,3,4], [7]]
+    const groups = [];
+    let curGroup = [uniqueIndices[0]];
+    for (let i = 1; i < uniqueIndices.length; i++) {
+        if (uniqueIndices[i] === uniqueIndices[i - 1] + 1) {
+            curGroup.push(uniqueIndices[i]);
+        } else {
+            groups.push(curGroup);
+            curGroup = [uniqueIndices[i]];
+        }
+    }
+    groups.push(curGroup);
+
+    const groupParts = groups.map(g => {
+        if (g.length === 1) {
+            return nomesMap[TODOS_MESES_KEYS[g[0]]];
+        } else if (g.length === 2) {
+            return `${nomesMap[TODOS_MESES_KEYS[g[0]]]}, ${nomesMap[TODOS_MESES_KEYS[g[1]]]}`;
+        } else {
+            return `${nomesMap[TODOS_MESES_KEYS[g[0]]]}-${nomesMap[TODOS_MESES_KEYS[g[g.length - 1]]]}`;
+        }
+    });
+
+    const compactString = groupParts.join(', ');
+    if (compactString.length <= 20) return compactString;
+
+    const noSpaceString = groupParts.join(',');
+    if (noSpaceString.length <= 20) return noSpaceString;
+
+    const tightParts = groups.map(g => {
+        if (g.length === 1) return nomesMap[TODOS_MESES_KEYS[g[0]]];
+        return `${nomesMap[TODOS_MESES_KEYS[g[0]]]}-${nomesMap[TODOS_MESES_KEYS[g[g.length - 1]]]}`;
+    });
+    const tightString = tightParts.join(',');
+    if (tightString.length <= 20) return tightString;
+
+    return tightString.substring(0, 20);
+}
+window.formatarMesesReferenciaCompacto = formatarMesesReferenciaCompacto;
+
+function parseStringMeses(str) {
+    if (!str || str === 'undefined' || str === 'null') return [];
+    const strLower = str.toLowerCase().trim();
+
+    if (strLower.includes('anual') || strLower.includes('todos') || strLower.includes('12m') || strLower === 'jan-dez' || strLower === 'jan a dez' || strLower === 'jan até dez' || strLower === 'jan ate dez') {
+        return [...TODOS_MESES_KEYS];
+    }
+
+    const segments = strLower.split(/[,;\/|]+/).map(s => s.trim()).filter(Boolean);
+    const result = [];
+
+    segments.forEach(seg => {
+        const rangeMatch = seg.match(/\b([a-z]{3})\s*(?:-|–|—|\ba\b|\baté\b|\bate\b)\s*([a-z]{3})\b/i);
+        if (rangeMatch) {
+            const startKey = MES_MAP_EXPAND[rangeMatch[1].toLowerCase()];
+            const endKey = MES_MAP_EXPAND[rangeMatch[2].toLowerCase()];
+            if (startKey && endKey) {
+                const startIdx = TODOS_MESES_KEYS.indexOf(startKey);
+                const endIdx = TODOS_MESES_KEYS.indexOf(endKey);
+                if (startIdx >= 0 && endIdx >= startIdx) {
+                    for (let i = startIdx; i <= endIdx; i++) {
+                        if (!result.includes(TODOS_MESES_KEYS[i])) {
+                            result.push(TODOS_MESES_KEYS[i]);
+                        }
+                    }
+                    return;
+                }
+            }
+        }
+
+        const words = seg.split(/[^a-z0-9áéíóúãõâêîôûç]+/i).filter(Boolean);
+        words.forEach(w => {
+            const clean = w.replace(/[^a-z0-9]/g, '');
+            if (MES_MAP_EXPAND[clean] && !result.includes(MES_MAP_EXPAND[clean])) {
+                result.push(MES_MAP_EXPAND[clean]);
+            }
+        });
+    });
+
+    return result;
+}
+window.parseStringMeses = parseStringMeses;
+
+function extrairListaMesesQuitados(rawInput) {
+    if (!rawInput) return [];
+
+    let itemObj = null;
+    let listaFromObs = [];
+    let listaFromMes = [];
+
+    if (typeof rawInput === 'object') {
+        itemObj = rawInput;
+
+        // 1. Extrair de observações / obs (se tiver parênteses com os meses, ex: "(Jan, Fev, Mar, Abr, Mai, Ago/2026)")
+        const obsTexto = String(itemObj.obs || itemObj.observacoes || '');
+        if (obsTexto && obsTexto.includes('(') && obsTexto.includes(')')) {
+            const m = obsTexto.match(/\(([^)]+)\)/);
+            if (m && m[1]) {
+                const cleanMeses = m[1].replace(/\/\s*\d{4}/g, '').trim().toLowerCase();
+                listaFromObs = parseStringMeses(cleanMeses);
+            }
+        }
+
+        // 2. Extrair de meses_quitados ou mes_referencia
+        const strMes = String(itemObj.meses_quitados || itemObj.mes_referencia || itemObj.meses || itemObj.mes || '').trim();
+        const isTruncated = strMes.endsWith(',') || strMes.endsWith(' ') || strMes.length === 20 || /^\d+m\b/i.test(strMes);
+
+        if (strMes && strMes !== 'undefined' && strMes !== 'null') {
+            listaFromMes = parseStringMeses(strMes);
+        }
+
+        // Se observações tiver meses válidos e for mais completa que mes_referencia (ou se mes_referencia for resumido/truncado)
+        if (listaFromObs.length > 0 && (listaFromObs.length >= listaFromMes.length || isTruncated || /^\d+m\b/i.test(strMes))) {
+            return listaFromObs;
+        }
+
+        // Se mes_referencia tiver meses válidos
+        if (listaFromMes.length > 0 && !isTruncated) {
+            return listaFromMes;
+        }
+
+        // Fallback para observações
+        if (listaFromObs.length > 0) {
+            return listaFromObs;
+        }
+
+        if (listaFromMes.length > 0) {
+            return listaFromMes;
+        }
+
+        return ['jan'];
+    } else {
+        const str = String(rawInput).trim();
+        const res = parseStringMeses(str);
+        return res.length > 0 ? res : ['jan'];
+    }
+}
+window.extrairListaMesesQuitados = extrairListaMesesQuitados;
+
 // FORMATADOR UNIVERSAL E SEGURO DE MESES QUITADOS (EVITA 'UNDEFINED' E RANGES CORROMPIDOS)
 function extrairTextoMesesQuitados(h) {
     if (!h) return '-';
