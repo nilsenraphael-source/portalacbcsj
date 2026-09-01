@@ -31,7 +31,13 @@ function renderBalancetesAssociado() {
     const ativos = listAssociados.filter(a => a.status === 'ativo' || !a.status);
     const qtdAssociadosAtivos = ativos.length || 1;
 
-    const financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    let financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    if (!financeiro || financeiro.length === 0) {
+        financeiro = (typeof INITIAL_LANCAMENTOS_DATA !== 'undefined' && Array.isArray(INITIAL_LANCAMENTOS_DATA)) ? INITIAL_LANCAMENTOS_DATA : [];
+        if (financeiro.length > 0) {
+            localStorage.setItem('acbcsj_financeiro', JSON.stringify(financeiro));
+        }
+    }
     const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
     const mesesInfo = [
@@ -519,7 +525,13 @@ function extrairInfoMensalidade(m, anoPadrao = '2026') {
 }
 
 function renderGestaoFinanceira() {
-    const listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    let listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    if (!listFinanceiro || listFinanceiro.length === 0) {
+        listFinanceiro = (typeof INITIAL_LANCAMENTOS_DATA !== 'undefined' && Array.isArray(INITIAL_LANCAMENTOS_DATA)) ? INITIAL_LANCAMENTOS_DATA : [];
+        if (listFinanceiro.length > 0) {
+            localStorage.setItem('acbcsj_financeiro', JSON.stringify(listFinanceiro));
+        }
+    }
     const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
     const filtroAnoSelect = document.getElementById('finFiltroAno');
@@ -761,9 +773,13 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
     const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
     const mIdx = parseInt(mesIndex, 10) || 1;
     const strMes = String(mIdx).padStart(2, '0');
-    const nomeMes = mesesNomes[mIdx - 1];
-
-    const listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    let listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    if (!listFinanceiro || listFinanceiro.length === 0) {
+        listFinanceiro = (typeof INITIAL_LANCAMENTOS_DATA !== 'undefined' && Array.isArray(INITIAL_LANCAMENTOS_DATA)) ? INITIAL_LANCAMENTOS_DATA : [];
+        if (listFinanceiro.length > 0) {
+            localStorage.setItem('acbcsj_financeiro', JSON.stringify(listFinanceiro));
+        }
+    }
     const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
     // Receitas e Despesas gerais do mês usando o parser universal de datas
@@ -1418,7 +1434,13 @@ function imprimirOuBaixarBalanceteMensal(mesIndex, anoStr) {
     const strMes = String(mIdx).padStart(2, '0');
     const nomeMes = mesesNomes[mIdx - 1];
 
-    const listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    let listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    if (!listFinanceiro || listFinanceiro.length === 0) {
+        listFinanceiro = (typeof INITIAL_LANCAMENTOS_DATA !== 'undefined' && Array.isArray(INITIAL_LANCAMENTOS_DATA)) ? INITIAL_LANCAMENTOS_DATA : [];
+        if (listFinanceiro.length > 0) {
+            localStorage.setItem('acbcsj_financeiro', JSON.stringify(listFinanceiro));
+        }
+    }
     const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
     const lancamentosMes = listFinanceiro.filter(item => {

@@ -751,14 +751,14 @@ const dbService = {
             // Executa requisições de forma resiliente e individual
             const fetchPromises = [
                 supabaseRest('associados?select=*').then(data => {
-                    if (data && Array.isArray(data)) {
+                    if (data && Array.isArray(data) && data.length > 0) {
                         safeSetLocalStorage('acbcsj_associados', data);
                         countTotal += data.length;
                         sucessos++;
                     }
                 }),
                 supabaseRest('financeiro_lancamentos?select=*').then(data => {
-                    if (data && Array.isArray(data)) {
+                    if (data && Array.isArray(data) && data.length > 0) {
                         safeSetLocalStorage('acbcsj_financeiro', data);
                         countTotal += data.length;
                         sucessos++;
@@ -779,7 +779,7 @@ const dbService = {
                     }
                 }),
                 supabaseRest('mensalidades?select=*').then(data => {
-                    if (data && Array.isArray(data)) {
+                    if (data && Array.isArray(data) && data.length > 0) {
                         const norm = (typeof dbService !== 'undefined' && dbService.normalizarMensalidades)
                             ? dbService.normalizarMensalidades(data)
                             : data;

@@ -1050,7 +1050,18 @@ function renderDiretoriaOverview() {
 function openModal(id) { document.getElementById(id).classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
+// AUTO-INICIALIZAÇÃO DO ESTADO INICIAL NO CARREGAMENTO
+if (typeof initMockData === 'function') {
+    initMockData();
+}
 
-
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof initMockData === 'function') {
+        initMockData();
+    }
+    if (typeof setupCPFMasks === 'function') {
+        setupCPFMasks();
+    }
+});
 
 // ==========================================

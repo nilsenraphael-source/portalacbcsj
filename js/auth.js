@@ -22,6 +22,15 @@ async function loginWithCPF(cpf, password, roleHint = null) {
             }
         }
 
+        // Garante que os lançamentos financeiros existam
+        let finList = [];
+        try { finList = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []; } catch(e) {}
+        if (!finList || finList.length === 0) {
+            if (typeof INITIAL_LANCAMENTOS_DATA !== 'undefined' && Array.isArray(INITIAL_LANCAMENTOS_DATA) && INITIAL_LANCAMENTOS_DATA.length > 0) {
+                localStorage.setItem('acbcsj_financeiro', JSON.stringify(INITIAL_LANCAMENTOS_DATA));
+            }
+        }
+
         // Garante que o Comandante exista na lista
         if (!list.some(a => a.cpf === '000.000.000-00' || a.perfil === 'diretoria')) {
             list.unshift({
