@@ -582,6 +582,253 @@ function extrairTextoMesesQuitados(h) {
 }
 window.extrairTextoMesesQuitados = extrairTextoMesesQuitados;
 
+// EXTRAI ANO EFETIVO DO PAGAMENTO (REGIME DE CAIXA)
+function extrairAnoPagamentoEfetivo(item) {
+    if (!item) return '';
+    const strData = String(item.data_pagamento || item.data || item.data_iso || item.created_at || item.data_baixa || '').trim();
+    if (!strData) {
+        return String(item.ano || '').trim();
+    }
+    const matchIso = strData.match(/^(\d{4})[-/]/);
+    if (matchIso) return matchIso[1];
+
+    const matchBr = strData.match(/\d{1,2}[-/]\d{1,2}[-/](\d{4})/);
+    if (matchBr) return matchBr[1];
+
+    const matchBrShort = strData.match(/\d{1,2}[-/]\d{1,2}[-/](\d{2})$/);
+    if (matchBrShort) {
+        let yy = parseInt(matchBrShort[1], 10);
+        return String(yy < 100 ? (2000 + yy) : yy);
+    }
+
+    const matchAny4 = strData.match(/\b(20\d\d)\b/);
+    if (matchAny4) return matchAny4[1];
+
+    return String(item.ano || '').trim();
+}
+window.extrairAnoPagamentoEfetivo = extrairAnoPagamentoEfetivo;
+
+function getHistoricoReajustesMensalidade() {
+    let historico = null;
+    try {
+        historico = JSON.parse(localStorage.getItem('acbcsj_historico_reajustes_mensalidade'));
+    } catch(e) {}
+    if (!historico || !Array.isArray(historico) || historico.length === 0 || historico.some(h => h.valor !== 20.00)) {
+        historico = [{
+            id: 'reaj_inicial',
+            valor: 20.00,
+            mes_inicio: '01',
+            ano_inicio: '2024',
+            data_registro: '01/01/2024',
+            justificativa: 'Valor base padrão (R$ 20,00)'
+        }];
+        localStorage.setItem('acbcsj_historico_reajustes_mensalidade', JSON.stringify(historico));
+        localStorage.setItem('acbcsj_valor_mensalidade', '20.00');
+    }
+    return historico;
+}
+window.getHistoricoReajustesMensalidade = getHistoricoReajustesMensalidade;
+
+function getValorMensalidadeVigente(mesIndex, anoStr) {
+    const historico = getHistoricoReajustesMensalidade();
+    if (!mesIndex || !anoStr) {
+        const hoje = new Date();
+        mesIndex = hoje.getMonth() + 1;
+        anoStr = String(hoje.getFullYear());
+    }
+
+    const targetScore = parseInt(anoStr, 10) * 100 + parseInt(mesIndex, 10);
+
+    const validos = historico.filter(h => {
+        const itemScore = parseInt(h.ano_inicio, 10) * 100 + parseInt(h.mes_inicio, 10);
+        return itemScore <= targetScore;
+    });
+
+    if (validos.length === 0) {
+        return historico[0].valor || 20.00;
+    }
+
+    validos.sort((a, b) => {
+        const scoreA = parseInt(a.ano_inicio, 10) * 100 + parseInt(a.mes_inicio, 10);
+        const scoreB = parseInt(b.ano_inicio, 10) * 100 + parseInt(b.mes_inicio, 10);
+        return scoreB - scoreA;
+    });
+
+    return validos[0].valor;
+}
+window.getValorMensalidadeVigente = getValorMensalidadeVigente;
+
+function getInfoVigenciaMensalidadeAtual() {
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth() + 1;
+    const anoAtual = String(hoje.getFullYear());
+    const historico = getHistoricoReajustesMensalidade();
+
+    const targetScore = parseInt(anoAtual, 10) * 100 + parseInt(mesAtual, 10);
+    const validos = historico.filter(h => (parseInt(h.ano_inicio, 10) * 100 + parseInt(h.mes_inicio, 10)) <= targetScore);
+    validos.sort((a, b) => (parseInt(b.ano_inicio, 10) * 100 + parseInt(b.mes_inicio, 10)) - (parseInt(a.ano_inicio, 10) * 100 + parseInt(a.mes_inicio, 10)));
+
+    const reg = validos[0] || { valor: 20.00, mes_inicio: '01', ano_inicio: '2024' };
+    return {
+        valor: reg.valor,
+        mes_inicio: reg.mes_inicio,
+        ano_inicio: reg.ano_inicio,
+        texto: `R$ ${reg.valor.toFixed(2).replace('.', ',')} (desde ${reg.mes_inicio}/${reg.ano_inicio})`
+    };
+}
+window.getInfoVigenciaMensalidadeAtual = getInfoVigenciaMensalidadeAtual;
+
+function calcularStatusMensalidade(mesIndex, anoStr, valorPago, socioOuDataIngresso) {
+    const valor = parseFloat(valorPago) || 0;
+    const mIdx = parseInt(mesIndex, 10) || 1;
+    const anoNum = parseInt(anoStr, 10) || 2026;
+    const baseVal = typeof getValorMensalidadeVigente === 'function' ? getValorMensalidadeVigente(mIdx, anoStr) : 20.00;
+    const dataVencimentoStr = `15/${String(mIdx).padStart(2, '0')}/${anoNum}`;
+
+    const parserIngresso = typeof extrairMesEAnoIngresso === 'function' ? extrairMesEAnoIngresso : (d => {
+        if (!d) return { mes: 1, ano: 2020, dia: 1, mesInicioCobranca: 1, anoInicioCobranca: 2020 };
+        const s = typeof d === 'object' ? (d.data_ingresso || d.data_admissao || d.data_cadastro || '') : String(d);
+        const p = s.split(' ')[0].split(/[\/\-]/);
+        let dia = 1, mes = 1, ano = 2020;
+        if (p.length === 3) {
+            let p1 = parseInt(p[0], 10), p2 = parseInt(p[1], 10), p3 = parseInt(p[2], 10);
+            if (p3 < 100) p3 += 2000;
+            if (p1 > 12) { dia = p1; mes = p2; ano = p3; }
+            else if (p2 > 12) { dia = p2; mes = p1; ano = p3; }
+            else { dia = p1; mes = p2; ano = p3; }
+        }
+        let mesInicio = mes;
+        let anoInicio = ano;
+        if (dia > 15) {
+            mesInicio = mes + 1;
+            if (mesInicio > 12) { mesInicio = 1; anoInicio += 1; }
+        }
+        return { mes, ano, dia, mesInicioCobranca: mesInicio, anoInicioCobranca: anoInicio };
+    });
+
+    const infoIngresso = parserIngresso(socioOuDataIngresso);
+    const targetScore = anoNum * 100 + mIdx;
+    const cobrancaScore = (infoIngresso.anoInicioCobranca || infoIngresso.ano) * 100 + (infoIngresso.mesInicioCobranca || infoIngresso.mes);
+
+    const isIsentoIngresso = targetScore < cobrancaScore;
+
+    let isDesligado = false;
+    let mesDesligamento = null;
+    let anoDesligamento = null;
+    let dataDesligStr = '';
+
+    if (socioOuDataIngresso && typeof socioOuDataIngresso === 'object') {
+        if (socioOuDataIngresso.status === 'desligado' || socioOuDataIngresso.data_desligamento) {
+            isDesligado = true;
+            dataDesligStr = socioOuDataIngresso.data_desligamento || '';
+            if (dataDesligStr) {
+                const sDes = String(dataDesligStr).split(' ')[0].split(/[\/\-]/);
+                if (sDes.length === 3) {
+                    let d1 = parseInt(sDes[0], 10), d2 = parseInt(sDes[1], 10), d3 = parseInt(sDes[2], 10);
+                    if (d3 < 100) d3 += 2000;
+                    if (d1 > 12) { mesDesligamento = d2; anoDesligamento = d3; }
+                    else if (d2 > 12) { mesDesligamento = d1; anoDesligamento = d3; }
+                    else { mesDesligamento = d2; anoDesligamento = d3; }
+                }
+            }
+        }
+    }
+
+    if (valor >= baseVal) {
+        return {
+            status: 'pago',
+            badge: `<div class="mes-box mes-box-pago" title="Mensalidade quitada: R$ ${valor.toFixed(2).replace('.', ',')}"><span class="mes-box-top">☑ R$</span><span class="mes-box-bottom">${valor.toFixed(2).replace('.', ',')}</span></div>`,
+            vencimento: dataVencimentoStr,
+            isVencido: false,
+            isIsento: false,
+            debitAmount: 0
+        };
+    } else if (valor > 0) {
+        const falta = Math.max(0, baseVal - valor);
+        const hoje = new Date();
+        const anoAtual = hoje.getFullYear();
+        const mesAtualNum = hoje.getMonth() + 1;
+        const diaAtual = hoje.getDate();
+        const isV = (anoNum < anoAtual || (anoNum === anoAtual && (mIdx < mesAtualNum || (mIdx === mesAtualNum && diaAtual > 15))));
+        return {
+            status: 'parcial',
+            badge: `<div class="mes-box mes-box-parcial" title="Pago parcialmente (Falta R$ ${falta.toFixed(2).replace('.', ',')})"><span class="mes-box-top">⚠️ R$</span><span class="mes-box-bottom">${valor.toFixed(2).replace('.', ',')}</span></div>`,
+            vencimento: dataVencimentoStr,
+            isVencido: isV,
+            isIsento: false,
+            debitAmount: falta
+        };
+    }
+
+    if (isIsentoIngresso) {
+        const tooltipIsento = infoIngresso.dia > 15 && targetScore === (infoIngresso.ano * 100 + infoIngresso.mes)
+            ? `Isento no mês de admissão (admitido em ${infoIngresso.dataFormatada || infoIngresso.dia + '/' + infoIngresso.mes + '/' + infoIngresso.ano}, após dia 15)`
+            : `Isento (Anterior à admissão em ${infoIngresso.dataFormatada || infoIngresso.dia + '/' + infoIngresso.mes + '/' + infoIngresso.ano})`;
+
+        return {
+            status: 'isento',
+            badge: `<div class="mes-box mes-box-isento" title="${tooltipIsento}"><span class="mes-box-top">⚪</span><span class="mes-box-bottom">ISENTO</span></div>`,
+            vencimento: '-',
+            isVencido: false,
+            isIsento: true,
+            debitAmount: 0
+        };
+    }
+
+    if (isDesligado && anoDesligamento && mesDesligamento) {
+        const scoreDesligamento = anoDesligamento * 100 + mesDesligamento;
+        if (targetScore > scoreDesligamento) {
+            return {
+                status: 'desligado',
+                badge: `<div class="mes-box mes-box-desligado" title="Desligado em ${dataDesligStr || (mesDesligamento + '/' + anoDesligamento)} (Não exigível)"><span class="mes-box-top">⚪</span><span class="mes-box-bottom">DESLIGADO</span></div>`,
+                vencimento: '-',
+                isVencido: false,
+                isIsento: true,
+                debitAmount: 0
+            };
+        }
+    }
+
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtualNum = hoje.getMonth() + 1;
+    const diaAtual = hoje.getDate();
+
+    let isVencido = false;
+    if (anoNum < anoAtual) {
+        isVencido = true;
+    } else if (anoNum === anoAtual) {
+        if (mIdx < mesAtualNum) {
+            isVencido = true;
+        } else if (mIdx === mesAtualNum) {
+            if (diaAtual > 15) {
+                isVencido = true;
+            }
+        }
+    }
+
+    if (isVencido) {
+        return {
+            status: 'vencido',
+            badge: `<div class="mes-box mes-box-vencido" title="Vencido em ${dataVencimentoStr}"><span class="mes-box-top">🔴 R$</span><span class="mes-box-bottom">0,00</span></div>`,
+            vencimento: dataVencimentoStr,
+            isVencido: true,
+            isIsento: false,
+            debitAmount: baseVal
+        };
+    } else {
+        return {
+            status: 'a_vencer',
+            badge: `<div class="mes-box mes-box-avencer" title="A vencer em ${dataVencimentoStr}">-</div>`,
+            vencimento: dataVencimentoStr,
+            isVencido: false,
+            isIsento: false,
+            debitAmount: 0
+        };
+    }
+}
+window.calcularStatusMensalidade = calcularStatusMensalidade;
+
 // PARSER UNIVERSAL DE DATA DE INGRESSO / ADMISSÃO DO ASSOCIADO (COM REGRA DO DIA 15)
 function extrairMesEAnoIngresso(socioOuData) {
     if (!socioOuData) {

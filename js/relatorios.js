@@ -44,6 +44,12 @@ function renderRelatoriosDiretoria() {
         else if (typeof MOCK_DATA_INITIAL !== 'undefined') listAssociados = MOCK_DATA_INITIAL.associados || [];
     }
 
+    const mapStatusAssociadoPorCpf = {};
+    listAssociados.forEach(socio => {
+        const clean = (socio.cpf || '').replace(/\D/g, '');
+        mapStatusAssociadoPorCpf[clean] = socio.status || 'ativo';
+    });
+
     const ativos = listAssociados.filter(a => a.status !== 'desligado');
     const desligados = listAssociados.filter(a => a.status === 'desligado');
 
@@ -88,7 +94,7 @@ function renderRelatoriosDiretoria() {
     const mesAtualNum = hoje.getMonth() + 1;
     const anoNum = parseInt(ano, 10) || 2026;
 
-    // A. CÁLCULO DE MENSALIDADES (PARÂMETROS DE QUANTIDADE E VALOR MÊS A MÊS)
+    // A. CÁLCULO DE MENSALIDADES (COMPETÊNCIA MÊS A MÊS DO EXERCÍCIO)
     mesesKeys.forEach((mKey, idx) => {
         const mIndex = idx + 1;
         const tarifaVigente = typeof getValorMensalidadeVigente === 'function' ? getValorMensalidadeVigente(mIndex, ano) : 20;
@@ -97,7 +103,14 @@ function renderRelatoriosDiretoria() {
         let paganteNoMesCount = 0;
         let valorArrecadadoMes = 0;
 
-        // Itera sobre todos os associados (Ativos e Desligados) para avaliar competência deste mês
+        // Soma valores da grade para este mês
+        if (Array.isArray(gridMensalidades)) {
+            gridMensalidades.forEach(row => {
+                valorArrecadadoMes += (parseFloat(row[mKey]) || 0);
+            });
+        }
+
+        // Itera sobre todos os associados (Ativos e Desligados) para avaliar meta e status deste mês
         listAssociados.forEach(socio => {
             const cleanCpf = (socio.cpf || '').replace(/\D/g, '');
             const itemGrid = Array.isArray(gridMensalidades) ? gridMensalidades.find(g => (g.cpf || '').replace(/\D/g, '') === cleanCpf) : null;
@@ -115,12 +128,9 @@ function renderRelatoriosDiretoria() {
                     paganteNoMesCount++;
                 }
             } else if (valorPagoNoMes >= tarifaVigente || valorPagoNoMes > 0) {
-                // Se pagou mesmo tendo status de isento (ex: quitação voluntária)
                 cobravelNoMesCount++;
                 paganteNoMesCount++;
             }
-
-            valorArrecadadoMes += valorPagoNoMes;
         });
 
         qtdCobraveisPorMes[idx] = cobravelNoMesCount;
@@ -137,10 +147,11 @@ function renderRelatoriosDiretoria() {
         taxaAdimplenciaPorMes[idx] = percEficiencia;
     });
 
-    // B. CÁLCULO FINANCEIRO GERAL (LIVRO CAIXA + ARRECADAÇÃO EFETIVA DO ANO)
+    // B. CÁLCULO FINANCEIRO GERAL (REGIME DE CAIXA / ENTRADAS EFETIVAS NO ANO)
     financeiro.forEach(f => {
         const dInfo = typeof extrairMesEAno === 'function' ? extrairMesEAno(f.data, f.data_iso || f.created_at) : { ano: '', mes: '' };
-        if (dInfo.ano === ano) {
+        const fAno = dInfo.ano || (f.data_iso ? f.data_iso.substring(0, 4) : (f.data ? f.data.split('/')[2] : ano));
+        if (String(fAno) === String(ano)) {
             const mIdx = parseInt(dInfo.mes, 10) - 1;
             if (mIdx >= 0 && mIdx < 12) {
                 const val = parseFloat(f.valor) || 0;
@@ -153,8 +164,11 @@ function renderRelatoriosDiretoria() {
         }
     });
 
-    // Soma das mensalidades arrecadadas pelo regime de caixa (data de entrada) para os totais financeiros
+    // Soma das mensalidades arrecadadas pelo regime de caixa (data de pagamento)
     const mensalidadesCaixaPorMes = Array(12).fill(0);
+    let totalArrecadadoNoAnoAtivos = 0;
+    let totalArrecadadoNoAnoDesligados = 0;
+
     historicoMensalidades.forEach(h => {
         const anoEfetivo = typeof extrairAnoPagamentoEfetivo === 'function' 
             ? extrairAnoPagamentoEfetivo(h) 
@@ -165,9 +179,17 @@ function renderRelatoriosDiretoria() {
             })();
 
         if (String(anoEfetivo) === String(ano)) {
+            const val = typeof h.valor === 'number' ? h.valor : (parseFloat(String(h.valor || '0').replace(',', '.')) || 0);
+            const cleanCpf = (h.cpf || '').replace(/\D/g, '');
+            const statusSocio = mapStatusAssociadoPorCpf[cleanCpf] || 'ativo';
+            if (statusSocio === 'desligado') {
+                totalArrecadadoNoAnoDesligados += val;
+            } else {
+                totalArrecadadoNoAnoAtivos += val;
+            }
+
             const dInfo = typeof extrairMesEAno === 'function' ? extrairMesEAno(h.data_pagamento || h.data, h.data_iso || h.created_at) : { mes: '01' };
             const mIdx = parseInt(dInfo.mes, 10) - 1;
-            const val = parseFloat(h.valor) || 0;
             if (mIdx >= 0 && mIdx < 12) {
                 mensalidadesCaixaPorMes[mIdx] += val;
             } else {
@@ -176,12 +198,13 @@ function renderRelatoriosDiretoria() {
         }
     });
 
+    const totalArrecadadoCaixaMensalidades = totalArrecadadoNoAnoAtivos + totalArrecadadoNoAnoDesligados;
+    const totalReceitasGeraisAno = receitasGeraisPorMes.reduce((a, b) => a + b, 0);
     const totalReceitasPorMes = receitasGeraisPorMes.map((rec, i) => rec + mensalidadesCaixaPorMes[i]);
 
     // TOTAIS ANUAIS CONSOLIDADOS
     const totalPrevistoMensalidadesAno = valorPrevistoPorMes.reduce((a, b) => a + b, 0);
     const totalRecebidoMensalidadesAno = valorRecebidoPorMes.reduce((a, b) => a + b, 0);
-    const totalArrecadadoCaixaMensalidades = mensalidadesCaixaPorMes.reduce((a, b) => a + b, 0);
 
     const totalReceitasAno = totalReceitasPorMes.reduce((a, b) => a + b, 0);
     const totalDespesasAno = despesasPorMes.reduce((a, b) => a + b, 0);
@@ -212,17 +235,17 @@ function renderRelatoriosDiretoria() {
     const elMetRes = document.getElementById('relMetricResultado');
     const elSubDes = document.getElementById('relSubtextDespesas');
 
-    if (elMetMens) elMetMens.textContent = `R$ ${totalRecebidoMensalidadesAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    if (elMetMens) elMetMens.textContent = `R$ ${totalArrecadadoCaixaMensalidades.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
     if (elSubMens) {
-        const percTotal = totalPrevistoMensalidadesAno > 0 ? ((totalRecebidoMensalidadesAno / totalPrevistoMensalidadesAno) * 100).toFixed(1) : '0';
-        elSubMens.innerHTML = `Meta prevista: <b>R$ ${totalPrevistoMensalidadesAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b> (${percTotal}% atingido)`;
+        const percTotal = totalPrevistoMensalidadesAno > 0 ? ((totalArrecadadoCaixaMensalidades / totalPrevistoMensalidadesAno) * 100).toFixed(1) : '0';
+        elSubMens.innerHTML = `🟢 Ativos: <b>R$ ${totalArrecadadoNoAnoAtivos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b> | 🚫 Desligados: <b>R$ ${totalArrecadadoNoAnoDesligados.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b><br><small style="color: var(--text-muted);">Meta prevista: R$ ${totalPrevistoMensalidadesAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${percTotal}% atingido)</small>`;
     }
 
     if (elMetPag) elMetPag.textContent = `${mediaPagantesMes} associados / mês`;
     if (elSubPag) elSubPag.textContent = `De uma média de ${mediaCobraveisMes} associados cobráveis por mês`;
 
     if (elMetRec) elMetRec.textContent = `R$ ${totalReceitasAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-    if (elSubRec) elSubRec.innerHTML = `Mensalidades PIX: <b>R$ ${totalArrecadadoCaixaMensalidades.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b>`;
+    if (elSubRec) elSubRec.innerHTML = `Mensalidades PIX: <b>R$ ${totalArrecadadoCaixaMensalidades.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b> | Outras: <b>R$ ${totalReceitasGeraisAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b>`;
 
     if (elMetRes) {
         elMetRes.textContent = `R$ ${saldoAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
@@ -233,7 +256,7 @@ function renderRelatoriosDiretoria() {
     // D. PREENCHE TABELA ANALÍTICA DE PARÂMETROS DE MENSALIDADES
     const tbodyParam = document.getElementById('tableRelatorioMensalidadesParametrosBody');
     if (tbodyParam) {
-        tbodyParam.innerHTML = nomesMesesCompletos.map((mNome, idx) => {
+        const rowsHTML = nomesMesesCompletos.map((mNome, idx) => {
             const cobr = qtdCobraveisPorMes[idx];
             const pag = qtdPagantesPorMes[idx];
             const pend = qtdPendentesPorMes[idx];
@@ -277,6 +300,34 @@ function renderRelatoriosDiretoria() {
                 </tr>
             `;
         }).join('');
+
+        const totalCobraveisAnual = qtdCobraveisPorMes.reduce((a, b) => a + b, 0);
+        const totalPagantesAnual = qtdPagantesPorMes.reduce((a, b) => a + b, 0);
+        const totalPendentesAnual = qtdPendentesPorMes.reduce((a, b) => a + b, 0);
+        const totalDeficitAnual = Math.max(0, totalPrevistoMensalidadesAno - totalRecebidoMensalidadesAno);
+        const taxaMediaAnual = totalPrevistoMensalidadesAno > 0 
+            ? Math.min(100, Math.round((totalRecebidoMensalidadesAno / totalPrevistoMensalidadesAno) * 100))
+            : (totalCobraveisAnual > 0 && totalPagantesAnual >= totalCobraveisAnual ? 100 : 0);
+
+        const totalRowHTML = `
+            <tr style="background: rgba(212, 175, 55, 0.12); font-weight: bold; border-top: 2px solid var(--accent-gold);">
+                <td style="text-align: left; color: var(--accent-gold); font-size: 13px;">🏆 TOTAL ANUAL</td>
+                <td><b>${totalCobraveisAnual}</b></td>
+                <td style="color: #2ECC71; font-size: 13px;">${totalPagantesAnual}</td>
+                <td style="color: ${totalPendentesAnual > 0 ? '#E74C3C' : 'var(--text-muted)'}; font-size: 13px;">${totalPendentesAnual}</td>
+                <td style="font-size: 13px;">R$ ${totalPrevistoMensalidadesAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td style="color: #2ECC71; font-size: 13px;">R$ ${totalRecebidoMensalidadesAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td style="color: ${totalDeficitAnual > 0 ? '#E74C3C' : 'var(--text-muted)'}; font-size: 13px;">R$ ${totalDeficitAnual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td>
+                    <span style="font-size: 12px; font-weight: bold; color: ${taxaMediaAnual >= 80 ? '#2ECC71' : (taxaMediaAnual >= 50 ? '#F39C12' : '#E74C3C')};">${taxaMediaAnual}%</span>
+                </td>
+                <td>
+                    <span class="badge" style="background: rgba(46, 204, 113, 0.2); color: #2ECC71; border: 1px solid rgba(46, 204, 113, 0.4);">${taxaMediaAnual}% ADIMPLÊNCIA</span>
+                </td>
+            </tr>
+        `;
+
+        tbodyParam.innerHTML = rowsHTML + totalRowHTML;
     }
 
     // E. RENDERIZAÇÃO DOS 5 GRÁFICOS CHART.JS

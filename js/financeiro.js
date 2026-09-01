@@ -60,8 +60,10 @@ function renderBalancetesAssociado() {
         const strMes = String(m.index).padStart(2, '0');
         let somaArrecadadaNoMes = 0;
         listMensalidades.forEach(itemMens => {
+            const anoEfetivo = typeof extrairAnoPagamentoEfetivo === 'function' ? extrairAnoPagamentoEfetivo(itemMens) : '';
             const dInfo = extrairInfoMensalidade(itemMens, ano);
-            if (dInfo.ano === ano && dInfo.mes === strMes) {
+            const itemAno = anoEfetivo || dInfo.ano;
+            if (String(itemAno) === String(ano) && dInfo.mes === strMes) {
                 somaArrecadadaNoMes += (parseFloat(itemMens.valor) || 0);
             }
         });
@@ -908,8 +910,10 @@ function gerarBalanceteAnualCompleto(anoStr) {
         let arrMens = 0;
         let qtdBaixas = 0;
         listMensalidades.forEach(m => {
+            const anoEfetivo = typeof extrairAnoPagamentoEfetivo === 'function' ? extrairAnoPagamentoEfetivo(m) : '';
             const infoM = extrairInfoMensalidade(m, anoStr);
-            if (infoM.ano === anoStr && infoM.mes === strMes) {
+            const mYear = anoEfetivo || infoM.ano;
+            if (String(mYear) === String(anoStr) && infoM.mes === strMes) {
                 arrMens += (parseFloat(m.valor) || 0);
                 qtdBaixas++;
             }
