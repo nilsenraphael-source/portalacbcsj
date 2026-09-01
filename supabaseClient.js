@@ -401,11 +401,9 @@ const dbService = {
     normalizarMensalidades(lista) {
         if (!Array.isArray(lista)) return [];
         return lista.map(item => {
-            const mesesTexto = (typeof extrairTextoMesesQuitados === 'function')
-                ? extrairTextoMesesQuitados(item)
-                : ((item.meses_quitados && item.meses_quitados !== 'undefined' && item.meses_quitados !== 'null')
-                    ? item.meses_quitados
-                    : (item.mes_referencia && item.mes_referencia !== 'undefined' && item.mes_referencia !== 'null' ? item.mes_referencia : 'Jan'));
+            const mesesTexto = (item.meses_quitados && item.meses_quitados !== 'undefined' && item.meses_quitados !== 'null')
+                ? item.meses_quitados
+                : (item.mes_referencia && item.mes_referencia !== 'undefined' && item.mes_referencia !== 'null' ? item.mes_referencia : (typeof extrairTextoMesesQuitados === 'function' ? extrairTextoMesesQuitados(item) : 'Jan'));
             
             return {
                 ...item,
@@ -414,8 +412,7 @@ const dbService = {
                 data: item.data || item.data_pagamento || '',
                 data_pagamento: item.data_pagamento || item.data || '',
                 obs: item.obs || item.observacoes || '-',
-                observacoes: item.observacoes || item.obs || '-',
-                comprovante_pix: item.comprovante_pix || item.observacoes || 'PIX'
+                comprovante_pix: item.comprovante_pix || 'PIX'
             };
         });
     },
