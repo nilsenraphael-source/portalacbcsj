@@ -1156,7 +1156,7 @@ function verExtratoAssociado(cpf) {
                                 <th>Valor (R$)</th>
                                 <th>Forma / Comprovante PIX</th>
                                 <th>Observações</th>
-                                <th>Ações</th>
+                                <th>${currentUser && currentUser.perfil === 'diretoria' ? 'Ações' : 'Situação'}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1170,6 +1170,7 @@ function verExtratoAssociado(cpf) {
                                 const dataExib = h.data || h.data_pagamento || (h.data_iso ? h.data_iso.split('T')[0].split('-').reverse().join('/') : '-');
                                 const obsExib = (h.obs && h.obs !== 'undefined' && h.obs !== 'null') ? h.obs : ((h.observacoes && h.observacoes !== 'undefined' && h.observacoes !== 'null') ? h.observacoes : '-');
                                 const compPix = (h.comprovante_pix && h.comprovante_pix !== 'undefined' && h.comprovante_pix !== 'null') ? h.comprovante_pix : '';
+                                const isDiretoria = currentUser && currentUser.perfil === 'diretoria';
 
                                 return `
                                     <tr>
@@ -1180,10 +1181,14 @@ function verExtratoAssociado(cpf) {
                                         <td><span class="badge badge-success">PIX</span> <small>${compPix !== 'PIX' ? compPix : ''}</small></td>
                                         <td>${obsExib}</td>
                                         <td>
-                                            <div style="display: flex; gap: 4px;">
-                                                <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 6px;" onclick="abrirModalEditarBaixa('${h.id}')">✏️ Editar</button>
-                                                <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 6px; color: #E74C3C; border-color: #E74C3C;" onclick="excluirBaixaMensalidade('${h.id}')">🗑️ Excluir</button>
-                                            </div>
+                                            ${isDiretoria ? `
+                                                <div style="display: flex; gap: 4px;">
+                                                    <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 6px;" onclick="abrirModalEditarBaixa('${h.id}')">✏️ Editar</button>
+                                                    <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 6px; color: #E74C3C; border-color: #E74C3C;" onclick="excluirBaixaMensalidade('${h.id}')">🗑️ Excluir</button>
+                                                </div>
+                                            ` : `
+                                                <span class="badge badge-success" style="font-size: 11px; padding: 4px 8px;">✅ Quitado</span>
+                                            `}
                                         </td>
                                     </tr>
                                 `;

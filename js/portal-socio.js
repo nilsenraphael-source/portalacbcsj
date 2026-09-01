@@ -521,9 +521,17 @@ function renderAssociadoOverview() {
     let totalDebitosPendente = 0;
     let temDebitoVencido = false;
 
+    // Buscar lançamentos específicos de histórico do associado
+    let historicoGeral = [];
+    try {
+        historicoGeral = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+    } catch(e) { historicoGeral = []; }
+
+    const meusLancamentos = historicoGeral.filter(h => (h.cpf || '').replace(/\D/g, '') === cleanUserCpf);
+
     const rowsHtml = mesesList.map(m => {
         const valPago = parseFloat(socio[m.key]) || 0;
-        const tarifaVigente = typeof getValorMensalidadeVigente === 'function' ? getValorMensalidadeVigente(m.index, ano) : 50;
+        const tarifaVigente = typeof getValorMensalidadeVigente === 'function' ? getValorMensalidadeVigente(m.index, ano) : 20;
         totalPagoAno += valPago;
 
         const info = typeof calcularStatusMensalidade === 'function' 
@@ -534,6 +542,15 @@ function renderAssociadoOverview() {
             temDebitoVencido = true;
             totalDebitosPendente += info.debitAmount;
         }
+
+        // Tentar encontrar lançamento correspondente para data de pagamento
+        const lancCorrespondente = meusLancamentos.find(h => {
+            if (String(h.ano || '') !== String(ano)) return false;
+            const lista = typeof extrairListaMesesQuitados === 'function' ? extrairListaMesesQuitados(h) : [];
+            return lista.includes(m.key);
+        });
+
+        const dataPagtoExibicao = lancCorrespondente ? (lancCorrespondente.data || lancCorrespondente.data_pagamento || '-') : (valPago > 0 ? 'Quitado' : '-');
 
         let badgeStatus = '';
         if (info.isIsento) {
@@ -557,6 +574,12 @@ function renderAssociadoOverview() {
                     ${info.isIsento && valPago === 0 ? '<span style="color:var(--text-muted);">-</span>' : 'R$ ' + valPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
                 <td>${badgeStatus}</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 11px; color: var(--text-muted);">📅 ${dataPagtoExibicao}</span>
+                        ${valPago > 0 ? `<button class="btn btn-sm btn-outline" style="font-size: 10px; padding: 2px 6px;" onclick="verExtratoAssociado('${currentUser.cpf}')" title="Ver Extrato">📄 Ver</button>` : ''}
+                    </div>
+                </td>
             </tr>
         `;
     }).join('');
@@ -596,6 +619,44 @@ function renderAssociadoOverview() {
                     <span style="font-size: 11px; color: var(--text-muted);">Parabéns! Suas contribuições estão em dia com a ACBCSJ.</span>
                 </div>
             `;
+        }
+    }
+
+    // 5. Extrato detalhado de lançamentos e recibos PIX do associado
+    const containerExtrato = document.getElementById('tableExtratoMinhasMensalidadesAssociadoBody');
+    if (containerExtrato) {
+        if (meusLancamentos.length === 0) {
+            containerExtrato.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 18px;">Nenhum lançamento de pagamento via PIX registrado no seu CPF até o momento.</td></tr>`;
+        } else {
+            const sortedLancamentos = [...meusLancamentos].sort((a, b) => {
+                const dA = String(a.data_iso || a.data_pagamento || a.data || '').split('/').reverse().join('-');
+                const dB = String(b.data_iso || b.data_pagamento || b.data || '').split('/').reverse().join('-');
+                return dB.localeCompare(dA);
+            });
+
+            containerExtrato.innerHTML = sortedLancamentos.map(l => {
+                const mesesTxt = (typeof extrairTextoMesesQuitados === 'function') 
+                    ? extrairTextoMesesQuitados(l) 
+                    : ((l.meses_quitados && l.meses_quitados !== 'undefined' && l.meses_quitados !== 'null') 
+                        ? l.meses_quitados 
+                        : ((l.mes_referencia && l.mes_referencia !== 'undefined' && l.mes_referencia !== 'null') ? l.mes_referencia : 'Mensalidade'));
+                
+                const valorFmt = parseFloat(l.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                const obsTxt = (l.obs && l.obs !== 'undefined' && l.obs !== 'null') ? l.obs : ((l.observacoes && l.observacoes !== 'undefined' && l.observacoes !== 'null') ? l.observacoes : (l.comprovante_pix || '-'));
+
+                return `
+                    <tr>
+                        <td><b>📅 ${l.data || l.data_pagamento || '-'}</b></td>
+                        <td><span class="badge badge-info" style="font-size: 11px;">${l.ano || '2026'}</span></td>
+                        <td><b style="color: var(--accent-gold); font-size: 12px;">${mesesTxt}</b></td>
+                        <td style="font-weight: 700; color: #2ECC71; font-size: 13px;">R$ ${valorFmt}</td>
+                        <td><small style="color: var(--text-muted);">${obsTxt}</small></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline" style="font-size: 10px; padding: 2px 6px;" onclick="verExtratoAssociado('${currentUser.cpf}')" title="Ver no Extrato">📄 Extrato</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
     }
 }

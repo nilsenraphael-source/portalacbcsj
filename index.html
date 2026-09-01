@@ -920,9 +920,37 @@
                                         <th>Tarifa Vigente (R$)</th>
                                         <th>Valor Quitado (R$)</th>
                                         <th>Status do Pagamento</th>
+                                        <th>Comprovante / Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tableMinhasMensalidadesBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- HISTÓRICO DE LANÇAMENTOS E BAIXAS VIA PIX DO ASSOCIADO -->
+                    <div class="card" style="margin-top: 20px;">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 class="card-title" style="color: var(--accent-gold);">📋 Extrato de Lançamentos & Recibos PIX</h3>
+                                <p style="font-size: 12px; color: var(--text-muted);">Todos os lançamentos de pagamento registrados no seu CPF.</p>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="verExtratoAssociado(currentUser ? currentUser.cpf : '')">📄 Ver Extrato Completo</button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="custom-table" style="font-size: 12px;">
+                                <thead>
+                                    <tr>
+                                        <th>Data Pagamento</th>
+                                        <th>Exercício</th>
+                                        <th>Meses Quitados</th>
+                                        <th>Valor Pago (R$)</th>
+                                        <th>Comprovante / Obs</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableExtratoMinhasMensalidadesAssociadoBody"></tbody>
                             </table>
                         </div>
                     </div>
@@ -2259,15 +2287,15 @@
     </div>
 
     <!-- SCRIPTS JS MODULARES -->
-    <script src="supabaseClient.js?v=20260901_05"></script>
-    <script src="js/core.js?v=20260901_05"></script>
-    <script src="js/auth.js?v=20260901_05"></script>
-    <script src="js/associados.js?v=20260901_05"></script>
-    <script src="js/documentos.js?v=20260901_05"></script>
-    <script src="js/mensagens.js?v=20260901_05"></script>
-    <script src="js/financeiro.js?v=20260901_05"></script>
-    <script src="js/portal-socio.js?v=20260901_05"></script>
-    <script src="js/mensalidades.js?v=20260901_05"></script>
-    <script src="js/relatorios.js?v=20260901_05"></script>
+    <script src="supabaseClient.js?v=20260901_06"></script>
+    <script src="js/core.js?v=20260901_06"></script>
+    <script src="js/auth.js?v=20260901_06"></script>
+    <script src="js/associados.js?v=20260901_06"></script>
+    <script src="js/documentos.js?v=20260901_06"></script>
+    <script src="js/mensagens.js?v=20260901_06"></script>
+    <script src="js/financeiro.js?v=20260901_06"></script>
+    <script src="js/portal-socio.js?v=20260901_06"></script>
+    <script src="js/mensalidades.js?v=20260901_06"></script>
+    <script src="js/relatorios.js?v=20260901_06"></script>
 </body>
 </html>
