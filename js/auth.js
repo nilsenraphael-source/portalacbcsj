@@ -71,32 +71,15 @@ async function loginWithCPF(cpf, password) {
             }
         }
 
-        // Garante que o Comandante exista na lista se não houver
-        if (!list.some(a => (a.cpf && a.cpf.replace(/\D/g, '') === '00000000000') || a.perfil === 'diretoria')) {
-            list.unshift({
-                id: "1",
-                cpf: "000.000.000-00",
-                senha: "123",
-                nome: "Comandante / Diretoria ACBCSJ",
-                nome_guerra: "Comandante",
-                email: "diretoria@acbcsj.org.br",
-                perfil: "diretoria",
-                status: "ativo",
-                data_cadastro: "01/01/2022"
-            });
-        }
+        // Remove qualquer conta genérica legada (000.000.000-00) da lista
+        list = list.filter(a => a.cpf !== '000.000.000-00' && (a.cpf || '').replace(/\D/g, '') !== '00000000000');
         localStorage.setItem('acbcsj_associados', JSON.stringify(list));
 
-        // Busca o usuário na base de dados
-        let found = null;
-        if (cleanInputCPF === '00000000000' || rawCpf === '000.000.000-00') {
-            found = list.find(a => (a.cpf && a.cpf.replace(/\D/g, '') === '00000000000') || a.perfil === 'diretoria');
-        } else {
-            found = list.find(a => {
-                const itemCleanCpf = (a.cpf || '').replace(/\D/g, '');
-                return itemCleanCpf === cleanInputCPF || a.cpf === rawCpf;
-            });
-        }
+        // Busca o usuário exclusivamente pelo CPF digitado
+        const found = list.find(a => {
+            const itemCleanCpf = (a.cpf || '').replace(/\D/g, '');
+            return itemCleanCpf === cleanInputCPF || a.cpf === rawCpf;
+        });
 
         // 1. SE O CPF NÃO EXISTE NO CADASTRO -> BLOQUEIA TOTALMENTE
         if (!found) {
@@ -127,24 +110,21 @@ async function loginWithCPF(cpf, password) {
             return false;
         }
 
-        // 4. VALIDAÇÃO RIGOROSA DA SENHA
-        const userSenhaCadastrada = String(found.senha || '').trim();
-        const defaultCpfSenha = cleanInputCPF.length >= 4 ? cleanInputCPF.substring(0, 4) : '';
+        // 4. VALIDAÇÃO RIGOROSA E ESTRITA DA SENHA INDIVIDUAL
+        let senhaEsperada = String(found.senha || '').trim();
 
-        let isSenhaValida = false;
-        if (userSenhaCadastrada && inputPassword === userSenhaCadastrada) {
-            isSenhaValida = true;
-        } else if (!userSenhaCadastrada && defaultCpfSenha && inputPassword === defaultCpfSenha) {
-            isSenhaValida = true;
-        } else if (!userSenhaCadastrada && (inputPassword === '1234' || inputPassword === '123')) {
-            isSenhaValida = true;
-        } else if (defaultCpfSenha && inputPassword === defaultCpfSenha) {
-            // Permite os 4 primeiros dígitos do CPF caso a senha cadastrada coincida ou seja o padrão inicial
-            isSenhaValida = true;
+        // Caso o registro no banco não possua campo senha preenchido:
+        if (!senhaEsperada) {
+            if (cleanInputCPF.length >= 4) {
+                senhaEsperada = cleanInputCPF.substring(0, 4);
+            } else {
+                senhaEsperada = '1234';
+            }
         }
 
-        if (!isSenhaValida) {
-            alert("❌ SENHA INCORRETA!\n\nA senha digitada não confere com o cadastro deste CPF.\n\n💡 Dica: Para novos membros cadastrados, a senha padrão inicial são os 4 primeiros dígitos do seu CPF.");
+        // Comparação ESTRITA da senha digitada com a senha individual do usuário
+        if (inputPassword !== senhaEsperada) {
+            alert("❌ SENHA INCORRETA!\n\nA senha digitada não confere com o cadastro deste CPF.\n\n💡 Dica: Para novos associados a senha padrão inicial são os 4 primeiros dígitos do seu CPF.");
             const passEl = document.getElementById('loginSenha');
             if (passEl) {
                 passEl.value = '';
