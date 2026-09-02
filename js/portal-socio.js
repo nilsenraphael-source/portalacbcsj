@@ -14,6 +14,8 @@ function abrirModalEditarMeusDados() {
     document.getElementById('editMeusCEP').value = currentUser.cep || '';
     document.getElementById('editMeusBairro').value = currentUser.bairro || '';
     document.getElementById('editMeusCidade').value = currentUser.cidade || 'São José / SC';
+    const senhaEl = document.getElementById('editMeusSenha');
+    if (senhaEl) senhaEl.value = '';
 
     openModal('modalEditarMeusDados');
 }
@@ -31,6 +33,8 @@ function salvarMeusDados(e) {
     const cep = document.getElementById('editMeusCEP').value.trim();
     const bairro = document.getElementById('editMeusBairro').value.trim();
     const cidade = document.getElementById('editMeusCidade').value.trim();
+    const novaSenhaEl = document.getElementById('editMeusSenha');
+    const novaSenha = novaSenhaEl ? novaSenhaEl.value.trim() : '';
 
     currentUser.telefone = telefone;
     currentUser.obm = obm;
@@ -41,6 +45,10 @@ function salvarMeusDados(e) {
     currentUser.cep = cep;
     currentUser.bairro = bairro;
     currentUser.cidade = cidade;
+
+    if (novaSenha && novaSenha.length > 0) {
+        currentUser.senha = novaSenha;
+    }
 
     let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const index = list.findIndex(a => a.cpf === currentUser.cpf);
@@ -53,7 +61,7 @@ function salvarMeusDados(e) {
         dbService.saveAssociado(currentUser);
     } catch (err) {}
 
-    alert('Seus dados cadastrais foram atualizados com sucesso!');
+    alert(`Seus dados cadastrais foram atualizados com sucesso!${novaSenha ? '\nSua nova senha de acesso foi salva.' : ''}`);
     closeModal('modalEditarMeusDados');
     renderAssociadoOverview();
 }

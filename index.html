@@ -37,12 +37,18 @@
             <form onsubmit="event.preventDefault(); loginWithCPF(document.getElementById('loginCPF').value, document.getElementById('loginSenha').value);">
                 <div class="form-group">
                     <label for="loginCPF">Seu CPF Registrado</label>
-                    <input type="text" id="loginCPF" class="form-control cpf-mask" placeholder="000.000.000-00" required>
+                    <input type="text" id="loginCPF" class="form-control cpf-mask" placeholder="000.000.000-00" required autocomplete="username">
                 </div>
 
                 <div class="form-group">
-                    <label for="loginSenha">Sua Senha de Acesso</label>
-                    <input type="password" id="loginSenha" class="form-control" placeholder="••••••••" required>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <label for="loginSenha" style="margin: 0;">Sua Senha de Acesso</label>
+                        <button type="button" class="btn btn-outline btn-sm" id="btnToggleLoginSenha" style="font-size: 11px; padding: 2px 8px;" onclick="toggleVisibilidadeLoginSenha()">👁️ Mostrar</button>
+                    </div>
+                    <input type="password" id="loginSenha" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                    <small style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px;">
+                        💡 <b>Senha padrão inicial:</b> Os 4 primeiros dígitos do seu CPF.
+                    </small>
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
@@ -2183,6 +2189,16 @@
                         <label>Cidade <span class="req-star">*</span></label>
                         <input type="text" id="editMeusCidade" class="form-control" placeholder="Ex: São José / Florianópolis" required>
                     </div>
+
+                    <div class="form-group-full" style="border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 5px;">
+                        <h4 style="font-size: 13px; color: var(--accent-gold); margin-bottom: 10px;">🔑 Segurança & Senha de Acesso ao Portal:</h4>
+                    </div>
+
+                    <!-- Nova Senha de Acesso -->
+                    <div class="form-group form-group-full">
+                        <label>Nova Senha de Acesso <small style="color: var(--text-muted); font-weight: normal;">(Deixe em branco para manter sua senha atual)</small></label>
+                        <input type="password" id="editMeusSenha" class="form-control" placeholder="Digite uma nova senha caso deseje alterá-la">
+                    </div>
                 </div>
 
                 <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
@@ -2654,17 +2670,17 @@
     </div>
 
     <!-- SCRIPTS JS MODULARES -->
-    <script src="supabaseClient.js?v=20260902_01"></script>
-    <script src="js/core.js?v=20260902_01"></script>
-    <script src="js/auth.js?v=20260902_01"></script>
-    <script src="js/associados.js?v=20260902_01"></script>
-    <script src="js/documentos.js?v=20260902_01"></script>
-    <script src="js/mensagens.js?v=20260902_01"></script>
-    <script src="js/financeiro.js?v=20260902_01"></script>
-    <script src="js/portal-socio.js?v=20260902_01"></script>
-    <script src="js/mensalidades.js?v=20260902_01"></script>
-    <script src="js/relatorios.js?v=20260902_01"></script>
-    <script src="js/escala.js?v=20260902_01"></script>
-    <script src="js/senhas.js?v=20260902_01"></script>
+    <script src="supabaseClient.js?v=20260902_02"></script>
+    <script src="js/core.js?v=20260902_02"></script>
+    <script src="js/auth.js?v=20260902_02"></script>
+    <script src="js/associados.js?v=20260902_02"></script>
+    <script src="js/documentos.js?v=20260902_02"></script>
+    <script src="js/mensagens.js?v=20260902_02"></script>
+    <script src="js/financeiro.js?v=20260902_02"></script>
+    <script src="js/portal-socio.js?v=20260902_02"></script>
+    <script src="js/mensalidades.js?v=20260902_02"></script>
+    <script src="js/relatorios.js?v=20260902_02"></script>
+    <script src="js/escala.js?v=20260902_02"></script>
+    <script src="js/senhas.js?v=20260902_02"></script>
 </body>
 </html>

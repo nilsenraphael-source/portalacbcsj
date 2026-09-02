@@ -154,7 +154,7 @@ function sanitizeAssociado(item) {
         solicitacao_desligamento: item.solicitacao_desligamento || null,
         obm: item.obm || 'São José',
         profissao: item.profissao || 'Bombeiro Comunitário',
-        senha: item.senha || '1234'
+        senha: item.senha || (item.cpf ? String(item.cpf).replace(/\D/g, '').substring(0, 4) : '1234')
     };
 }
 
