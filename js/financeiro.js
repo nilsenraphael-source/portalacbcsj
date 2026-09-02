@@ -984,22 +984,6 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
     openModal('modalBalanceteMensal');
 }
 
-    const botoes = document.getElementById('botoesBalanceteMensal');
-    if (botoes) {
-        botoes.innerHTML = `
-            <button type="button" class="btn btn-outline" onclick="closeModal('modalBalanceteMensal')">Fechar</button>
-            <button type="button" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 6px;" onclick="exportarBalanceteMensalCSV(${mIdx}, '${anoStr}')">
-                📊 Baixar Planilha (.CSV)
-            </button>
-            <button type="button" class="btn btn-gold" style="display: inline-flex; align-items: center; gap: 6px; font-weight: bold;" onclick="imprimirOuBaixarBalanceteMensal(${mIdx}, '${anoStr}')">
-                🖨️ Baixar / Imprimir PDF Oficial
-            </button>
-        `;
-    }
-
-    openModal('modalBalanceteMensal');
-}
-
 // ALIAS GLOBAL PARA ABERTURA DO BALANCETE MENSAL
 function abrirModalBalanceteMensal(mesIndex, anoStr) {
     gerarBalanceteMensal(parseInt(mesIndex, 10), anoStr);
