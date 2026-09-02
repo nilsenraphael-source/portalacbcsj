@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual do Usuário — Portal ACBCSJ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: #0A192F;
+            --primary-light: #172A45;
+            --accent-gold: #D4AF37;
+            --accent-gold-hover: #F1C40F;
+            --text-dark: #1E293B;
+            --text-muted: #64748B;
+            --bg-light: #F8FAFC;
+            --border-color: #E2E8F0;
+            --success: #16A34A;
+            --danger: #DC2626;
+            --info: #0284C7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #ECEFF1;
+            color: var(--text-dark);
+            line-height: 1.55;
+            font-size: 13px;
+        }
+
+        .no-print-bar {
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            background: #0A192F;
+            color: #FFFFFF;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .no-print-bar h2 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent-gold);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #D4AF37, #B8972E);
+            color: #0A192F;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-print:hover {
+            background: #F1C40F;
+            transform: translateY(-1px);
+        }
+
+        .doc-container {
+            max-width: 900px;
+            margin: 25px auto 50px auto;
+            background: #FFFFFF;
+            padding: 45px 50px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+        }
+
+        /* CAPA INSTITUCIONAL */
+        .cover-header {
+            border-bottom: 3px solid var(--accent-gold);
+            padding-bottom: 25px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cover-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .cover-logo {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+        }
+
+        .cover-title h1 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cover-title span {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-gold);
+            display: block;
+        }
+
+        .doc-badge {
+            background: #0A192F;
+            color: #FFFFFF;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            border-left: 4px solid var(--accent-gold);
+            text-align: right;
+        }
+
+        .section-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--primary);
+            border-left: 5px solid var(--accent-gold);
+            padding-left: 12px;
+            margin: 32px 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subsection-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-light);
+            margin: 20px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        p {
+            margin-bottom: 12px;
+            color: #334155;
+            text-align: justify;
+        }
+
+        /* CARDS E BOXES */
+        .highlight-box {
+            background: #F1F5F9;
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--primary);
+            padding: 14px 18px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 12.5px;
+        }
+
+        .highlight-box.gold {
+            background: #FEF9C3;
+            border-color: #FDE047;
+            border-left: 4px solid var(--accent-gold);
+            color: #713F12;
+        }
+
+        .highlight-box.blue {
+            background: #E0F2FE;
+            border-color: #BAE6FD;
+            border-left: 4px solid var(--info);
+            color: #075985;
+        }
+
+        .highlight-box.green {
+            background: #DCFCE7;
+            border-color: #BBF7D0;
+            border-left: 4px solid var(--success);
+            color: #14532D;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+            margin: 18px 0;
+        }
+
+        .step-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            position: relative;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+
+        .step-number {
+            display: inline-block;
+            background: var(--primary);
+            color: var(--accent-gold);
+            font-weight: 800;
+            font-size: 12px;
+            width: 26px;
+            height: 26px;
+            line-height: 26px;
+            text-align: center;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+        .step-card h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .step-card p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 0;
+            text-align: left;
+        }
+
+        /* TABELAS */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 12px;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #0A192F;
+            color: #FFFFFF;
+            font-weight: 700;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #F8FAFC;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+
+        .badge-gold { background: #FEF3C7; color: #92400E; }
+        .badge-blue { background: #DBEAFE; color: #1E40AF; }
+        .badge-green { background: #DCFCE7; color: #166534; }
+        .badge-red { background: #FEE2E2; color: #991B1B; }
+
+        /* GUIA DE CORES DA ESCALA */
+        .scale-legend {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .scale-item {
+            padding: 10px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 11.5px;
+            color: #FFFFFF;
+        }
+
+        .gu-verde { background: #2ECC71; }
+        .gu-vermelha { background: #E74C3C; }
+        .gu-azul { background: #3498DB; }
+        .gu-amarela { background: #F1C40F; color: #000; }
+
+        /* FOOTER */
+        .doc-footer {
+            margin-top: 40px;
+            border-top: 2px solid var(--border-color);
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* AJUSTES PARA IMPRESSÃO / PDF */
+        @media print {
+            .no-print-bar {
+                display: none !important;
+            }
+
+            body {
+                background: #FFFFFF !important;
+                font-size: 11.5pt;
+            }
+
+            .doc-container {
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+            }
+
+            .page-break {
+                page-break-before: always;
+            }
+
+            @page {
+                size: A4 portrait;
+                margin: 15mm 12mm 15mm 12mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BARRA DE TOPO COM BOTÃO DE IMPRESSÃO (NÃO SAI NO PDF) -->
+    <div class="no-print-bar">
+        <h2>📘 Manual Oficial do Usuário — Portal ACBCSJ</h2>
+        <button class="btn-print" onclick="window.print()">
+            🖨️ Salvar como PDF / Imprimir
+        </button>
+    </div>
+
+    <div class="doc-container">
+
+        <!-- CABEÇALHO DA CAPA -->
+        <div class="cover-header">
+            <div class="cover-brand">
+                <img src="logo.png" alt="Logo ACBCSJ" class="cover-logo" onerror="this.style.display='none'">
+                <div class="cover-title">
+                    <h1>ACBCSJ</h1>
+                    <span>Associação do Corpo de Bombeiros Comunitários de São José</span>
+                </div>
+            </div>
+            <div class="doc-badge">
+                MANUAL OPERACIONAL<br>
+                <span>Versão 2026 • Oficial</span>
+            </div>
+        </div>
+
+        <div class="highlight-box gold">
+            <b>📌 Finalidade deste Documento:</b><br>
+            Este manual foi elaborado para orientar associados e membros da diretoria no uso cotidiano do <b>Portal de Gestão & Transparência da ACBCSJ</b>, demonstrando passo a passo como consultar escalas, gerenciar mensalidades, emitir balancetes, acessar documentos e acompanhar a vida associativa.
+        </div>
+
+        <!-- SEÇÃO 1: ACESSO AO SISTEMA -->
+        <h2 class="section-title">1. Acesso e Primeiro Cadastro</h2>
+        <p>O Portal da ACBCSJ é acessível via navegador web tanto pelo computador quanto pelo celular através de endereço seguro.</p>
+
+        <div class="steps-grid">
+            <div class="step-card">
+                <span class="step-number">1</span>
+                <h4>Inserção de CPF</h4>
+                <p>Digite o número do seu CPF cadastrado. A pontuação é formatada automaticamente (ex: <i>123.456.789-00</i>).</p>
+            </div>
+            <div class="step-card">
+                <span class="step-number">2</span>
+                <h4>Senha Pessoal</h4>
+                <p>Insira a sua senha de acesso. No primeiro acesso, solicite a credencial padrão fornecida pela Diretoria.</p>
+            </div>
+            <div class="step-card">
+                <span class="step-number">3</span>
+                <h4>Solicitar Pré-Cadastro</h4>
+                <p>Se você ainda não possui cadastro ativo, clique no botão <b>"Não tem acesso? Solicitar Pré-Cadastro"</b> e preencha a ficha com seus dados.</p>
+            </div>
+        </div>
+
+        <div class="highlight-box blue">
+            <b>💡 Perfis de Acesso:</b><br>
+            • <b>Associado (Bombeiro Comunitário):</b> Acesso a escalas militares, carteirinha digital, comprovantes de anuidade, balancetes de transparência e comunicados.<br>
+            • <b>Diretoria / Comando:</b> Gestão completa de associados, controle de mensalidades, livro-caixa financeiro, emissão de balancetes contábeis e cofre de senhas.
+        </div>
+
+        <!-- SEÇÃO 2: MÓDULO DO ASSOCIADO -->
+        <h2 class="section-title">2. Funcionalidades do Associado (Sócio / Bombeiro)</h2>
+
+        <h3 class="subsection-title">🏠 2.1. Meu Painel (Visão Geral & Carteirinha Digital)</h3>
+        <p>Ao realizar o login como associado, o sistema apresenta a tela principal contendo:</p>
+        <ul style="margin-left: 20px; margin-bottom: 12px;">
+            <li><b>Carteirinha Digital:</b> Exibe seu nome, graduação, matrícula BC, tipo sanguíneo, fator RH, número de associado e <b>QR Code de Validação</b> de membro ativo.</li>
+            <li><b>Status de Anuidade:</b> Indica em tempo real se a anuidade/mensalidade do ano corrente está <b>Em Dia</b> ou com <b>Pendente</b>.</li>
+            <li><b>Dados Cadastrais:</b> Permite conferir e atualizar seu endereço, telefone/WhatsApp, e-mail e dados de emergência através do botão <i>"✏️ Atualizar Meus Dados Cadastrais"</i>.</li>
+        </ul>
+
+        <h3 class="subsection-title">🚒 2.2. Escala Militar Perpétua (Regime 24x72)</h3>
+        <p>Módulo exclusivo para consulta de escala de serviço operacional dos bombeiros comunitários:</p>
+        
+        <div class="scale-legend">
+            <div class="scale-item gu-verde">1ª GU — Verde</div>
+            <div class="scale-item gu-vermelha">2ª GU — Vermelha</div>
+            <div class="scale-item gu-azul">3ª GU — Azul</div>
+            <div class="scale-item gu-amarela">4ª GU — Amarela</div>
+        </div>
+
+        <div class="steps-grid">
+            <div class="step-card">
+                <span class="step-number">A</span>
+                <h4>Visualização em Calendário</h4>
+                <p>Exibe os 30/31 dias do mês com marcações visuais de cada plantão de 24 horas, destacando feriados e o dia atual.</p>
+            </div>
+            <div class="step-card">
+                <span class="step-number">B</span>
+                <h4>Consulta de Data Futura</h4>
+                <p>Ferramenta para selecionar qualquer data do ano e descobrir instantaneamente qual guarnição estará de plantão.</p>
+            </div>
+            <div class="step-card">
+                <span class="step-number">C</span>
+                <h4>Impressão da Escala</h4>
+                <p>Botão <b>"🖨️ Imprimir"</b> gera a grade mensal oficial para fixação no quartel ou consulta offline.</p>
+            </div>
+        </div>
+
+        <div class="page-break"></div>
+
+        <h3 class="subsection-title">💳 2.3. Controle de Mensalidades & Pagamento via PIX</h3>
+        <p>Área destinada à consulta e quitação das mensalidades associativas:</p>
+        <ul style="margin-left: 20px; margin-bottom: 12px;">
+            <li><b>Chave PIX e QR Code:</b> Disponibiliza a Chave CNPJ oficial da ACBCSJ (<code>07.820.678/0001-57</code>) e botão <i>"Copiar Chave PIX"</i> para transferência rápida no aplicativo do seu banco.</li>
+            <li><b>Lançamento de Comprovante:</b> Clique em <b>"💳 + Lançar Pagamento (PIX)"</b>, selecione o ano/mês de referência, informe a data e anexe a foto ou PDF do comprovante bancário.</li>
+            <li><b>Emissão de Recibo & Extrato:</b> Visualize o extrato completo com quitações anteriores e gere o comprovante oficial de membro adimplente.</li>
+        </ul>
+
+        <h3 class="subsection-title">📈 2.4. Balancetes & Transparência Financeira</h3>
+        <p>A ACBCSJ preza pela transparência de suas contas. Todos os sócios têm acesso irrestrito aos relatórios financeiros:</p>
+        <div class="steps-grid">
+            <div class="step-card">
+                <span class="step-number">1</span>
+                <h4>Balancete Sintético Mensal</h4>
+                <p>Tabela discriminando receitas de mensalidades, outras receitas e total de despesas pagas mês a mês.</p>
+            </div>
+            <div class="step-card">
+                <span class="step-number">2</span>
+                <h4>Detalhamento com Notas Fiscais</h4>
+                <p>Clique em <b>"👁️ Visualizar Balancete"</b> em qualquer mês para conferir o extrato com favorecidos, valores e comprovantes de despesas.</p>
+            </div>
+            <div class="step-card">
+                <span class="step-number">3</span>
+                <h4>Exportação em PDF e Planilha</h4>
+                <p>Baixe o balancete oficial assinado em PDF para prestação de contas ou exporte em planilha Excel/CSV.</p>
+            </div>
+        </div>
+
+        <h3 class="subsection-title">📑 2.5. Documentos Oficiais & Central de Contato</h3>
+        <ul style="margin-left: 20px; margin-bottom: 12px;">
+            <li><b>Documentos & Atas:</b> Download do Estatuto Social da ACBCSJ, atas de assembleias gerais e comunicados formais.</li>
+            <li><b>Fale com a Diretoria:</b> Canal direto para envio de dúvidas, sugestões e requerimentos para a mesa diretora.</li>
+        </ul>
+
+        <!-- SEÇÃO 3: MÓDULO DA DIRETORIA -->
+        <h2 class="section-title">3. Funcionalidades da Diretoria & Gestão Administrativa</h2>
+
+        <h3 class="subsection-title">👥 3.1. Gestão e Controle de Associados</h3>
+        <p>Painel central de associados ativos, pendentes de aprovação e desligados:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Recurso</th>
+                    <th>Descrição Operacional</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><b>Aprovação de Pré-Cadastros</b></td>
+                    <td>Analisa e homologa novos voluntários que preencheram a solicitação inicial no portal.</td>
+                </tr>
+                <tr>
+                    <td><b>Ficha Cadastral Completa</b></td>
+                    <td>Gera a ficha cadastral do bombeiro para impressão contendo foto, matrícula, datas de curso e contatos.</td>
+                </tr>
+                <tr>
+                    <td><b>Edição e Reativação</b></td>
+                    <td>Permite editar dados de qualquer associado ou reativar cadastros anteriormente inativos.</td>
+                </tr>
+                <tr>
+                    <td><b>Desligamento Administrativo</b></td>
+                    <td>Registra o desligamento formal de membros, arquivando a data e o motivo no histórico permanente.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3 class="subsection-title">💰 3.2. Controle Financeiro, Livro-Caixa & Balancetes</h3>
+        <p>Módulo de controle orçamentário completo da entidade:</p>
+        <ul style="margin-left: 20px; margin-bottom: 12px;">
+            <li><b>Lançamento de Receitas:</b> Registro de arrecadações extras, doações, rifas, eventos e rendimentos de contas.</li>
+            <li><b>Lançamento de Despesas:</b> Registro de gastos com categoria padronizada (Mercado, Treinamentos, Uniformes, Manutenção, Combustível, Tarifas bancárias) e anexo obrigatório de Nota Fiscal ou Recibo.</li>
+            <li><b>Baixa de Mensalidades:</b> Conciliação em massa ou individual das contribuições dos associados via PIX.</li>
+            <li><b>Reajuste Global:</b> Ferramenta para atualizar o valor oficial da anuidade/mensalidade para todos os sócios com um clique.</li>
+            <li><b>Conciliação Bancária:</b> Controle dos saldos e movimentações nas contas do <b>SICREDI (Conta Corrente/PIX)</b> e <b>Caixa Econômica Federal (Poupança)</b>.</li>
+        </ul>
+
+        <div class="page-break"></div>
+
+        <h3 class="subsection-title">🔐 3.3. Cofre Seguro de Senhas & Credenciais Institucionais</h3>
+        <p>Módulo protegido para armazenamento e gestão de acessos digitais da ACBCSJ (Internet banking, provedores, e-mails institucionais, sistemas do CBMSC e redes sociais):</p>
+        <ul style="margin-left: 20px; margin-bottom: 12px;">
+            <li>Visualização em cartões ou tabela detalhada;</li>
+            <li>Botão de cópia rápida de usuário e senha para a área de transferência;</li>
+            <li>Histórico e backup criptografado das credenciais institucionais.</li>
+        </ul>
+
+        <!-- SEÇÃO 4: DÚVIDAS FREQUENTES -->
+        <h2 class="section-title">4. Perguntas Frequentes (FAQ) & Resolução de Dúvidas</h2>
+
+        <div class="highlight-box">
+            <b>❓ Como faço para trocar ou recuperar minha senha?</b><br>
+            Entre em contato com o administrador ou diretoria através da aba <i>"Fale com a Diretoria"</i> ou pelo WhatsApp da Associação para que uma nova senha temporária seja gerada.
+        </div>
+
+        <div class="highlight-box">
+            <b>❓ Como sei se meu pagamento PIX foi confirmado?</b><br>
+            Assim que você anexa o comprovante, ele é encaminhado para a Diretoria Financeira. Quando a baixa for homologada, o status no seu painel mudará automaticamente de <i>Pendente</i> para <i>Confirmado / Em Dia</i> (🟢).
+        </div>
+
+        <div class="highlight-box">
+            <b>❓ O sistema funciona no celular?</b><br>
+            Sim! O Portal ACBCSJ é 100% responsivo e otimizado para celulares, tablets e computadores, permitindo consultar escalas e efetuar pagamentos com facilidade.
+        </div>
+
+        <!-- RODAPÉ INSTITUCIONAL -->
+        <div class="doc-footer">
+            <div>
+                <b>ACBCSJ — Associação do Corpo de Bombeiros Comunitários de São José</b><br>
+                CNPJ: 07.820.678/0001-57 • São José / Santa Catarina
+            </div>
+            <div style="text-align: right;">
+                Portal de Gestão & Transparência<br>
+                <i>Documento Gerado Oficialmente pelo Sistema</i>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
