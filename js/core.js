@@ -159,6 +159,13 @@ function initMockData() {
         list = list.filter(a => a.cpf !== '000.000.000-00' && (a.cpf || '').replace(/\D/g, '') !== '00000000000');
     }
 
+    // Garante que o Da Silva (318.036.738-50) esteja presente na lista
+    const temDaSilva = list.some(a => (a.cpf || '').replace(/\D/g, '') === '31803673850' || a.nome_guerra === 'Da Silva');
+    if (!temDaSilva && typeof ASSOCIADOS_PLANILHA_REAL !== 'undefined') {
+        const daSilvaObj = ASSOCIADOS_PLANILHA_REAL.find(a => a.nome_guerra === 'Da Silva');
+        if (daSilvaObj) list.push(daSilvaObj);
+    }
+
     if (!list || list.length < 50) {
         list = (MOCK_DATA_INITIAL.associados || []).filter(a => a.cpf !== '000.000.000-00' && (a.cpf || '').replace(/\D/g, '') !== '00000000000');
     }
