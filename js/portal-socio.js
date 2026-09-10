@@ -677,6 +677,16 @@ function getComunicadosLidosUsuario() {
     return JSON.parse(localStorage.getItem(storageKey)) || [];
 }
 
+function getComunicadosNaoLidosCount(cleanUserCpf) {
+    if (!currentUser && !cleanUserCpf) return 0;
+    const cpf = cleanUserCpf || (currentUser ? currentUser.cpf : '');
+    const cleanCpf = (cpf || '').replace(/\D/g, '');
+    const todos = obterTodosComunicadosEMensagensAssociado(cleanCpf);
+    const lidos = getComunicadosLidosUsuario();
+    return todos.filter(c => !lidos.includes(c.id)).length;
+}
+window.getComunicadosNaoLidosCount = getComunicadosNaoLidosCount;
+
 function marcarComunicadoLido(comunicadoId) {
     if (!currentUser || !comunicadoId) return;
     const cleanUserCpf = (currentUser.cpf || '').replace(/\D/g, '');
@@ -688,61 +698,92 @@ function marcarComunicadoLido(comunicadoId) {
         localStorage.setItem(storageKey, JSON.stringify(lidos));
     }
 
+    if (typeof renderSidebarMenu === 'function') renderSidebarMenu();
     renderAssociadoOverview();
     renderComunicadosHistoricoAssociado();
 }
+window.marcarComunicadoLido = marcarComunicadoLido;
 
 function obterTodosComunicadosEMensagensAssociado(cleanUserCpf) {
     const comunicadosAll = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
     const mensagensAll = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
 
     const itens = [];
+    const userClean = String(cleanUserCpf || '').replace(/\D/g, '');
 
-    // 1. Comunicados gerais ou individuais enviados pela diretoria
+    // 1. Comunicados gerais ou individuais salvos na chave acbcsj_comunicados_enviados
     comunicadosAll.forEach(c => {
         let match = false;
-        if (c.destinatario_tipo === 'todos') match = true;
+        const tipo = String(c.destinatario_tipo || '').toLowerCase();
+        if (tipo === 'todos' || !c.destinatario_tipo) match = true;
         else if (c.destinatarios_cpfs && Array.isArray(c.destinatarios_cpfs)) {
-            if (c.destinatarios_cpfs.includes('TODOS')) match = true;
-            else if (c.destinatarios_cpfs.some(cpfItem => (cpfItem || '').replace(/\D/g, '') === cleanUserCpf)) match = true;
+            if (c.destinatarios_cpfs.some(cpfItem => String(cpfItem || '').toUpperCase() === 'TODOS' || String(cpfItem || '').replace(/\D/g, '') === userClean)) {
+                match = true;
+            }
+        } else if (typeof c.destinatarios_cpfs === 'string') {
+            const arr = c.destinatarios_cpfs.split(',');
+            if (arr.some(cpfItem => String(cpfItem || '').toUpperCase() === 'TODOS' || String(cpfItem || '').replace(/\D/g, '') === userClean)) {
+                match = true;
+            }
         }
         if (match) {
             itens.push({
                 id: c.id,
-                assunto: c.assunto,
-                mensagem: c.mensagem,
+                assunto: c.assunto || '📢 Comunicado Oficial da Diretoria',
+                mensagem: c.mensagem || c.conteudo || '',
                 prioridade: c.prioridade || 'Informativo',
-                data: c.data,
+                data: c.data || c.data_envio || 'Recente',
                 remetente_nome: c.remetente_nome || 'Diretoria ACBCSJ',
                 destinatarios_resumo: c.destinatarios_resumo || 'Associados'
             });
         }
     });
 
-    // 2. Mensagens diretas ou respostas de solicitações (ex: indeferimento/homologação de desligamento ou resposta de ideia)
+    // 2. Mensagens do Supabase / acbcsj_mensagens (comunicados da diretoria E mensagens diretas / respostas)
     mensagensAll.forEach(m => {
-        const cleanDest = (m.destinatario || '').replace(/\D/g, '');
-        const cleanAssoc = (m.associado_cpf || '').replace(/\D/g, '');
+        const destStr = String(m.destinatario || '').trim();
+        const destLower = destStr.toLowerCase();
+        const isBroadcast = destLower === 'todos' || destLower === 'all' || (m.id && String(m.id).startsWith('comunicado_') && (!destStr || destLower === 'todos'));
+        
+        let match = false;
+        let isDirectTicketResponse = false;
 
-        if (cleanDest === cleanUserCpf || (cleanAssoc === cleanUserCpf && (m.status === 'indeferida' || m.status === 'respondida' || m.status === 'homologada' || m.resposta))) {
+        if (isBroadcast) {
+            match = true;
+        } else if (destStr) {
+            const cpfs = destStr.split(',').map(s => s.replace(/\D/g, ''));
+            if (cpfs.includes(userClean) || cpfs.includes('TODOS')) {
+                match = true;
+            }
+        }
+
+        // Respostas a solicitações ou ideias abertas pelo próprio associado
+        const assocCpfClean = String(m.associado_cpf || '').replace(/\D/g, '');
+        if (assocCpfClean === userClean && (m.status === 'indeferida' || m.status === 'respondida' || m.status === 'homologada' || m.resposta || m.resposta_diretoria)) {
+            match = true;
+            isDirectTicketResponse = true;
+        }
+
+        if (match) {
             let msgFormatada = m.conteudo || m.mensagem || '';
-            if (m.resposta && !msgFormatada.includes(m.resposta)) {
-                msgFormatada += `\n\n📌 RESPOSTA OFICIAL DA DIRETORIA:\n"${m.resposta}"\n\n(Respondido por: ${m.respondido_por || 'Diretoria'} em ${m.data_resposta || m.data_envio || ''})`;
+            const resp = m.resposta || m.resposta_diretoria;
+            if (resp && !msgFormatada.includes(resp)) {
+                msgFormatada += `\n\n📌 RESPOSTA OFICIAL DA DIRETORIA:\n"${resp}"\n\n(Respondido por: ${m.respondido_por || 'Diretoria'} em ${m.data_resposta || m.data_envio || ''})`;
             }
 
             itens.push({
                 id: m.id,
-                assunto: m.assunto || '📢 Notificação da Diretoria',
+                assunto: m.assunto || (isDirectTicketResponse ? '📢 Resposta da Diretoria' : '📢 Comunicado Oficial'),
                 mensagem: msgFormatada,
-                prioridade: m.prioridade || (m.status === 'indeferida' ? 'Urgente' : 'Importante'),
+                prioridade: m.prioridade || (m.status === 'indeferida' ? 'Urgente' : (m.status === 'respondida' ? 'Importante' : 'Informativo')),
                 data: m.data_resposta || m.data_envio || m.data || 'Recente',
-                remetente_nome: m.respondido_por ? `${m.respondido_por} (Diretoria)` : 'Diretoria ACBCSJ',
-                destinatarios_resumo: '👤 Você'
+                remetente_nome: m.respondido_por ? `${m.respondido_por} (Diretoria)` : (m.associado_nome || 'Diretoria ACBCSJ'),
+                destinatarios_resumo: isDirectTicketResponse ? '👤 Você' : (destLower === 'todos' ? '📢 Todos os Associados' : '👤 Você')
             });
         }
     });
 
-    // Se o usuário tem resposta direta de desligamento gravada em seu perfil
+    // 3. Se o associado tem resposta de desligamento gravada em seu perfil
     if (currentUser && currentUser.solicitacao_desligamento_resposta && (!currentUser.solicitacao_desligamento || currentUser.solicitacao_desligamento.status !== 'pendente')) {
         const resp = currentUser.solicitacao_desligamento_resposta;
         const respId = 'resp_deslig_' + (resp.data || '').replace(/\D/g, '');
@@ -759,7 +800,7 @@ function obterTodosComunicadosEMensagensAssociado(cleanUserCpf) {
         }
     }
 
-    // Deduplica por id
+    // Deduplica por id preservando ordem mais recente primeiro
     const mapa = new Map();
     itens.forEach(it => {
         if (!mapa.has(it.id)) mapa.set(it.id, it);
@@ -767,6 +808,7 @@ function obterTodosComunicadosEMensagensAssociado(cleanUserCpf) {
 
     return Array.from(mapa.values());
 }
+window.obterTodosComunicadosEMensagensAssociado = obterTodosComunicadosEMensagensAssociado;
 
 function renderComunicadosHistoricoAssociado() {
     if (!currentUser) return;

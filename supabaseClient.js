@@ -536,6 +536,38 @@ const dbService = {
         return true;
     },
 
+// Helper para sincronizar comunicados enviados da tabela de mensagens
+function sincronizarComunicadosEnviados(mensagensData) {
+    if (!Array.isArray(mensagensData)) return;
+    let comunicados = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+    mensagensData.forEach(m => {
+        const isCom = (m.id && String(m.id).startsWith('comunicado_')) || 
+                      String(m.destinatario || '').toLowerCase() === 'todos' ||
+                      m.status === 'enviada';
+        if (isCom) {
+            const idx = comunicados.findIndex(c => c.id === m.id);
+            const comObj = {
+                id: m.id,
+                remetente_cpf: m.associado_cpf || '',
+                remetente_nome: m.associado_nome || 'Diretoria ACBCSJ',
+                destinatario_tipo: (m.destinatario === 'todos' || !m.destinatario) ? 'todos' : 'selecao',
+                destinatarios_cpfs: m.destinatario ? m.destinatario.split(',') : ['TODOS'],
+                destinatarios_resumo: (m.destinatario === 'todos' || !m.destinatario) ? '📢 Todos os Associados Ativos' : `👥 Destinatários (${m.destinatario})`,
+                assunto: m.assunto || '📢 Comunicado Oficial',
+                prioridade: m.prioridade || 'Informativo',
+                mensagem: m.conteudo || m.mensagem || '',
+                data: m.data_envio || m.data || new Date().toLocaleString('pt-BR')
+            };
+            if (idx >= 0) {
+                comunicados[idx] = { ...comunicados[idx], ...comObj };
+            } else {
+                comunicados.push(comObj);
+            }
+        }
+    });
+    safeSetLocalStorage('acbcsj_comunicados_enviados', comunicados);
+}
+
     // MENSAGENS E COMUNICADOS
     async getMensagens() {
         const client = getSupabaseClient();
@@ -544,6 +576,7 @@ const dbService = {
                 const { data, error } = await client.from('mensagens').select('*');
                 if (!error && data) {
                     localStorage.setItem('acbcsj_mensagens', JSON.stringify(data));
+                    sincronizarComunicadosEnviados(data);
                     return data;
                 }
             } catch (e) {
@@ -554,6 +587,7 @@ const dbService = {
             const data = await supabaseRest('mensagens?select=*');
             if (Array.isArray(data)) {
                 localStorage.setItem('acbcsj_mensagens', JSON.stringify(data));
+                sincronizarComunicadosEnviados(data);
                 return data;
             }
         } catch(e) {}
@@ -767,6 +801,7 @@ const dbService = {
                 supabaseRest('mensagens?select=*').then(data => {
                     if (data && Array.isArray(data)) {
                         safeSetLocalStorage('acbcsj_mensagens', data);
+                        sincronizarComunicadosEnviados(data);
                         countTotal += data.length;
                         sucessos++;
                     }

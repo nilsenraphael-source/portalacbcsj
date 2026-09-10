@@ -215,31 +215,50 @@ function renderUserHeader() {
 
 function renderSidebarMenu() {
     const menuNav = document.getElementById('sidebarNav');
-    if (!menuNav) return;
+    if (!menuNav || !currentUser) return;
     menuNav.innerHTML = '';
 
     if (currentUser.perfil === 'diretoria') {
+        let msgsNaoLidas = 0;
+        try {
+            const msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+            const lidas = JSON.parse(localStorage.getItem('acbcsj_mensagens_lidas_diretoria')) || [];
+            const recebidas = msgs.filter(m => m.destinatario === 'diretoria' || (m.associado_cpf && !String(m.id || '').startsWith('comunicado_')));
+            msgsNaoLidas = recebidas.filter(m => !lidas.includes(m.id) && !m.lida_diretoria).length;
+        } catch(e) {}
+
+        const badgeMsg = msgsNaoLidas > 0 ? `<span class="nav-badge-count">${msgsNaoLidas}</span>` : '';
+
         menuNav.innerHTML = `
-            <div class="nav-item active" onclick="navigateTab('overview-diretoria')">📊 Painel Geral</div>
-            <div class="nav-item" onclick="navigateTab('gestao-associados')">👥 Controle de Associados</div>
-            <div class="nav-item" onclick="navigateTab('associados-desligados')">📋 Associados Desligados</div>
-            <div class="nav-item" onclick="navigateTab('gestao-mensalidades')">💳 Controle de Mensalidades</div>
-            <div class="nav-item" onclick="navigateTab('minhas-mensalidades-diretor')">👤 Minhas Mensalidades</div>
-            <div class="nav-item" onclick="navigateTab('escala-militar')">🚒 Escala Militar</div>
-            <div class="nav-item" onclick="navigateTab('relatorios-diretoria')">📈 Relatórios & Gráficos</div>
-            <div class="nav-item" onclick="navigateTab('gestao-financeira')">💰 Lançamentos Financeiros</div>
-            <div class="nav-item" onclick="navigateTab('documentos-associado')">📑 Documentos & Atas</div>
-            <div class="nav-item" onclick="navigateTab('mensagens-diretoria')">📬 Caixa de Mensagens</div>
-            <div class="nav-item" onclick="navigateTab('senhas-acessos')">🔐 Senhas & Acessos</div>
+            <div class="nav-item active" onclick="navigateTab('overview-diretoria')"><span>📊 Painel Geral</span></div>
+            <div class="nav-item" onclick="navigateTab('gestao-associados')"><span>👥 Associados</span></div>
+            <div class="nav-item" onclick="navigateTab('associados-desligados')"><span>📋 Desligados</span></div>
+            <div class="nav-item" onclick="navigateTab('gestao-mensalidades')"><span>💳 Mensalidades</span></div>
+            <div class="nav-item" onclick="navigateTab('minhas-mensalidades-diretor')"><span>👤 Minhas Mensalidades</span></div>
+            <div class="nav-item" onclick="navigateTab('escala-militar')"><span>🚒 Escala Militar</span></div>
+            <div class="nav-item" onclick="navigateTab('relatorios-diretoria')"><span>📈 Relatórios & Gráficos</span></div>
+            <div class="nav-item" onclick="navigateTab('gestao-financeira')"><span>💰 Financeiro</span></div>
+            <div class="nav-item" onclick="navigateTab('documentos-associado')"><span>📑 Documentos</span></div>
+            <div class="nav-item" onclick="navigateTab('mensagens-diretoria')"><span>📬 Mensagens</span>${badgeMsg}</div>
+            <div class="nav-item" onclick="navigateTab('senhas-acessos')"><span>🔐 Senhas & Acessos</span></div>
         `;
     } else {
+        let comNaoLidos = 0;
+        try {
+            if (typeof getComunicadosNaoLidosCount === 'function') {
+                comNaoLidos = getComunicadosNaoLidosCount(currentUser.cpf);
+            }
+        } catch(e) {}
+
+        const badgeCom = comNaoLidos > 0 ? `<span class="nav-badge-count">${comNaoLidos}</span>` : '';
+
         menuNav.innerHTML = `
-            <div class="nav-item active" onclick="navigateTab('overview-associado')">🏠 Meu Painel</div>
-            <div class="nav-item" onclick="navigateTab('escala-militar')">🚒 Escala Militar</div>
-            <div class="nav-item" onclick="navigateTab('comunicados-associado')">📢 Comunicados & Avisos</div>
-            <div class="nav-item" onclick="navigateTab('balancetes-associado')">📈 Balancetes & Contas</div>
-            <div class="nav-item" onclick="navigateTab('documentos-associado')">📁 Documentos & Convites</div>
-            <div class="nav-item" onclick="navigateTab('enviar-mensagem')">💬 Fale com a Diretoria</div>
+            <div class="nav-item active" onclick="navigateTab('overview-associado')"><span>🏠 Meu Painel</span></div>
+            <div class="nav-item" onclick="navigateTab('escala-militar')"><span>🚒 Escala Militar</span></div>
+            <div class="nav-item" onclick="navigateTab('comunicados-associado')"><span>📢 Comunicados & Avisos</span>${badgeCom}</div>
+            <div class="nav-item" onclick="navigateTab('balancetes-associado')"><span>📈 Balancetes & Contas</span></div>
+            <div class="nav-item" onclick="navigateTab('documentos-associado')"><span>📁 Documentos & Convites</span></div>
+            <div class="nav-item" onclick="navigateTab('enviar-mensagem')"><span>💬 Fale com a Diretoria</span></div>
         `;
     }
 }
@@ -265,7 +284,16 @@ function navigateTab(tabId) {
 
     // Destacar item de menu ativo
     const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick')?.includes(tabId));
-    if (activeNav) activeNav.classList.add('active');
+    if (activeNav) {
+        activeNav.classList.add('active');
+        // Scroll suave no menu mobile
+        if (window.innerWidth <= 768 && activeNav.parentElement) {
+            try {
+                const scrollLeft = activeNav.offsetLeft - (activeNav.parentElement.clientWidth / 2) + (activeNav.clientWidth / 2);
+                activeNav.parentElement.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' });
+            } catch(e) {}
+        }
+    }
 
     // Executar atualizações de tela específicas
     if (tabId === 'overview-diretoria') renderDiretoriaOverview();

@@ -266,7 +266,36 @@ function renderMensagensDiretoria() {
             }).join('');
         }
     } else {
-        const comunicados = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+        const comunicadosLocal = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+        const msgsAll = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+        
+        const mapa = new Map();
+        comunicadosLocal.forEach(c => {
+            if (c && c.id) mapa.set(c.id, c);
+        });
+
+        msgsAll.forEach(m => {
+            const isCom = (m.id && String(m.id).startsWith('comunicado_')) || 
+                          String(m.destinatario || '').toLowerCase() === 'todos' ||
+                          m.status === 'enviada';
+            if (isCom && !mapa.has(m.id)) {
+                mapa.set(m.id, {
+                    id: m.id,
+                    remetente_cpf: m.associado_cpf || '',
+                    remetente_nome: m.associado_nome || 'Diretoria ACBCSJ',
+                    destinatario_tipo: (m.destinatario === 'todos' || !m.destinatario) ? 'todos' : 'selecao',
+                    destinatarios_cpfs: m.destinatario ? m.destinatario.split(',') : ['TODOS'],
+                    destinatarios_resumo: (m.destinatario === 'todos' || !m.destinatario) ? '📢 Todos os Associados Ativos' : `👥 Destinatários (${m.destinatario})`,
+                    assunto: m.assunto || '📢 Comunicado Oficial',
+                    prioridade: m.prioridade || 'Informativo',
+                    mensagem: m.conteudo || m.mensagem || '',
+                    data: m.data_envio || m.data || 'Recente'
+                });
+            }
+        });
+
+        const comunicados = Array.from(mapa.values());
+
         if (comunicados.length === 0) {
             container.innerHTML = `
                 <div class="card" style="text-align: center; padding: 30px; color: var(--text-muted);">
@@ -282,7 +311,7 @@ function renderMensagensDiretoria() {
 
                 return `
                     <div class="card" style="margin-bottom: 12px; border-left: 4px solid #3498DB;">
-                        <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 6px;">
+                        <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
                             <div style="display: flex; gap: 8px; align-items: center;">
                                 <b style="font-size: 15px; color: var(--accent-gold);">${c.assunto}</b>
                                 ${badgePrio}
@@ -290,11 +319,11 @@ function renderMensagensDiretoria() {
                             <small style="color:var(--text-muted); font-size: 11px;">📅 ${c.data}</small>
                         </div>
                         <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
-                            👥 Destinatários: <b style="color: #3498DB;">${c.destinatarios_resumo}</b> | Enviado por: <b style="color: #fff;">${c.remetente_nome || 'Diretoria'}</b>
+                            👥 Destinatários: <b style="color: #3498DB;">${c.destinatarios_resumo || 'Associados'}</b> | Enviado por: <b style="color: #fff;">${c.remetente_nome || 'Diretoria'}</b>
                         </div>
-                        <p style="font-size:13px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; white-space: pre-wrap; margin: 0 0 10px 0;">${c.mensagem}</p>
+                        <p style="font-size:13px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; white-space: pre-wrap; margin: 0 0 10px 0; word-break: break-word;">${c.mensagem}</p>
                         <div style="display: flex; justify-content: flex-end;">
-                            <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 6px; color: #E74C3C; border-color: #E74C3C;" onclick="excluirComunicadoEnviado('${c.id}')">🗑️ Excluir Comunicado</button>
+                            <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 4px 8px; color: #E74C3C; border-color: #E74C3C;" onclick="excluirComunicadoEnviado('${c.id}')">🗑️ Excluir Comunicado</button>
                         </div>
                     </div>
                 `;
@@ -575,6 +604,11 @@ function excluirComunicadoEnviado(id) {
         let comunicados = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
         comunicados = comunicados.filter(c => c.id !== id);
         localStorage.setItem('acbcsj_comunicados_enviados', JSON.stringify(comunicados));
+
+        let msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+        msgs = msgs.filter(m => m.id !== id);
+        localStorage.setItem('acbcsj_mensagens', JSON.stringify(msgs));
+
         if (typeof dbService !== 'undefined') {
             try { dbService.deleteMensagem(id); } catch(e) {}
         }
