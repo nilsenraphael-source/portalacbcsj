@@ -2,11 +2,16 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#121417">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ACBCSJ">
+    <link rel="apple-touch-icon" href="logo.png">
     <title>ACBCSJ — Associação Corpo de Bombeiros Comunitários de São José</title>
     
     <!-- Folha de Estilos Customizada (Carregamento Prioritário) -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20260916_04">
 
     <!-- Google Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1415,6 +1420,56 @@
 
             </main>
         </div>
+
+        <!-- BARRA DE NAVEGAÇÃO INFERIOR FIXA (MOBILE APP BOTTOM BAR) -->
+        <nav id="mobileBottomNav" class="mobile-bottom-nav"></nav>
+    </div>
+
+    <!-- MODAL MENU MAIS DA DIRETORIA (BOTTOM SHEET MOBILE) -->
+    <div id="modalMenuMaisDiretoria" class="modal-backdrop" onclick="if(event.target === this) closeModal('modalMenuMaisDiretoria')">
+        <div class="modal-content mobile-bottom-sheet" style="max-width: 500px;">
+            <div class="bottom-sheet-drag-handle"></div>
+            <div class="modal-header" style="margin-bottom: 12px;">
+                <h3 style="font-size: 16px; color: var(--accent-gold); display: flex; align-items: center; gap: 8px;">
+                    <span>📂 Mais Opções & Módulos</span>
+                </h3>
+                <button type="button" class="modal-close" onclick="closeModal('modalMenuMaisDiretoria')">&times;</button>
+            </div>
+            <div class="mobile-more-grid">
+                <div class="mobile-more-item" onclick="navigateTab('escala-militar'); closeModal('modalMenuMaisDiretoria');">
+                    <span class="mobile-more-icon">🚒</span>
+                    <span class="mobile-more-title">Escala Militar</span>
+                </div>
+                <div class="mobile-more-item" onclick="navigateTab('associados-desligados'); closeModal('modalMenuMaisDiretoria');">
+                    <span class="mobile-more-icon">📋</span>
+                    <span class="mobile-more-title">Desligados</span>
+                </div>
+                <div class="mobile-more-item" onclick="navigateTab('minhas-mensalidades-diretor'); closeModal('modalMenuMaisDiretoria');">
+                    <span class="mobile-more-icon">👤</span>
+                    <span class="mobile-more-title">Minha Mensalidade</span>
+                </div>
+                <div class="mobile-more-item" onclick="navigateTab('relatorios-diretoria'); closeModal('modalMenuMaisDiretoria');">
+                    <span class="mobile-more-icon">📈</span>
+                    <span class="mobile-more-title">Relatórios & Gráficos</span>
+                </div>
+                <div class="mobile-more-item" onclick="navigateTab('documentos-associado'); closeModal('modalMenuMaisDiretoria');">
+                    <span class="mobile-more-icon">📑</span>
+                    <span class="mobile-more-title">Documentos & Atas</span>
+                </div>
+                <div class="mobile-more-item" onclick="navigateTab('mensagens-diretoria'); closeModal('modalMenuMaisDiretoria');">
+                    <span class="mobile-more-icon">📬</span>
+                    <span class="mobile-more-title">Central Mensagens</span>
+                </div>
+                <div class="mobile-more-item" onclick="navigateTab('senhas-acessos'); closeModal('modalMenuMaisDiretoria');">
+                    <span class="mobile-more-icon">🔐</span>
+                    <span class="mobile-more-title">Cofre de Senhas</span>
+                </div>
+                <div class="mobile-more-item" onclick="abrirSuporteWhatsApp(); closeModal('modalMenuMaisDiretoria');">
+                    <span class="mobile-more-icon">💬</span>
+                    <span class="mobile-more-title">WhatsApp Suporte</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL DE PRÉ-CADASTRO -->
@@ -2681,17 +2736,17 @@
     </div>
 
     <!-- SCRIPTS JS MODULARES -->
-    <script src="supabaseClient.js?v=20260916_03"></script>
-    <script src="js/core.js?v=20260916_03"></script>
-    <script src="js/auth.js?v=20260916_03"></script>
-    <script src="js/associados.js?v=20260916_03"></script>
-    <script src="js/documentos.js?v=20260916_03"></script>
-    <script src="js/mensagens.js?v=20260916_03"></script>
-    <script src="js/financeiro.js?v=20260916_03"></script>
-    <script src="js/portal-socio.js?v=20260916_03"></script>
-    <script src="js/mensalidades.js?v=20260916_03"></script>
-    <script src="js/relatorios.js?v=20260916_03"></script>
-    <script src="js/escala.js?v=20260916_03"></script>
-    <script src="js/senhas.js?v=20260916_03"></script>
+    <script src="supabaseClient.js?v=20260916_04"></script>
+    <script src="js/core.js?v=20260916_04"></script>
+    <script src="js/auth.js?v=20260916_04"></script>
+    <script src="js/associados.js?v=20260916_04"></script>
+    <script src="js/documentos.js?v=20260916_04"></script>
+    <script src="js/mensagens.js?v=20260916_04"></script>
+    <script src="js/financeiro.js?v=20260916_04"></script>
+    <script src="js/portal-socio.js?v=20260916_04"></script>
+    <script src="js/mensalidades.js?v=20260916_04"></script>
+    <script src="js/relatorios.js?v=20260916_04"></script>
+    <script src="js/escala.js?v=20260916_04"></script>
+    <script src="js/senhas.js?v=20260916_04"></script>
 </body>
 </html>

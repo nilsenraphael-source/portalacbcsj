@@ -215,8 +215,10 @@ function renderUserHeader() {
 
 function renderSidebarMenu() {
     const menuNav = document.getElementById('sidebarNav');
-    if (!menuNav || !currentUser) return;
-    menuNav.innerHTML = '';
+    const mobileBottomNav = document.getElementById('mobileBottomNav');
+    if (!currentUser) return;
+    if (menuNav) menuNav.innerHTML = '';
+    if (mobileBottomNav) mobileBottomNav.innerHTML = '';
 
     if (currentUser.perfil === 'diretoria') {
         let msgsNaoLidas = 0;
@@ -229,19 +231,47 @@ function renderSidebarMenu() {
 
         const badgeMsg = msgsNaoLidas > 0 ? `<span class="nav-badge-count">${msgsNaoLidas}</span>` : '';
 
-        menuNav.innerHTML = `
-            <div class="nav-item active" onclick="navigateTab('overview-diretoria')"><span>📊 Painel Geral</span></div>
-            <div class="nav-item" onclick="navigateTab('gestao-associados')"><span>👥 Associados</span></div>
-            <div class="nav-item" onclick="navigateTab('associados-desligados')"><span>📋 Desligados</span></div>
-            <div class="nav-item" onclick="navigateTab('gestao-mensalidades')"><span>💳 Mensalidades</span></div>
-            <div class="nav-item" onclick="navigateTab('minhas-mensalidades-diretor')"><span>👤 Minhas Mensalidades</span></div>
-            <div class="nav-item" onclick="navigateTab('escala-militar')"><span>🚒 Escala Militar</span></div>
-            <div class="nav-item" onclick="navigateTab('relatorios-diretoria')"><span>📈 Relatórios & Gráficos</span></div>
-            <div class="nav-item" onclick="navigateTab('gestao-financeira')"><span>💰 Financeiro</span></div>
-            <div class="nav-item" onclick="navigateTab('documentos-associado')"><span>📑 Documentos</span></div>
-            <div class="nav-item" onclick="navigateTab('mensagens-diretoria')"><span>📬 Mensagens</span>${badgeMsg}</div>
-            <div class="nav-item" onclick="navigateTab('senhas-acessos')"><span>🔐 Senhas & Acessos</span></div>
-        `;
+        if (menuNav) {
+            menuNav.innerHTML = `
+                <div class="nav-item active" onclick="navigateTab('overview-diretoria')"><span>📊 Painel Geral</span></div>
+                <div class="nav-item" onclick="navigateTab('gestao-associados')"><span>👥 Associados</span></div>
+                <div class="nav-item" onclick="navigateTab('associados-desligados')"><span>📋 Desligados</span></div>
+                <div class="nav-item" onclick="navigateTab('gestao-mensalidades')"><span>💳 Mensalidades</span></div>
+                <div class="nav-item" onclick="navigateTab('minhas-mensalidades-diretor')"><span>👤 Minhas Mensalidades</span></div>
+                <div class="nav-item" onclick="navigateTab('escala-militar')"><span>🚒 Escala Militar</span></div>
+                <div class="nav-item" onclick="navigateTab('relatorios-diretoria')"><span>📈 Relatórios & Gráficos</span></div>
+                <div class="nav-item" onclick="navigateTab('gestao-financeira')"><span>💰 Financeiro</span></div>
+                <div class="nav-item" onclick="navigateTab('documentos-associado')"><span>📑 Documentos</span></div>
+                <div class="nav-item" onclick="navigateTab('mensagens-diretoria')"><span>📬 Mensagens</span>${badgeMsg}</div>
+                <div class="nav-item" onclick="navigateTab('senhas-acessos')"><span>🔐 Senhas & Acessos</span></div>
+            `;
+        }
+
+        if (mobileBottomNav) {
+            mobileBottomNav.innerHTML = `
+                <div class="mobile-tab-btn active" data-tab="overview-diretoria" onclick="navigateTab('overview-diretoria')">
+                    <span class="mobile-tab-icon">📊</span>
+                    <span class="mobile-tab-label">Painel</span>
+                </div>
+                <div class="mobile-tab-btn" data-tab="gestao-associados" onclick="navigateTab('gestao-associados')">
+                    <span class="mobile-tab-icon">👥</span>
+                    <span class="mobile-tab-label">Sócios</span>
+                </div>
+                <div class="mobile-tab-btn" data-tab="gestao-mensalidades" onclick="navigateTab('gestao-mensalidades')">
+                    <span class="mobile-tab-icon">💳</span>
+                    <span class="mobile-tab-label">Mensalidades</span>
+                </div>
+                <div class="mobile-tab-btn" data-tab="gestao-financeira" onclick="navigateTab('gestao-financeira')">
+                    <span class="mobile-tab-icon">💰</span>
+                    <span class="mobile-tab-label">Caixa</span>
+                </div>
+                <div class="mobile-tab-btn" onclick="openModal('modalMenuMaisDiretoria')">
+                    <span class="mobile-tab-icon">⋯</span>
+                    <span class="mobile-tab-label">Mais</span>
+                    ${badgeMsg}
+                </div>
+            `;
+        }
     } else {
         let comNaoLidos = 0;
         try {
@@ -252,14 +282,42 @@ function renderSidebarMenu() {
 
         const badgeCom = comNaoLidos > 0 ? `<span class="nav-badge-count">${comNaoLidos}</span>` : '';
 
-        menuNav.innerHTML = `
-            <div class="nav-item active" onclick="navigateTab('overview-associado')"><span>🏠 Meu Painel</span></div>
-            <div class="nav-item" onclick="navigateTab('escala-militar')"><span>🚒 Escala Militar</span></div>
-            <div class="nav-item" onclick="navigateTab('comunicados-associado')"><span>📢 Comunicados & Avisos</span>${badgeCom}</div>
-            <div class="nav-item" onclick="navigateTab('balancetes-associado')"><span>📈 Balancetes & Contas</span></div>
-            <div class="nav-item" onclick="navigateTab('documentos-associado')"><span>📁 Documentos & Convites</span></div>
-            <div class="nav-item" onclick="navigateTab('enviar-mensagem')"><span>💬 Fale com a Diretoria</span></div>
-        `;
+        if (menuNav) {
+            menuNav.innerHTML = `
+                <div class="nav-item active" onclick="navigateTab('overview-associado')"><span>🏠 Meu Painel</span></div>
+                <div class="nav-item" onclick="navigateTab('escala-militar')"><span>🚒 Escala Militar</span></div>
+                <div class="nav-item" onclick="navigateTab('comunicados-associado')"><span>📢 Comunicados & Avisos</span>${badgeCom}</div>
+                <div class="nav-item" onclick="navigateTab('balancetes-associado')"><span>📈 Balancetes & Contas</span></div>
+                <div class="nav-item" onclick="navigateTab('documentos-associado')"><span>📁 Documentos & Convites</span></div>
+                <div class="nav-item" onclick="navigateTab('enviar-mensagem')"><span>💬 Fale com a Diretoria</span></div>
+            `;
+        }
+
+        if (mobileBottomNav) {
+            mobileBottomNav.innerHTML = `
+                <div class="mobile-tab-btn active" data-tab="overview-associado" onclick="navigateTab('overview-associado')">
+                    <span class="mobile-tab-icon">🏠</span>
+                    <span class="mobile-tab-label">Início</span>
+                </div>
+                <div class="mobile-tab-btn" data-tab="escala-militar" onclick="navigateTab('escala-militar')">
+                    <span class="mobile-tab-icon">🚒</span>
+                    <span class="mobile-tab-label">Escala</span>
+                </div>
+                <div class="mobile-tab-btn" data-tab="comunicados-associado" onclick="navigateTab('comunicados-associado')">
+                    <span class="mobile-tab-icon">📢</span>
+                    <span class="mobile-tab-label">Avisos</span>
+                    ${badgeCom}
+                </div>
+                <div class="mobile-tab-btn" data-tab="balancetes-associado" onclick="navigateTab('balancetes-associado')">
+                    <span class="mobile-tab-icon">📈</span>
+                    <span class="mobile-tab-label">Contas</span>
+                </div>
+                <div class="mobile-tab-btn" data-tab="enviar-mensagem" onclick="navigateTab('enviar-mensagem')">
+                    <span class="mobile-tab-icon">💬</span>
+                    <span class="mobile-tab-label">Contato</span>
+                </div>
+            `;
+        }
     }
 }
 
@@ -278,6 +336,13 @@ function navigateTab(tabId) {
 
     document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+        if (btn.getAttribute('data-tab') === tabId) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
 
     const activeTab = document.getElementById(`tab-${tabId}`);
     if (activeTab) activeTab.style.display = 'block';
