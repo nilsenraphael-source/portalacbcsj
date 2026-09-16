@@ -184,6 +184,9 @@ function renderMensagensDiretoriaOverview() {
                                 👁️ Ver
                             </button>
                         `}
+                        <button type="button" class="btn btn-sm btn-whatsapp" style="font-size: 11px; padding: 4px 8px;" title="Conversar / Responder via WhatsApp com o associado" onclick="responderMensagemWhatsApp('${m.id}')">
+                            💬 WhatsApp
+                        </button>
                         <button type="button" class="btn btn-sm btn-gold" style="font-size: 11px; padding: 4px 8px; font-weight: bold;" title="Marcar como lida e mover para o histórico" onclick="marcarMensagemLidaDiretoria('${m.id}')">
                             ✅ Marcar como Lida
                         </button>
@@ -250,8 +253,9 @@ function renderMensagensDiretoria() {
                         <p style="font-size:13px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; white-space: pre-wrap; margin: 0;">${m.conteudo || m.mensagem || ''}</p>
                         ${respostaHtml}
                         <div style="display: flex; justify-content: flex-end; margin-top: 10px; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-sm btn-whatsapp" onclick="responderMensagemWhatsApp('${m.id}')">💬 Responder no WhatsApp</button>
                             ${m.status === 'pendente' ? `
-                                <button type="button" class="btn btn-sm btn-primary" onclick="abrirModalResponderMensagem('${m.id}')">✉️ Responder Mensagem</button>
+                                <button type="button" class="btn btn-sm btn-primary" onclick="abrirModalResponderMensagem('${m.id}')">✉️ Responder no Portal</button>
                             ` : `
                                 <button type="button" class="btn btn-sm btn-outline" onclick="abrirModalResponderMensagem('${m.id}')">✏️ Atualizar Resposta</button>
                             `}
@@ -322,7 +326,8 @@ function renderMensagensDiretoria() {
                             👥 Destinatários: <b style="color: #3498DB;">${c.destinatarios_resumo || 'Associados'}</b> | Enviado por: <b style="color: #fff;">${c.remetente_nome || 'Diretoria'}</b>
                         </div>
                         <p style="font-size:13px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; white-space: pre-wrap; margin: 0 0 10px 0; word-break: break-word;">${c.mensagem}</p>
-                        <div style="display: flex; justify-content: flex-end;">
+                        <div style="display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn btn-sm btn-whatsapp" onclick="compartilharComunicadoWhatsApp('${c.id}')">📲 Compartilhar no WhatsApp</button>
                             <button class="btn btn-sm btn-outline" style="font-size: 11px; padding: 4px 8px; color: #E74C3C; border-color: #E74C3C;" onclick="excluirComunicadoEnviado('${c.id}')">🗑️ Excluir Comunicado</button>
                         </div>
                     </div>
@@ -616,3 +621,100 @@ function excluirComunicadoEnviado(id) {
         renderMensagensDiretoria();
     }
 }
+
+// INTEGRAÇÃO DE RESPOSTAS E COMUNICADOS VIA WHATSAPP (SEM CUSTOS)
+function responderMensagemWhatsApp(msgId) {
+    const msgs = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+    const m = msgs.find(item => item.id === msgId);
+    if (!m) {
+        alert('Mensagem não localizada.');
+        return;
+    }
+
+    const cleanCpf = (m.associado_cpf || '').replace(/\D/g, '');
+    let list = [];
+    try {
+        list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    } catch(e) { list = []; }
+    if (!list.length && typeof ASSOCIADOS_PLANILHA_REAL !== 'undefined') {
+        list = ASSOCIADOS_PLANILHA_REAL;
+    }
+
+    const socio = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
+    let telefone = socio ? (socio.telefone || '') : '';
+    let cleanPhone = String(telefone).replace(/\D/g, '');
+
+    const nomeAssoc = m.associado_nome || (socio ? (socio.nome_guerra || socio.nome) : 'Associado');
+
+    if (!cleanPhone || cleanPhone.length < 8) {
+        const inputTel = prompt(`O associado ${nomeAssoc} não possui telefone/WhatsApp válido no cadastro.\n\nInforme o número com DDD para abrir a conversa (ex: 48999998888):`, telefone || '');
+        if (!inputTel) return;
+        cleanPhone = inputTel.replace(/\D/g, '');
+        if (cleanPhone.length < 8) {
+            alert('Número de telefone inválido.');
+            return;
+        }
+        if (socio) {
+            socio.telefone = inputTel;
+            localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+        }
+    }
+
+    if (cleanPhone.length === 10 || cleanPhone.length === 11) {
+        cleanPhone = '55' + cleanPhone;
+    }
+
+    const textoOriginal = m.conteudo || m.mensagem || '';
+    const textoFormatado = `Olá, *${nomeAssoc}*! Tudo bem? 🚒\n\n` +
+        `Aqui é a *Diretoria da ACBCSJ* (Associação dos Cabos e Bombeiros Comunitários de São José).\n\n` +
+        `Estamos entrando em contato referente à sua mensagem enviada pelo Portal com o assunto "*${m.assunto || 'Mensagem'}*".\n\n` +
+        `📝 *Sua mensagem no Portal:*\n` +
+        `"${textoOriginal}"\n\n` +
+        `💬 *Resposta / Atendimento:*\n` +
+        (m.resposta ? `${m.resposta}\n\n` : `Como podemos ajudar você?`);
+
+    const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(textoFormatado)}`;
+    window.open(url, '_blank');
+}
+window.responderMensagemWhatsApp = responderMensagemWhatsApp;
+
+function compartilharComunicadoWhatsApp(comunicadoId) {
+    const comunicadosLocal = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
+    const msgsAll = JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
+    
+    let c = comunicadosLocal.find(item => item.id === comunicadoId);
+    if (!c) {
+        const m = msgsAll.find(item => item.id === comunicadoId);
+        if (m) {
+            c = {
+                assunto: m.assunto || '📢 Comunicado Oficial',
+                prioridade: m.prioridade || 'Informativo',
+                data: m.data_envio || m.data || '',
+                mensagem: m.conteudo || m.mensagem || ''
+            };
+        }
+    }
+
+    if (!c) {
+        alert('Comunicado não localizado.');
+        return;
+    }
+
+    let emojiPrio = '🟢';
+    if (c.prioridade === 'Importante') emojiPrio = '🟡';
+    if (c.prioridade === 'Urgente') emojiPrio = '🔴';
+
+    const textoFormatado = `📢 *ACBCSJ - COMUNICADO OFICIAL* 🚒\n\n` +
+        `📌 *Assunto:* ${c.assunto}\n` +
+        `${emojiPrio} *Prioridade:* ${c.prioridade || 'Informativo'}\n` +
+        `📅 *Data:* ${c.data || new Date().toLocaleDateString('pt-BR')}\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `${c.mensagem}\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `*Associação dos Cabos e Bombeiros Comunitários de São José (ACBCSJ)*\n` +
+        `_Acesse o Portal: https://acbcsj.vercel.app_`;
+
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(textoFormatado)}`;
+    window.open(url, '_blank');
+}
+window.compartilharComunicadoWhatsApp = compartilharComunicadoWhatsApp;

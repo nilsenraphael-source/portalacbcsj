@@ -1079,9 +1079,17 @@ function renderDiretoriaOverview() {
     }
 }
 
+function openModal(id) { 
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active'); 
+}
+window.openModal = openModal;
 
-function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function closeModal(id) { 
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active'); 
+}
+window.closeModal = closeModal;
 
 // AUTO-INICIALIZAÇÃO DO ESTADO INICIAL NO CARREGAMENTO
 if (typeof initMockData === 'function') {
@@ -1096,5 +1104,27 @@ document.addEventListener('DOMContentLoaded', () => {
         setupCPFMasks();
     }
 });
+
+// SUPORTE / FALE COM A DIRETORIA VIA WHATSAPP (SEM CUSTOS)
+function abrirSuporteWhatsApp() {
+    let num = localStorage.getItem('acbcsj_whatsapp_suporte') || '5548984041027';
+    let cleanPhone = num.replace(/\D/g, '');
+    if (cleanPhone.length === 10 || cleanPhone.length === 11) {
+        cleanPhone = '55' + cleanPhone;
+    }
+
+    let saudacao = 'Olá, Diretoria da ACBCSJ! 🚒';
+    if (typeof currentUser !== 'undefined' && currentUser) {
+        const nomeGuerra = currentUser.nome_guerra || currentUser.nome || 'Associado';
+        const cpf = currentUser.cpf || '';
+        saudacao = `Olá, Diretoria da ACBCSJ! 🚒\n\nSou o associado *${nomeGuerra}* (CPF: ${cpf}) e gostaria de um atendimento/suporte pelo Portal.`;
+    } else {
+        saudacao = `Olá, Diretoria da ACBCSJ! 🚒\n\nGostaria de obter informações sobre o Portal / Associação dos Cabos e Bombeiros Comunitários de São José.`;
+    }
+
+    const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(saudacao)}`;
+    window.open(url, '_blank');
+}
+window.abrirSuporteWhatsApp = abrirSuporteWhatsApp;
 
 // ==========================================

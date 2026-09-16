@@ -780,6 +780,7 @@ function renderGestaoMensalidades() {
                         <td class="col-acoes">
                             <div class="acoes-btn-group">
                                 <button class="btn-acao btn-acao-baixar" onclick="abrirModalDarBaixa('${a.cpf}')" title="Dar baixa em mensalidade">💳 Baixar</button>
+                                <button class="btn-acao btn-acao-whatsapp" onclick="enviarCobrancaWhatsApp('${a.cpf}')" title="Notificar / Cobrar via WhatsApp">💬 WhatsApp</button>
                                 <button class="btn-acao btn-acao-historico" onclick="verExtratoAssociado('${a.cpf}')" title="Ver extrato e histórico">📋 Histórico</button>
                                 <button class="btn-acao btn-acao-editar" onclick="verExtratoAssociado('${a.cpf}')" title="Editar lançamentos">✏️ Editar</button>
                             </div>
@@ -838,6 +839,7 @@ function renderGestaoMensalidades() {
                         <td class="col-acoes">
                             <div class="acoes-btn-group">
                                 <button class="btn-acao btn-acao-baixar" onclick="abrirModalDarBaixa('${socio.cpf}')" title="Dar baixa em mensalidade">💳 Baixar</button>
+                                <button class="btn-acao btn-acao-whatsapp" onclick="enviarCobrancaWhatsApp('${socio.cpf}')" title="Notificar / Cobrar via WhatsApp">💬 WhatsApp</button>
                                 <button class="btn-acao btn-acao-historico" onclick="verExtratoAssociado('${socio.cpf}')" title="Ver extrato e histórico">📋 Histórico</button>
                                 <button class="btn-acao btn-acao-editar" onclick="verExtratoAssociado('${socio.cpf}')" title="Editar lançamentos">✏️ Editar</button>
                             </div>
@@ -1135,10 +1137,15 @@ function verExtratoAssociado(cpf) {
                     <div style="font-size: 16px; font-weight: bold; color: #2ECC71;">R$ ${totalPagoTodosAnos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
                     <div style="font-size: 11px; color: var(--text-muted);">${historicoAssociado.length} lançamentos efetuados</div>
                 </div>
-                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-                    <div style="font-size: 11px; color: var(--text-muted);">OBM / SITUAÇÃO</div>
-                    <div style="font-size: 14px; font-weight: bold;">${String(a.obm || 'São José').replace(/SÃ£o/g, 'São').replace(/JosÃ©/g, 'José').replace(/Ã§Ã£/g, 'çã').replace(/Ã£/g, 'ã').replace(/Ã©/g, 'é')}</div>
-                    <span class="badge badge-${a.status === 'desligado' ? 'danger' : 'success'}" style="font-size: 10px;">${a.status === 'desligado' ? 'CADASTRO DESLIGADO' : 'CADASTRO ATIVO'}</span>
+                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted);">OBM / SITUAÇÃO</div>
+                        <div style="font-size: 14px; font-weight: bold;">${String(a.obm || 'São José').replace(/SÃ£o/g, 'São').replace(/JosÃ©/g, 'José').replace(/Ã§Ã£/g, 'çã').replace(/Ã£/g, 'ã').replace(/Ã©/g, 'é')}</div>
+                        <span class="badge badge-${a.status === 'desligado' ? 'danger' : 'success'}" style="font-size: 10px;">${a.status === 'desligado' ? 'CADASTRO DESLIGADO' : 'CADASTRO ATIVO'}</span>
+                    </div>
+                    <button class="btn btn-sm btn-whatsapp" style="margin-top: 8px; width: 100%; justify-content: center; font-size: 11px; padding: 5px 8px;" onclick="enviarCobrancaWhatsApp('${a.cpf}')">
+                        💬 WhatsApp: Cobrança / Status
+                    </button>
                 </div>
             </div>
 
@@ -1419,3 +1426,95 @@ async function limparBancoMensalidadesCompletamente() {
         renderGestaoFinanceira();
     }
 }
+
+// COBRANÇA E NOTIFICAÇÃO DIRETA VIA WHATSAPP (SEM CUSTOS)
+function enviarCobrancaWhatsApp(cpf, anoParam = null) {
+    if (!cpf) return;
+    const cleanCpf = String(cpf).replace(/\D/g, '');
+    let list = [];
+    try {
+        list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    } catch(e) { list = []; }
+    if (!list.length && typeof ASSOCIADOS_PLANILHA_REAL !== 'undefined') {
+        list = ASSOCIADOS_PLANILHA_REAL;
+    }
+
+    const socio = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
+    if (!socio) {
+        alert('Associado não encontrado no sistema.');
+        return;
+    }
+
+    const selAno = document.getElementById('selAnoMensalidades');
+    const ano = anoParam || (selAno ? selAno.value : '2026');
+
+    // Telefone
+    let telefone = socio.telefone || '';
+    let cleanPhone = String(telefone).replace(/\D/g, '');
+
+    if (!cleanPhone || cleanPhone.length < 8) {
+        const inputTel = prompt(`O associado ${socio.nome_guerra || socio.nome} não possui telefone/WhatsApp válido cadastrado.\n\nInforme o WhatsApp com DDD (ex: 48999998888):`, telefone || '');
+        if (!inputTel) return;
+        cleanPhone = inputTel.replace(/\D/g, '');
+        if (cleanPhone.length < 8) {
+            alert('Número de telefone inválido.');
+            return;
+        }
+        socio.telefone = inputTel;
+        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+    }
+
+    if (cleanPhone.length === 10 || cleanPhone.length === 11) {
+        cleanPhone = '55' + cleanPhone;
+    }
+
+    // Calcular pendências do ano selecionado
+    const mesesKeys = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    const nomesMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+    const storageKey = `acbcsj_mensalidades_grid_${ano}`;
+    let grid = [];
+    try {
+        grid = JSON.parse(localStorage.getItem(storageKey)) || [];
+    } catch(e) { grid = []; }
+
+    const itemGrid = grid.find(g => (g.cpf || '').replace(/\D/g, '') === cleanCpf) || {};
+
+    let mesesPendentesNomes = [];
+    let totalDevido = 0;
+
+    mesesKeys.forEach((key, index) => {
+        const val = parseFloat(itemGrid[key]) || 0;
+        const info = calcularStatusMensalidade(index + 1, ano, val, socio);
+        if (info.isVencido) {
+            mesesPendentesNomes.push(nomesMeses[index]);
+            totalDevido += (info.debitAmount || 20);
+        }
+    });
+
+    const nomeGuerra = socio.nome_guerra || socio.nome.split(' ')[0] || 'Associado';
+    let mensagem = '';
+
+    if (mesesPendentesNomes.length > 0) {
+        mensagem = `Olá, *${nomeGuerra}*! Tudo bem? 🚒\n\n` +
+            `Passando para lembrar sobre sua contribuição com a *ACBCSJ* (Associação dos Cabos e Bombeiros Comunitários de São José).\n\n` +
+            `📋 *Situação das Mensalidades (${ano}):*\n` +
+            `• Mês(es) pendente(s): *${mesesPendentesNomes.join(', ')}*\n` +
+            `• Total em aberto: *R$ ${totalDevido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}*\n` +
+            `• Vencimento padrão: *Dia 15* de cada mês\n\n` +
+            `💳 *Chave PIX Oficial para Pagamento:*\n` +
+            `• Chave CNPJ: *07.820.678/0001-57*\n` +
+            `• Favorecido: *Associação dos Cabos e Bombeiros Comunitários de São José*\n` +
+            `• Banco: *SICREDI*\n\n` +
+            `Após realizar a transferência, você pode anexar o comprovante diretamente no *Portal ACBCSJ* ou responder por aqui com a foto/PDF do comprovante.\n\n` +
+            `Agradecemos seu compromisso e apoio contínuo à nossa Associação! 🤝`;
+    } else {
+        mensagem = `Olá, *${nomeGuerra}*! Tudo bem? 🚒\n\n` +
+            `Passando para informar que suas mensalidades da *ACBCSJ* (exercício ${ano}) estão *todas em dia*! ✅\n\n` +
+            `Muito obrigado pelo seu compromisso e dedicação com a nossa Associação dos Cabos e Bombeiros Comunitários de São José! 🤝`;
+    }
+
+    const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(mensagem)}`;
+    window.open(url, '_blank');
+}
+window.enviarCobrancaWhatsApp = enviarCobrancaWhatsApp;

@@ -1297,7 +1297,10 @@
                                 <label>Sua Mensagem ou Ideia <span class="req-star">*</span></label>
                                 <textarea id="msgConteudoAssociado" class="form-control" rows="5" placeholder="Escreva aqui detalhadamente sua mensagem para a Diretoria..." required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-gold">✉️ Enviar para a Diretoria</button>
+                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 15px;">
+                                <button type="submit" class="btn btn-gold">✉️ Enviar pelo Portal</button>
+                                <button type="button" class="btn btn-whatsapp" onclick="abrirSuporteWhatsApp()">💬 Falar no WhatsApp da Diretoria</button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -2669,18 +2672,26 @@
         </div>
     </div>
 
+    <!-- BOTÃO FLUTUANTE DE SUPORTE WHATSAPP ACBCSJ -->
+    <div class="whatsapp-floating-widget" id="whatsappFloatingWidget">
+        <div class="whatsapp-floating-tooltip">💬 Suporte / Fale com a Diretoria</div>
+        <button type="button" class="whatsapp-floating-btn" onclick="abrirSuporteWhatsApp()" title="Fale com a Diretoria via WhatsApp" aria-label="Fale com a Diretoria via WhatsApp">
+            💬
+        </button>
+    </div>
+
     <!-- SCRIPTS JS MODULARES -->
-    <script src="supabaseClient.js?v=20260914_01"></script>
-    <script src="js/core.js?v=20260914_01"></script>
-    <script src="js/auth.js?v=20260914_01"></script>
-    <script src="js/associados.js?v=20260914_01"></script>
-    <script src="js/documentos.js?v=20260914_01"></script>
-    <script src="js/mensagens.js?v=20260914_01"></script>
-    <script src="js/financeiro.js?v=20260914_01"></script>
-    <script src="js/portal-socio.js?v=20260914_01"></script>
-    <script src="js/mensalidades.js?v=20260914_01"></script>
-    <script src="js/relatorios.js?v=20260914_01"></script>
-    <script src="js/escala.js?v=20260914_01"></script>
-    <script src="js/senhas.js?v=20260914_01"></script>
+    <script src="supabaseClient.js?v=20260916_02"></script>
+    <script src="js/core.js?v=20260916_02"></script>
+    <script src="js/auth.js?v=20260916_02"></script>
+    <script src="js/associados.js?v=20260916_02"></script>
+    <script src="js/documentos.js?v=20260916_02"></script>
+    <script src="js/mensagens.js?v=20260916_02"></script>
+    <script src="js/financeiro.js?v=20260916_02"></script>
+    <script src="js/portal-socio.js?v=20260916_02"></script>
+    <script src="js/mensalidades.js?v=20260916_02"></script>
+    <script src="js/relatorios.js?v=20260916_02"></script>
+    <script src="js/escala.js?v=20260916_02"></script>
+    <script src="js/senhas.js?v=20260916_02"></script>
 </body>
 </html>
