@@ -1107,7 +1107,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // SUPORTE / FALE COM A DIRETORIA VIA WHATSAPP (SEM CUSTOS)
 function abrirSuporteWhatsApp() {
-    let num = localStorage.getItem('acbcsj_whatsapp_suporte') || '5548984041027';
+    let num = localStorage.getItem('acbcsj_whatsapp_suporte') || '554892231110';
     let cleanPhone = num.replace(/\D/g, '');
     if (cleanPhone.length === 10 || cleanPhone.length === 11) {
         cleanPhone = '55' + cleanPhone;
@@ -1119,7 +1119,7 @@ function abrirSuporteWhatsApp() {
         const cpf = currentUser.cpf || '';
         saudacao = `Olá, Diretoria da ACBCSJ! 🚒\n\nSou o associado *${nomeGuerra}* (CPF: ${cpf}) e gostaria de um atendimento/suporte pelo Portal.`;
     } else {
-        saudacao = `Olá, Diretoria da ACBCSJ! 🚒\n\nGostaria de obter informações sobre o Portal / Associação dos Cabos e Bombeiros Comunitários de São José.`;
+        saudacao = `Olá, Diretoria da ACBCSJ! 🚒\n\nGostaria de obter informações sobre o Portal / Associação Corpo de Bombeiros Comunitários de São José.`;
     }
 
     const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(saudacao)}`;

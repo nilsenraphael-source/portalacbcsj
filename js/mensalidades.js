@@ -1497,21 +1497,20 @@ function enviarCobrancaWhatsApp(cpf, anoParam = null) {
 
     if (mesesPendentesNomes.length > 0) {
         mensagem = `Olá, *${nomeGuerra}*! Tudo bem? 🚒\n\n` +
-            `Passando para lembrar sobre sua contribuição com a *ACBCSJ* (Associação dos Cabos e Bombeiros Comunitários de São José).\n\n` +
+            `Passando para lembrar sobre sua contribuição com a *ACBCSJ* (Associação Corpo de Bombeiros Comunitários de São José).\n\n` +
             `📋 *Situação das Mensalidades (${ano}):*\n` +
             `• Mês(es) pendente(s): *${mesesPendentesNomes.join(', ')}*\n` +
             `• Total em aberto: *R$ ${totalDevido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}*\n` +
             `• Vencimento padrão: *Dia 15* de cada mês\n\n` +
             `💳 *Chave PIX Oficial para Pagamento:*\n` +
-            `• Chave CNPJ: *07.820.678/0001-57*\n` +
-            `• Favorecido: *Associação dos Cabos e Bombeiros Comunitários de São José*\n` +
-            `• Banco: *SICREDI*\n\n` +
-            `Após realizar a transferência, você pode anexar o comprovante diretamente no *Portal ACBCSJ* ou responder por aqui com a foto/PDF do comprovante.\n\n` +
+            `• Chave CNPJ: *07.962.460/0001-40*\n` +
+            `• Favorecido: *Associação Corpo de Bombeiros Comunitários de São José*\n` +
+            `• Banco: *SICREDI*\n\n\n\n` +
             `Agradecemos seu compromisso e apoio contínuo à nossa Associação! 🤝`;
     } else {
         mensagem = `Olá, *${nomeGuerra}*! Tudo bem? 🚒\n\n` +
             `Passando para informar que suas mensalidades da *ACBCSJ* (exercício ${ano}) estão *todas em dia*! ✅\n\n` +
-            `Muito obrigado pelo seu compromisso e dedicação com a nossa Associação dos Cabos e Bombeiros Comunitários de São José! 🤝`;
+            `Muito obrigado pelo seu compromisso e dedicação com a nossa Associação Corpo de Bombeiros Comunitários de São José! 🤝`;
     }
 
     const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(mensagem)}`;

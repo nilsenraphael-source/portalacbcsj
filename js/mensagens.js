@@ -666,7 +666,7 @@ function responderMensagemWhatsApp(msgId) {
 
     const textoOriginal = m.conteudo || m.mensagem || '';
     const textoFormatado = `Olá, *${nomeAssoc}*! Tudo bem? 🚒\n\n` +
-        `Aqui é a *Diretoria da ACBCSJ* (Associação dos Cabos e Bombeiros Comunitários de São José).\n\n` +
+        `Aqui é a *Diretoria da ACBCSJ* (Associação Corpo de Bombeiros Comunitários de São José).\n\n` +
         `Estamos entrando em contato referente à sua mensagem enviada pelo Portal com o assunto "*${m.assunto || 'Mensagem'}*".\n\n` +
         `📝 *Sua mensagem no Portal:*\n` +
         `"${textoOriginal}"\n\n` +
@@ -711,7 +711,7 @@ function compartilharComunicadoWhatsApp(comunicadoId) {
         `━━━━━━━━━━━━━━━━━━━━\n` +
         `${c.mensagem}\n` +
         `━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `*Associação dos Cabos e Bombeiros Comunitários de São José (ACBCSJ)*\n` +
+        `*Associação Corpo de Bombeiros Comunitários de São José (ACBCSJ)*\n` +
         `_Acesse o Portal: https://acbcsj.vercel.app_`;
 
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(textoFormatado)}`;
