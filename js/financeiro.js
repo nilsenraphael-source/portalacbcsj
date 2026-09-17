@@ -1276,10 +1276,8 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
     }
     const saldoFinalConsolidado = saldoAnteriorEstimado + resultadoMes;
 
-    // Divisão estimada das contas (Sicredi + Caixa)
-    const rendimentosCaixa = receitasGerais.filter(r => (r.categoria || '').includes('Rendimento') || (r.descricao || '').includes('Caixa')).reduce((s, r) => s + (parseFloat(r.valor) || 0), 0);
-    const saldoCaixaEstimado = 283.44 + rendimentosCaixa;
-    const saldoSicrediEstimado = saldoFinalConsolidado - saldoCaixaEstimado;
+    // Conta Oficial: SICREDI (Conta Corrente / PIX)
+    const saldoSicrediConsolidado = saldoFinalConsolidado;
 
     const container = document.getElementById('conteudoBalanceteMensal');
     if (container) {
@@ -1340,7 +1338,7 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
                             </tr>
                         `).join('') : `
                             <tr>
-                                <td style="color: var(--text-muted);">Rendimentos Poupança / Outros</td>
+                                <td style="color: var(--text-muted);">Rendimentos / Outros</td>
                                 <td style="color: var(--text-muted);">Rendimentos bancários e aplicações</td>
                                 <td style="text-align: right; color: var(--text-muted);">R$ 0,00</td>
                             </tr>
@@ -1394,25 +1392,15 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
                 </table>
             </div>
 
-            <!-- SEÇÃO 3: CONCILIAÇÃO BANCÁRIA POR CONTA -->
+            <!-- SEÇÃO 3: CONCILIAÇÃO BANCÁRIA -->
             <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 6px; padding: 14px; margin-bottom: 15px;">
-                <h4 style="color: var(--accent-gold); font-size: 13px; margin: 0 0 10px 0;">🏦 CONCILIAÇÃO DOS SALDOS BANCÁRIOS:</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
-                    <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                            <span><b>SICREDI</b> (Conta Corrente / PIX):</span>
-                            <strong style="color: #2ECC71;">R$ ${saldoSicrediEstimado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
-                        </div>
-                        <small style="color: var(--text-muted);">Cooperativa 0226 • Conta: 23117-1</small>
+                <h4 style="color: var(--accent-gold); font-size: 13px; margin: 0 0 10px 0;">🏦 CONCILIAÇÃO BANCÁRIA (CONTA OFICIAL):</h4>
+                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); max-width: 480px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span><b style="color: var(--text-main);">SICREDI</b> (Conta Corrente / PIX):</span>
+                        <strong style="color: #2ECC71; font-size: 14px;">R$ ${saldoSicrediConsolidado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
                     </div>
-
-                    <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                            <span><b>CAIXA ECONÔMICA FEDERAL</b> (Poupança):</span>
-                            <strong style="color: #3498DB;">R$ ${saldoCaixaEstimado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
-                        </div>
-                        <small style="color: var(--text-muted);">Agência 3078 • Conta: 1388.000738993428-0</small>
-                    </div>
+                    <small style="color: var(--text-muted);">Cooperativa 0226 • Conta: 23117-1</small>
                 </div>
             </div>
         `;
@@ -1899,9 +1887,7 @@ function imprimirOuBaixarBalanceteMensal(mesIndex, anoStr) {
 
     let saldoAnteriorEstimado = 10968.92;
     const saldoFinalConsolidado = saldoAnteriorEstimado + (totalReceitas - totalDespesas);
-    const rendimentosCaixa = receitasGerais.filter(r => (r.categoria || '').includes('Rendimento') || (r.descricao || '').includes('Caixa')).reduce((s, r) => s + (parseFloat(r.valor) || 0), 0);
-    const saldoCaixaEstimado = 283.44 + rendimentosCaixa;
-    const saldoSicrediEstimado = saldoFinalConsolidado - saldoCaixaEstimado;
+    const saldoSicrediConsolidado = saldoFinalConsolidado;
 
     const htmlTabelas = `
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; text-align: center;">
@@ -1988,21 +1974,12 @@ function imprimirOuBaixarBalanceteMensal(mesIndex, anoStr) {
             </tbody>
         </table>
 
-        <h3 style="font-size: 13px; color: #0284c7; margin: 20px 0 6px 0;">🏦 CONCILIAÇÃO BANCÁRIA POR CONTA:</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-            <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; background: #fafafa;">
-                <b style="color: #0f172a; font-size: 12px;">SICREDI (Conta Corrente / PIX)</b><br>
-                <span style="font-size: 11px; color: #64748b;">Cooperativa 0226 • Conta: 23117-1</span>
-                <div style="font-size: 14px; font-weight: bold; color: #166534; margin-top: 5px;">
-                    Saldo: R$ ${saldoSicrediEstimado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
-            </div>
-            <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; background: #fafafa;">
-                <b style="color: #0f172a; font-size: 12px;">CAIXA ECONÔMICA FEDERAL (Poupança)</b><br>
-                <span style="font-size: 11px; color: #64748b;">Agência 3078 • Conta: 1388.000738993428-0</span>
-                <div style="font-size: 14px; font-weight: bold; color: #0284c7; margin-top: 5px;">
-                    Saldo: R$ ${saldoCaixaEstimado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
+        <h3 style="font-size: 13px; color: #0284c7; margin: 20px 0 6px 0;">🏦 CONCILIAÇÃO BANCÁRIA (CONTA OFICIAL):</h3>
+        <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; background: #fafafa; max-width: 480px; margin-bottom: 20px;">
+            <b style="color: #0f172a; font-size: 12px;">SICREDI (Conta Corrente / PIX)</b><br>
+            <span style="font-size: 11px; color: #64748b;">Cooperativa 0226 • Conta: 23117-1</span>
+            <div style="font-size: 15px; font-weight: bold; color: #166534; margin-top: 5px;">
+                Saldo Consolidado: R$ ${saldoSicrediConsolidado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
         </div>
     `;
