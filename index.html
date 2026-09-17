@@ -914,6 +914,8 @@
                                 Receita</button>
                             <button class="btn btn-sm btn-outline" style="color: #E74C3C; border-color: #E74C3C;"
                                 onclick="abrirModalNovoLancamento('despesa')">➖ Nova Despesa</button>
+                            <button class="btn btn-sm btn-outline"
+                                onclick="abrirModalGerenciarCategoriasFin()">🏷️ Categorias</button>
 
                         </div>
                     </div>
@@ -2381,7 +2383,12 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div class="form-group">
-                        <label>Categoria <span class="req-star">*</span></label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label style="margin: 0;">Categoria <span class="req-star">*</span></label>
+                            <button type="button" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 1px 6px;"
+                                onclick="abrirModalGerenciarCategoriasFin(document.getElementById('finTipo').value)"
+                                title="Gerenciar categorias de receitas e despesas">⚙️ Gerenciar</button>
+                        </div>
                         <select id="finCategoria" class="form-control" required>
                             <option value="Mensalidade / Contribuição">Mensalidade / Contribuição</option>
                             <option value="Doação / Convênio">Doação / Convênio</option>
@@ -2411,6 +2418,54 @@
                     <button type="submit" class="btn btn-gold" id="btnSalvarLancamento">Salvar Lançamento</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE GERENCIAMENTO DE CATEGORIAS FINANCEIRAS -->
+    <div id="modalGerenciarCategoriasFinanceiras" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title" style="color: var(--accent-gold);">🏷️ Gerenciar Categorias Financeiras</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Adicione ou remova categorias de receitas e despesas.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modalGerenciarCategoriasFinanceiras')">&times;</button>
+            </div>
+
+            <!-- Alternador de Tipo de Categoria -->
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                <button type="button" id="tabCatFinReceitas" class="btn btn-gold btn-sm" style="flex: 1;" onclick="setTipoCategoriaManager('receita')">
+                    ➕ Receitas (Entradas)
+                </button>
+                <button type="button" id="tabCatFinDespesas" class="btn btn-outline btn-sm" style="flex: 1;" onclick="setTipoCategoriaManager('despesa')">
+                    ➖ Despesas (Saídas)
+                </button>
+            </div>
+
+            <!-- Inserção de Nova Categoria -->
+            <form onsubmit="adicionarNovaCategoriaFin(event)" style="margin-bottom: 16px;">
+                <label style="font-size: 12px; margin-bottom: 6px; display: block;">Nova Categoria para <b id="lblGerenciarCatTipoTexto" style="color: #2ECC71;">Receitas (Entradas)</b></label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="novaCategoriaFinInput" class="form-control" placeholder="Ex: Doação Empresarial, Eventos..." style="flex: 1;" required>
+                    <button type="submit" class="btn btn-gold btn-sm" style="white-space: nowrap;">➕ Adicionar</button>
+                </div>
+            </form>
+
+            <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Categorias Ativas</span>
+                <button type="button" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 2px 8px; color: var(--text-muted);" onclick="restaurarCategoriasPadraoFin()">
+                    🔄 Restaurar Padrões
+                </button>
+            </div>
+
+            <!-- Lista de Categorias Ativas -->
+            <div id="listaCategoriasFinContainer" style="max-height: 280px; overflow-y: auto; padding-right: 4px; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px; background: rgba(0,0,0,0.2);">
+                <!-- Preenchido via JavaScript -->
+            </div>
+
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalGerenciarCategoriasFinanceiras')">Concluído / Fechar</button>
+            </div>
         </div>
     </div>
 

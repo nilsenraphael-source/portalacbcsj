@@ -310,26 +310,219 @@ function abrirModalNovoLancamento(tipo) {
     openModal('modalNovoLancamento');
 }
 
-function atualizarCategoriasLancamento(tipo) {
+const DEFAULT_CATEGORIAS_RECEITAS = [
+    "Mensalidade / Contribuição",
+    "Doação / Convênio",
+    "Evento / Rifa",
+    "Outras Receitas"
+];
+
+const DEFAULT_CATEGORIAS_DESPESAS = [
+    "Despesa Operacional",
+    "Manutenção de Viatura",
+    "Administrativo / Consumo",
+    "Encargos / Tarifas",
+    "Combustível",
+    "Mercado / Alimentação",
+    "Treinamentos / Cursos",
+    "Uniformes / EPI",
+    "Outras Despesas"
+];
+
+function getCategoriasFinanceiras(tipo) {
+    const isRec = (tipo === 'receita');
+    const storageKey = isRec ? 'acbcsj_categorias_receitas' : 'acbcsj_categorias_despesas';
+    const defaultList = isRec ? DEFAULT_CATEGORIAS_RECEITAS : DEFAULT_CATEGORIAS_DESPESAS;
+    
+    try {
+        const stored = JSON.parse(localStorage.getItem(storageKey));
+        if (Array.isArray(stored) && stored.length > 0) {
+            return stored;
+        }
+    } catch(e) {
+        console.warn('Erro ao ler categorias financeiras do storage:', e);
+    }
+    
+    try {
+        localStorage.setItem(storageKey, JSON.stringify(defaultList));
+    } catch(e) {}
+    
+    return [...defaultList];
+}
+
+function salvarCategoriasFinanceiras(tipo, lista) {
+    const isRec = (tipo === 'receita');
+    const storageKey = isRec ? 'acbcsj_categorias_receitas' : 'acbcsj_categorias_despesas';
+    try {
+        localStorage.setItem(storageKey, JSON.stringify(lista));
+    } catch(e) {
+        console.error('Erro ao salvar categorias financeiras:', e);
+    }
+}
+
+function atualizarCategoriasLancamento(tipo, selectedValue = null) {
     const catSelect = document.getElementById('finCategoria');
     if (!catSelect) return;
     
+    const categorias = getCategoriasFinanceiras(tipo || 'receita');
     catSelect.innerHTML = '';
-    if (tipo === 'receita') {
-        catSelect.innerHTML = `
-            <option value="Mensalidade / Contribuição">Mensalidade / Contribuição</option>
-            <option value="Doação / Convênio">Doação / Convênio</option>
-            <option value="Evento / Rifa">Evento / Rifa</option>
-            <option value="Outras Receitas">Outras Receitas</option>
-        `;
+    
+    categorias.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        if (selectedValue && selectedValue === cat) {
+            opt.selected = true;
+        }
+        catSelect.appendChild(opt);
+    });
+}
+
+// Modal de Gerenciamento de Categorias
+let categoriaManagerTipoAtual = 'receita';
+
+function abrirModalGerenciarCategoriasFin(tipo = null) {
+    const selTipoLanc = document.getElementById('finTipo');
+    if (tipo) {
+        categoriaManagerTipoAtual = tipo;
+    } else if (selTipoLanc && selTipoLanc.value) {
+        categoriaManagerTipoAtual = selTipoLanc.value;
     } else {
-        catSelect.innerHTML = `
-            <option value="Despesa Operacional">Despesa Operacional</option>
-            <option value="Manutenção de Viatura">Manutenção de Viatura</option>
-            <option value="Administrativo / Consumo">Administrativo / Consumo</option>
-            <option value="Encargos / Tarifas">Encargos / Tarifas</option>
-            <option value="Outras Despesas">Outras Despesas</option>
+        categoriaManagerTipoAtual = 'receita';
+    }
+    
+    setTipoCategoriaManager(categoriaManagerTipoAtual);
+    openModal('modalGerenciarCategoriasFinanceiras');
+}
+
+function setTipoCategoriaManager(tipo) {
+    categoriaManagerTipoAtual = (tipo === 'despesa') ? 'despesa' : 'receita';
+    
+    const btnTabRec = document.getElementById('tabCatFinReceitas');
+    const btnTabDes = document.getElementById('tabCatFinDespesas');
+    const lblTipo = document.getElementById('lblGerenciarCatTipoTexto');
+    
+    if (btnTabRec && btnTabDes) {
+        if (categoriaManagerTipoAtual === 'receita') {
+            btnTabRec.classList.add('btn-gold');
+            btnTabRec.classList.remove('btn-outline');
+            btnTabDes.classList.remove('btn-gold');
+            btnTabDes.classList.add('btn-outline');
+        } else {
+            btnTabDes.classList.add('btn-gold');
+            btnTabDes.classList.remove('btn-outline');
+            btnTabRec.classList.remove('btn-gold');
+            btnTabRec.classList.add('btn-outline');
+        }
+    }
+    
+    if (lblTipo) {
+        lblTipo.textContent = categoriaManagerTipoAtual === 'receita' ? 'Receitas (Entradas)' : 'Despesas (Saídas)';
+        lblTipo.style.color = categoriaManagerTipoAtual === 'receita' ? '#2ECC71' : '#E74C3C';
+    }
+    
+    renderListaCategoriasGerenciador();
+}
+
+function renderListaCategoriasGerenciador() {
+    const container = document.getElementById('listaCategoriasFinContainer');
+    if (!container) return;
+    
+    const categorias = getCategoriasFinanceiras(categoriaManagerTipoAtual);
+    
+    if (categorias.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px;">
+                Nenhuma categoria cadastrada para ${categoriaManagerTipoAtual === 'receita' ? 'Receitas' : 'Despesas'}.
+            </div>
         `;
+        return;
+    }
+    
+    container.innerHTML = categorias.map((cat) => {
+        const safeCat = cat.replace(/'/g, "\\'");
+        return `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px;">
+                <div style="display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 13px;">
+                    <span style="color: ${categoriaManagerTipoAtual === 'receita' ? '#2ECC71' : '#E74C3C'};">🏷️</span>
+                    <span>${cat}</span>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" style="color: #E74C3C; border-color: rgba(231,76,60,0.3); font-size: 11px; padding: 2px 8px;" onclick="removerCategoriaFin('${safeCat}')" title="Excluir categoria">
+                    🗑️ Excluir
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+function adicionarNovaCategoriaFin(e) {
+    if (e) e.preventDefault();
+    const input = document.getElementById('novaCategoriaFinInput');
+    if (!input) return;
+    
+    const nome = input.value.trim();
+    if (!nome) {
+        alert('Por favor, informe o nome da categoria.');
+        input.focus();
+        return;
+    }
+    
+    let categorias = getCategoriasFinanceiras(categoriaManagerTipoAtual);
+    const existe = categorias.some(c => c.toLowerCase() === nome.toLowerCase());
+    
+    if (existe) {
+        alert(`A categoria "${nome}" já existe na lista de ${categoriaManagerTipoAtual === 'receita' ? 'Receitas' : 'Despesas'}!`);
+        input.focus();
+        return;
+    }
+    
+    categorias.push(nome);
+    salvarCategoriasFinanceiras(categoriaManagerTipoAtual, categorias);
+    input.value = '';
+    
+    renderListaCategoriasGerenciador();
+    
+    // Atualiza o select de lançamento se estiver aberto
+    const selTipoLanc = document.getElementById('finTipo');
+    if (selTipoLanc && selTipoLanc.value === categoriaManagerTipoAtual) {
+        atualizarCategoriasLancamento(categoriaManagerTipoAtual, nome);
+    }
+}
+
+function removerCategoriaFin(nomeCat) {
+    if (!confirm(`Deseja realmente remover a categoria "${nomeCat}" da lista de ${categoriaManagerTipoAtual === 'receita' ? 'Receitas' : 'Despesas'}?`)) {
+        return;
+    }
+    
+    let categorias = getCategoriasFinanceiras(categoriaManagerTipoAtual);
+    categorias = categorias.filter(c => c !== nomeCat);
+    
+    if (categorias.length === 0) {
+        categorias.push(categoriaManagerTipoAtual === 'receita' ? 'Outras Receitas' : 'Outras Despesas');
+    }
+    
+    salvarCategoriasFinanceiras(categoriaManagerTipoAtual, categorias);
+    renderListaCategoriasGerenciador();
+    
+    // Atualiza o select de lançamento
+    const selTipoLanc = document.getElementById('finTipo');
+    if (selTipoLanc && selTipoLanc.value === categoriaManagerTipoAtual) {
+        atualizarCategoriasLancamento(categoriaManagerTipoAtual);
+    }
+}
+
+function restaurarCategoriasPadraoFin() {
+    if (!confirm(`Deseja restaurar as categorias padrão para ${categoriaManagerTipoAtual === 'receita' ? 'Receitas' : 'Despesas'}?`)) {
+        return;
+    }
+    
+    const defaultList = (categoriaManagerTipoAtual === 'receita') ? DEFAULT_CATEGORIAS_RECEITAS : DEFAULT_CATEGORIAS_DESPESAS;
+    salvarCategoriasFinanceiras(categoriaManagerTipoAtual, [...defaultList]);
+    renderListaCategoriasGerenciador();
+    
+    const selTipoLanc = document.getElementById('finTipo');
+    if (selTipoLanc && selTipoLanc.value === categoriaManagerTipoAtual) {
+        atualizarCategoriasLancamento(categoriaManagerTipoAtual);
     }
 }
 
