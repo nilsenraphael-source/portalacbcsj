@@ -1102,9 +1102,28 @@ function renderGestaoFinanceira() {
     }
 
     if (containerLevantamento) {
+        const hoje = new Date();
+        const anoAtual = hoje.getFullYear();
+        const mesAtual = hoje.getMonth() + 1;
+        const anoInt = parseInt(anoSelected, 10) || 2026;
+
         containerLevantamento.innerHTML = demonstrativoMensal.map(d => {
             const isMesSelecionado = mesSelected === d.mesNum;
             const bgRow = isMesSelecionado ? 'background: rgba(241, 196, 15, 0.2); font-weight: bold; border-left: 4px solid var(--accent-gold);' : '';
+
+            let statusBadge = '';
+            if (anoInt < anoAtual || (anoInt === anoAtual && d.mesIndex < mesAtual)) {
+                statusBadge = d.temMovimento 
+                    ? `<span class="badge" style="background: rgba(46, 204, 113, 0.15); color: #2ECC71; border: 1px solid rgba(46, 204, 113, 0.4); font-size: 10px; font-weight: bold;">🟢 FECHADO</span>`
+                    : `<span class="badge" style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid var(--border-color); font-size: 10px;">⚪ SEM MOV.</span>`;
+            } else if (anoInt === anoAtual && d.mesIndex === mesAtual) {
+                statusBadge = `<span class="badge" style="background: rgba(241, 196, 15, 0.2); color: #F1C40F; border: 1px solid rgba(241, 196, 15, 0.6); font-size: 10px; font-weight: bold;">⏳ EM ABERTO</span>`;
+            } else {
+                statusBadge = d.temMovimento
+                    ? `<span class="badge" style="background: rgba(241, 196, 15, 0.15); color: #F1C40F; border: 1px solid rgba(241, 196, 15, 0.4); font-size: 10px;">⏳ EM ABERTO</span>`
+                    : `<span class="badge" style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid var(--border-color); font-size: 10px;">⚪ SEM MOV.</span>`;
+            }
+
             return `
                 <tr style="${bgRow}">
                     <td style="text-align: left;">
@@ -1117,9 +1136,7 @@ function renderGestaoFinanceira() {
                         ${d.saldo >= 0 ? '+' : ''} R$ ${d.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </td>
                     <td>
-                        <span class="badge badge-${d.temMovimento ? 'info' : 'secondary'}" style="font-size: 10px;">
-                            ${d.temMovimento ? '🟢 FECHADO' : '⚪ SEM MOV.'}
-                        </span>
+                        ${statusBadge}
                     </td>
                     <td>
                         <div style="display: flex; gap: 4px; justify-content: center;">
