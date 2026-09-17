@@ -1762,9 +1762,9 @@ function gerarBalanceteAnualCompleto(anoStr) {
     openModal('modalBalanceteAnual');
 }
 
-// IMPRESSÃO E DOWNLOAD DE BALANCETE EM PDF COM CABEÇALHO OFICIAL
-function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas, htmlResumo) {
-    const docWindow = window.open('', '_blank');
+// IMPRESSÃO E DOWNLOAD DE BALANCETE EM PDF COM CABEÇALHO OFICIAL E ANEXO DE NOTAS FISCAIS
+function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas, htmlResumo, htmlAnexosComprovantes = '', existingWindow = null) {
+    const docWindow = existingWindow || window.open('', '_blank');
     if (!docWindow) {
         alert('Por favor, permita pop-ups no seu navegador para visualizar/baixar o balancete.');
         return;
@@ -1788,13 +1788,16 @@ function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas
                 .no-print-bar {
                     background: #1e293b;
                     color: #ffffff;
-                    padding: 12px 20px;
+                    padding: 14px 20px;
                     border-radius: 8px;
                     margin-bottom: 25px;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    position: sticky;
+                    top: 15px;
+                    z-index: 999;
                 }
                 .btn-action {
                     background: #d97706;
@@ -1905,8 +1908,8 @@ function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas
                 .signatures {
                     margin-top: 40px;
                     display: grid;
-                    grid-template-columns: 1fr 1fr 1fr;
-                    gap: 20px;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 30px;
                     text-align: center;
                     page-break-inside: avoid;
                 }
@@ -1918,11 +1921,32 @@ function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas
                     color: #334155;
                     font-weight: 600;
                 }
+                .comprovante-print-card {
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 8px;
+                    padding: 16px;
+                    margin-bottom: 25px;
+                    background: #ffffff;
+                }
+                .comprovante-img {
+                    max-width: 100%;
+                    max-height: 220mm;
+                    width: auto;
+                    height: auto;
+                    object-fit: contain;
+                    display: block;
+                    margin: 0 auto;
+                    border-radius: 4px;
+                }
                 @media print {
                     .no-print-bar { display: none !important; }
-                    body { background: #ffffff; padding: 0; }
-                    .doc-page { border: none; box-shadow: none; padding: 0; max-width: 100%; }
-                    @page { size: A4; margin: 12mm; }
+                    body { background: #ffffff !important; padding: 0 !important; }
+                    .doc-page { border: none !important; box-shadow: none !important; padding: 0 !important; max-width: 100% !important; }
+                    .page-break { page-break-before: always !important; break-before: page !important; }
+                    .comprovante-print-card { page-break-inside: avoid !important; break-inside: avoid !important; margin-bottom: 20mm !important; }
+                    @page { size: A4; margin: 12mm 10mm; }
                 }
             </style>
         </head>
@@ -1930,7 +1954,7 @@ function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas
             <div class="no-print-bar">
                 <div>
                     <b style="font-size: 14px;">📄 ${tituloDoc}</b><br>
-                    <span style="font-size: 12px; color: #cbd5e1;">Documento oficial contábil da ACBCSJ formatado para impressão ou download em PDF.</span>
+                    <span style="font-size: 12px; color: #cbd5e1;">Documento oficial contábil da ACBCSJ formatado com demonstrativos e notas fiscais anexas.</span>
                 </div>
                 <div>
                     <button class="btn-action" onclick="window.print()">🖨️ Imprimir / Salvar em PDF</button>
@@ -1957,7 +1981,7 @@ function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas
 
                 ${htmlResumo}
 
-                <div class="signatures" style="grid-template-columns: 1fr 1fr; max-width: 600px; margin: 40px auto 0 auto;">
+                <div class="signatures" style="max-width: 600px; margin: 40px auto 0 auto;">
                     <div>
                         <div class="signature-line">
                             DIRETORIA EXECUTIVA<br>
@@ -1971,6 +1995,26 @@ function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas
                         </div>
                     </div>
                 </div>
+
+                ${htmlAnexosComprovantes ? `
+                    <div class="page-break" style="margin-top: 40px; padding-top: 25px; border-top: 2px dashed #cbd5e1;">
+                        <div class="header-container" style="border-bottom: 2px solid #b91c1c; margin-bottom: 20px;">
+                            <img src="${window.location.origin}/logo.png" alt="Logo ACBCSJ" class="header-logo" onerror="this.style.display='none'">
+                            <div class="header-text">
+                                <h1>Associação Corpo de Bombeiros Comunitários de São José — ACBCSJ</h1>
+                                <p>ANEXO CONTÁBIL: NOTAS FISCAIS & COMPROVANTES DE DESPESAS</p>
+                                <p>Prestação de Contas vinculada ao ${tituloDoc}</p>
+                            </div>
+                        </div>
+
+                        <div class="doc-title-box" style="background: #fffbeb; border-left: 4px solid #d97706;">
+                            <h2>📁 Caderno de Notas Fiscais & Comprovantes Anexados</h2>
+                            <p>Relação digitalizada das notas fiscais e recibos de pagamento de todas as despesas lançadas no período.</p>
+                        </div>
+
+                        ${htmlAnexosComprovantes}
+                    </div>
+                ` : ''}
             </div>
         </body>
         </html>
@@ -1981,11 +2025,23 @@ function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas
     docWindow.document.close();
 }
 
-function imprimirOuBaixarBalanceteMensal(mesIndex, anoStr) {
+async function imprimirOuBaixarBalanceteMensal(mesIndex, anoStr) {
     if (!anoStr) {
         const selAno = document.getElementById('selAnoTransparencia') || document.getElementById('diretoriaFiltroAno');
         anoStr = selAno ? selAno.value : '2026';
     }
+
+    // Abre janela imediatamente para evitar bloqueador de pop-ups
+    const docWindow = window.open('', '_blank');
+    if (docWindow) {
+        docWindow.document.write(`
+            <div style="font-family: 'Inter', -apple-system, sans-serif; padding: 40px; text-align: center; color: #1e293b;">
+                <h3 style="color: #d97706; margin-bottom: 8px;">⏳ Gerando Balancete & Compilando Notas Fiscais...</h3>
+                <p style="color: #64748b; font-size: 13px;">Carregando demonstrativo e processando imagens/documentos anexos para impressão oficial.</p>
+            </div>
+        `);
+    }
+
     const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
     const mIdx = parseInt(mesIndex, 10) || 1;
     const strMes = String(mIdx).padStart(2, '0');
@@ -2023,6 +2079,71 @@ function imprimirOuBaixarBalanceteMensal(mesIndex, anoStr) {
     const saldoAnteriorEstimado = calcularSaldoAnteriorMes(mIdx, anoStr, listFinanceiro, listMensalidades);
     const saldoFinalConsolidado = saldoAnteriorEstimado + (totalReceitas - totalDespesas);
     const saldoSicrediConsolidado = saldoFinalConsolidado;
+
+    // Carrega comprovantes e notas fiscais anexadas de forma assíncrona
+    let htmlAnexosComprovantes = '';
+    const despesasComDoc = despesasGerais.filter(d => d.comprovante_nome || d.comprovante_url || d.arquivo_url || d.id);
+    const comprovantesCarregados = [];
+
+    for (let i = 0; i < despesasComDoc.length; i++) {
+        const d = despesasComDoc[i];
+        let fileContent = null;
+        try {
+            if (typeof idbStorage !== 'undefined' && idbStorage.getFile) {
+                fileContent = await idbStorage.getFile(d.id);
+            }
+        } catch (e) {
+            console.warn('Aviso ao carregar comprovante do idb para impressão:', e);
+        }
+
+        if (!fileContent && (d.comprovante_url || d.arquivo_url)) {
+            fileContent = d.comprovante_url || d.arquivo_url;
+        }
+
+        if (fileContent) {
+            comprovantesCarregados.push({
+                despesa: d,
+                fileContent: fileContent,
+                nomeArquivo: d.comprovante_nome || 'Nota Fiscal / Recibo'
+            });
+        }
+    }
+
+    if (comprovantesCarregados.length > 0) {
+        htmlAnexosComprovantes = comprovantesCarregados.map((itemDoc, docIdx) => {
+            const d = itemDoc.despesa;
+            const fileContent = itemDoc.fileContent;
+            const nomeArq = itemDoc.nomeArquivo;
+            const isPdf = fileContent.startsWith('data:application/pdf') || nomeArq.toLowerCase().endsWith('.pdf');
+
+            return `
+                <div class="comprovante-print-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <b style="font-size: 13px; color: #0f172a;">Documento #${docIdx + 1}: ${d.fornecedor_cliente || 'Favorecido / Fornecedor'}</b>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+                                Data: <b>${d.data || '-'}</b> • Categoria: <span class="badge badge-danger">${d.categoria}</span> • Arquivo: <i>${nomeArq}</i>
+                            </div>
+                            <div style="font-size: 11px; color: #334155; margin-top: 4px;">
+                                <b>Descrição:</b> ${d.descricao}
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold; display: block;">Valor da Despesa</span>
+                            <strong style="font-size: 15px; color: #991b1b;">R$ ${(parseFloat(d.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                        </div>
+                    </div>
+                    <div style="text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px;">
+                        ${isPdf ? `
+                            <iframe src="${fileContent}" style="width: 100%; height: 550px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff;"></iframe>
+                        ` : `
+                            <img src="${fileContent}" alt="${nomeArq}" class="comprovante-img">
+                        `}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 
     const htmlTabelas = `
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; text-align: center;">
@@ -2145,15 +2266,28 @@ function imprimirOuBaixarBalanceteMensal(mesIndex, anoStr) {
         `Balancete Mensal de Prestação de Contas — ${nomeMes}/${anoStr}`,
         subtituloStatus,
         htmlTabelas,
-        htmlResumo
+        htmlResumo,
+        htmlAnexosComprovantes,
+        docWindow
     );
 }
 
-function imprimirOuBaixarBalanceteAnual(anoStr) {
+async function imprimirOuBaixarBalanceteAnual(anoStr) {
     if (!anoStr) {
         const selAno = document.getElementById('selAnoTransparencia') || document.getElementById('diretoriaFiltroAno');
         anoStr = selAno ? selAno.value : '2026';
     }
+
+    const docWindow = window.open('', '_blank');
+    if (docWindow) {
+        docWindow.document.write(`
+            <div style="font-family: 'Inter', -apple-system, sans-serif; padding: 40px; text-align: center; color: #1e293b;">
+                <h3 style="color: #d97706; margin-bottom: 8px;">⏳ Gerando Balancete Anual & Compilando Notas Fiscais...</h3>
+                <p style="color: #64748b; font-size: 13px;">Carregando demonstrativo consolidado e processando documentos anexos para impressão oficial.</p>
+            </div>
+        `);
+    }
+
     const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
     const listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
     const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
@@ -2190,6 +2324,75 @@ function imprimirOuBaixarBalanceteAnual(anoStr) {
     const totalEntradasAno = tabelaMeses.reduce((s, m) => s + m.totalEntradas, 0);
     const totalDespesasAno = tabelaMeses.reduce((s, m) => s + m.despesas, 0);
     const saldoAno = totalEntradasAno - totalDespesasAno;
+
+    // Compila comprovantes do ano
+    let htmlAnexosComprovantes = '';
+    const todasDespesasAno = listFinanceiro.filter(f => {
+        const dInfo = extrairMesEAno(f.data, f.data_iso);
+        const fAno = dInfo.ano || (f.data_iso ? f.data_iso.substring(0, 4) : (f.data ? f.data.split('/')[2] : anoStr));
+        return fAno === anoStr && f.tipo === 'despesa' && (f.comprovante_nome || f.comprovante_url || f.arquivo_url || f.id);
+    });
+
+    const comprovantesCarregados = [];
+    for (let i = 0; i < todasDespesasAno.length; i++) {
+        const d = todasDespesasAno[i];
+        let fileContent = null;
+        try {
+            if (typeof idbStorage !== 'undefined' && idbStorage.getFile) {
+                fileContent = await idbStorage.getFile(d.id);
+            }
+        } catch (e) {
+            console.warn('Aviso ao carregar comprovante anual do idb:', e);
+        }
+
+        if (!fileContent && (d.comprovante_url || d.arquivo_url)) {
+            fileContent = d.comprovante_url || d.arquivo_url;
+        }
+
+        if (fileContent) {
+            comprovantesCarregados.push({
+                despesa: d,
+                fileContent: fileContent,
+                nomeArquivo: d.comprovante_nome || 'Nota Fiscal / Recibo'
+            });
+        }
+    }
+
+    if (comprovantesCarregados.length > 0) {
+        htmlAnexosComprovantes = comprovantesCarregados.map((itemDoc, docIdx) => {
+            const d = itemDoc.despesa;
+            const fileContent = itemDoc.fileContent;
+            const nomeArq = itemDoc.nomeArquivo;
+            const isPdf = fileContent.startsWith('data:application/pdf') || nomeArq.toLowerCase().endsWith('.pdf');
+
+            return `
+                <div class="comprovante-print-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <b style="font-size: 13px; color: #0f172a;">Documento #${docIdx + 1}: ${d.fornecedor_cliente || 'Favorecido / Fornecedor'}</b>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+                                Data: <b>${d.data || '-'}</b> • Categoria: <span class="badge badge-danger">${d.categoria}</span> • Arquivo: <i>${nomeArq}</i>
+                            </div>
+                            <div style="font-size: 11px; color: #334155; margin-top: 4px;">
+                                <b>Descrição:</b> ${d.descricao}
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold; display: block;">Valor da Despesa</span>
+                            <strong style="font-size: 15px; color: #991b1b;">R$ ${(parseFloat(d.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                        </div>
+                    </div>
+                    <div style="text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px;">
+                        ${isPdf ? `
+                            <iframe src="${fileContent}" style="width: 100%; height: 550px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff;"></iframe>
+                        ` : `
+                            <img src="${fileContent}" alt="${nomeArq}" class="comprovante-img">
+                        `}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 
     const htmlTabelas = `
         <h3 style="font-size: 13px; color: #0f172a; margin-bottom: 8px;">📑 Demonstrativo Financeiro Mensal Consolidado (${anoStr}):</h3>
@@ -2247,7 +2450,9 @@ function imprimirOuBaixarBalanceteAnual(anoStr) {
         `Balancete Anual Consolidado de Prestação de Contas — Exercício ${anoStr}`,
         `Relatório Anual Contábil de Entradas, Mensalidades, Saídas e Resultado da ACBCSJ`,
         htmlTabelas,
-        htmlResumo
+        htmlResumo,
+        htmlAnexosComprovantes,
+        docWindow
     );
 }
 

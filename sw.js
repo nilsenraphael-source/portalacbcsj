@@ -1,5 +1,5 @@
 // Service Worker - Portal ACBCSJ PWA
-const CACHE_NAME = 'acbcsj-cache-v7';
+const CACHE_NAME = 'acbcsj-cache-v8';
 const PRECACHE_ASSETS = [
     './',
     './index.html',
