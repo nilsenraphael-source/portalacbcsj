@@ -244,6 +244,10 @@ function renderBalancetesAssociado() {
     const tbodyTransp = document.getElementById('tableBalancetesMensaisTransparencia');
     if (tbodyTransp) {
         const nomesMesesCompletos = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const hoje = new Date();
+        const anoAtual = hoje.getFullYear();
+        const mesAtual = hoje.getMonth() + 1; // 1 a 12
+        const anoInt = parseInt(ano, 10) || 2026;
         
         tbodyTransp.innerHTML = nomesMesesCompletos.map((mNome, idx) => {
             const mIndex = idx + 1;
@@ -257,9 +261,19 @@ function renderBalancetesAssociado() {
             const prevMensal = mensalidadesPrevistasPorMes[idx];
             const percMensal = prevMensal > 0 ? Math.round((arrMensal / prevMensal) * 100) : 100;
 
+            let statusBadge = '';
+            if (anoInt < anoAtual || (anoInt === anoAtual && mIndex < mesAtual)) {
+                statusBadge = `<span class="badge" style="background: rgba(46, 204, 113, 0.15); color: #2ECC71; border: 1px solid rgba(46, 204, 113, 0.4); font-size: 11px;">🔒 Fechado</span>`;
+            } else if (anoInt === anoAtual && mIndex === mesAtual) {
+                statusBadge = `<span class="badge" style="background: rgba(241, 196, 15, 0.15); color: #F1C40F; border: 1px solid rgba(241, 196, 15, 0.4); font-size: 11px;">⏳ Em Aberto</span>`;
+            } else {
+                statusBadge = `<span class="badge" style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid var(--border-color); font-size: 11px;">⚪ Previsto</span>`;
+            }
+
             return `
                 <tr>
                     <td><b>${mIndexStr} - ${mNome} / ${ano}</b></td>
+                    <td>${statusBadge}</td>
                     <td style="color: #2ECC71; font-weight: 600;">R$ ${recGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                     <td>
                         <b>R$ ${arrMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b>
@@ -1299,8 +1313,36 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
     const saldoAnteriorEstimado = calcularSaldoAnteriorMes(mIdx, anoStr, listFinanceiro, listMensalidades);
     const saldoFinalConsolidado = saldoAnteriorEstimado + resultadoMes;
 
-    // Conta Oficial: SICREDI (Conta Corrente / PIX)
-    const saldoSicrediConsolidado = saldoFinalConsolidado;
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth() + 1;
+    const anoInt = parseInt(anoStr, 10) || 2026;
+    const isEmAberto = (anoInt === anoAtual && mIdx === mesAtual);
+    const isFechado = (anoInt < anoAtual || (anoInt === anoAtual && mIdx < mesAtual));
+
+    const statusBannerHtml = isEmAberto ? `
+        <div style="background: rgba(241, 196, 15, 0.12); border: 1px solid #F1C40F; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">⏳</span>
+                <div>
+                    <strong style="color: #F1C40F; font-size: 13px;">EXERCÍCIO DE ${mesesNomes[mIdx-1].toUpperCase()}/${anoStr} EM ABERTO</strong>
+                    <div style="font-size: 11px; color: var(--text-muted);">Mês corrente em andamento. Os valores parciais refletem as movimentações registradas até a data de hoje (${hoje.toLocaleDateString('pt-BR')}) e serão consolidados ao término do mês.</div>
+                </div>
+            </div>
+            <span class="badge" style="background: rgba(241, 196, 15, 0.2); color: #F1C40F; border: 1px solid #F1C40F; font-size: 11px; padding: 4px 8px;">⏳ Em Aberto</span>
+        </div>
+    ` : `
+        <div style="background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.3); border-radius: 6px; padding: 8px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">🔒</span>
+                <div>
+                    <strong style="color: #2ECC71; font-size: 13px;">BALANCETE CONCILIADO — EXERCÍCIO FECHADO</strong>
+                    <div style="font-size: 11px; color: var(--text-muted);">Período contábil encerrado com todas as receitas, mensalidades e notas fiscais liquidadas.</div>
+                </div>
+            </div>
+            <span class="badge" style="background: rgba(46, 204, 113, 0.2); color: #2ECC71; border: 1px solid #2ECC71; font-size: 11px; padding: 4px 8px;">🔒 Fechado</span>
+        </div>
+    `;
 
     const container = document.getElementById('conteudoBalanceteMensal');
     if (container) {
@@ -1312,6 +1354,8 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
                     Período: <b>01/${strMes}/${anoStr} a 31/${strMes}/${anoStr}</b> • CNPJ: <b>07.962.460/0001-40</b> • São José - SC
                 </p>
             </div>
+
+            ${statusBannerHtml}
 
             <!-- QUADRO SINTÉTICO DE SALDO E RESULTADO -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 18px;">
@@ -2019,9 +2063,19 @@ function imprimirOuBaixarBalanceteMensal(mesIndex, anoStr) {
         </div>
     `;
 
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth() + 1;
+    const anoInt = parseInt(anoStr, 10) || 2026;
+    const isEmAberto = (anoInt === anoAtual && mIdx === mesAtual);
+
+    const subtituloStatus = isEmAberto 
+        ? `Demonstrativo Parcial em Andamento (Exercício em Aberto até ${hoje.toLocaleDateString('pt-BR')}) — ACBCSJ` 
+        : `Demonstrativo Financeiro Oficial Consolidado (Exercício Fechado) — ACBCSJ`;
+
     imprimirOuBaixarBalanceteDocumento(
         `Balancete Mensal de Prestação de Contas — ${nomeMes}/${anoStr}`,
-        `Demonstrativo Financeiro Oficial com Extratos e Notas Fiscais da ACBCSJ`,
+        subtituloStatus,
         htmlTabelas,
         htmlResumo
     );
