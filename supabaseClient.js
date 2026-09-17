@@ -47,7 +47,7 @@ function safeSetLocalStorage(key, data) {
                 });
                 localStorage.setItem(key, JSON.stringify(cleanedData));
             }
-        } catch(innerErr) {
+        } catch (innerErr) {
             console.error(`Erro ao salvar no LocalStorage (${key}):`, innerErr);
         }
     }
@@ -68,7 +68,7 @@ async function supabaseRest(endpoint, options = {}) {
     if (typeof AbortController !== 'undefined') {
         controller = new AbortController();
         timeoutId = setTimeout(() => {
-            try { controller.abort(); } catch(e) {}
+            try { controller.abort(); } catch (e) { }
         }, options.timeout || 10000);
     }
 
@@ -102,7 +102,7 @@ async function supabaseRestUpsert(table, row) {
             },
             body: JSON.stringify(row)
         });
-    } catch(e) {
+    } catch (e) {
         console.warn(`Aviso no supabaseRestUpsert (${table}):`, e);
         return null;
     }
@@ -113,7 +113,7 @@ async function supabaseRestDelete(table, query) {
         return await supabaseRest(`${table}?${query}`, {
             method: 'DELETE'
         });
-    } catch(e) {
+    } catch (e) {
         console.warn(`Aviso no supabaseRestDelete (${table}):`, e);
         return null;
     }
@@ -196,7 +196,7 @@ function sanitizeMensalidade(item) {
     let assocId = item.associado_id || null;
     if (!assocId) {
         let list = [];
-        try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch(e) {}
+        try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch (e) { }
         const assoc = list.find(a => (a.cpf || '').replace(/\D/g, '') === cleanCpf);
         if (assoc && assoc.id) assocId = String(assoc.id);
     }
@@ -266,9 +266,9 @@ function sincronizarComunicadosEnviados(mensagensData) {
     if (!Array.isArray(mensagensData)) return;
     let comunicados = JSON.parse(localStorage.getItem('acbcsj_comunicados_enviados')) || [];
     mensagensData.forEach(m => {
-        const isCom = (m.id && String(m.id).startsWith('comunicado_')) || 
-                      String(m.destinatario || '').toLowerCase() === 'todos' ||
-                      m.status === 'enviada';
+        const isCom = (m.id && String(m.id).startsWith('comunicado_')) ||
+            String(m.destinatario || '').toLowerCase() === 'todos' ||
+            m.status === 'enviada';
         if (isCom) {
             const idx = comunicados.findIndex(c => c.id === m.id);
             const comObj = {
@@ -315,7 +315,7 @@ const dbService = {
                 localStorage.setItem('acbcsj_associados', JSON.stringify(data));
                 return data;
             }
-        } catch(e) {}
+        } catch (e) { }
         return JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     },
 
@@ -392,7 +392,7 @@ const dbService = {
                 localStorage.setItem('acbcsj_financeiro', JSON.stringify(data));
                 return data;
             }
-        } catch(e) {}
+        } catch (e) { }
         return JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
     },
 
@@ -453,7 +453,7 @@ const dbService = {
             const mesesTexto = (item.meses_quitados && item.meses_quitados !== 'undefined' && item.meses_quitados !== 'null')
                 ? item.meses_quitados
                 : (item.mes_referencia && item.mes_referencia !== 'undefined' && item.mes_referencia !== 'null' ? item.mes_referencia : (typeof extrairTextoMesesQuitados === 'function' ? extrairTextoMesesQuitados(item) : 'Jan'));
-            
+
             return {
                 ...item,
                 meses_quitados: mesesTexto,
@@ -493,7 +493,7 @@ const dbService = {
                 }
                 return norm;
             }
-        } catch(e) {}
+        } catch (e) { }
         const local = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
         return normalizarLista(local);
     },
@@ -528,7 +528,7 @@ const dbService = {
     async clearMensalidades() {
         localStorage.setItem('acbcsj_mensalidades_historico', JSON.stringify([]));
         localStorage.setItem('acbcsj_mensalidades_grid', JSON.stringify([]));
-        ['2024','2025','2026','2027','2028'].forEach(ano => {
+        ['2024', '2025', '2026', '2027', '2028'].forEach(ano => {
             localStorage.setItem('acbcsj_mensalidades_grid_' + ano, JSON.stringify([]));
         });
         if (typeof recalcularTodasGridsMensalidades === 'function') {
@@ -590,7 +590,7 @@ const dbService = {
                 sincronizarComunicadosEnviados(data);
                 return data;
             }
-        } catch(e) {}
+        } catch (e) { }
         return JSON.parse(localStorage.getItem('acbcsj_mensagens')) || [];
     },
 
@@ -626,7 +626,7 @@ const dbService = {
         if (client) {
             try {
                 await client.from('mensagens').delete().eq('id', id);
-            } catch (e) {}
+            } catch (e) { }
         } else {
             await supabaseRestDelete('mensagens', `id=eq.${id}`);
         }
@@ -653,7 +653,7 @@ const dbService = {
                 localStorage.setItem('acbcsj_documentos', JSON.stringify(data));
                 return data;
             }
-        } catch(e) {}
+        } catch (e) { }
         return JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
     },
 
@@ -722,7 +722,7 @@ const dbService = {
                 localStorage.setItem('acbcsj_senhas_acessos', JSON.stringify(data));
                 return data;
             }
-        } catch(e) {}
+        } catch (e) { }
         return JSON.parse(localStorage.getItem('acbcsj_senhas_acessos')) || [];
     },
 
@@ -838,7 +838,7 @@ const dbService = {
                 if (typeof recalcularTodasGridsMensalidades === 'function') {
                     recalcularTodasGridsMensalidades();
                 }
-            } catch(calcErr) {
+            } catch (calcErr) {
                 console.warn("Aviso ao recalcular grids:", calcErr);
             }
 
@@ -859,7 +859,7 @@ const dbService = {
                 if (typeof refreshCurrentView === 'function') {
                     refreshCurrentView();
                 }
-            } catch(uiErr) {
+            } catch (uiErr) {
                 console.warn("Aviso ao atualizar tela:", uiErr);
             }
 
