@@ -559,11 +559,16 @@ function salvarNovoLancamento(e) {
             data: dataBR,
             data_iso: dataInput,
             mes: mesNome,
-            comprovante_nome: fileName
+            comprovante_nome: fileName,
+            comprovante_url: fileDataUrl || null
         };
 
         if (fileDataUrl) {
-            await idbStorage.setFile(lancId, fileDataUrl);
+            try {
+                await idbStorage.setFile(lancId, fileDataUrl);
+            } catch (idbErr) {
+                console.warn('Aviso IndexedDB:', idbErr);
+            }
         }
 
         list.unshift(novoLancamento);
@@ -610,24 +615,140 @@ function excluirLancamentoFinanceiro(id) {
 }
 
 async function abrirComprovanteLancamento(id) {
-    const fileContent = await idbStorage.getFile(id);
+    let fileContent = null;
+    let fileName = 'comprovante';
+    let descricao = 'Lançamento Financeiro';
+
+    // 1. Tenta buscar no IndexedDB
+    try {
+        fileContent = await idbStorage.getFile(id);
+    } catch (e) {
+        console.warn('Aviso ao ler comprovante do IndexedDB:', e);
+    }
+
+    // 2. Fallback: Busca na lista do LocalStorage (acbcsj_financeiro)
+    const list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const item = list.find(f => f.id === id);
+
+    if (item) {
+        if (item.descricao) descricao = item.descricao;
+        if (item.comprovante_nome) fileName = item.comprovante_nome;
+        if (!fileContent && (item.comprovante_url || item.arquivo_url)) {
+            fileContent = item.comprovante_url || item.arquivo_url;
+            try {
+                await idbStorage.setFile(id, fileContent);
+            } catch (e) {}
+        }
+    }
+
     if (!fileContent) {
-        alert('Comprovante não disponível para este lançamento.');
+        alert(`Comprovante não disponível para o lançamento "${descricao}".\nPor favor, edite ou recadastre o comprovante no lançamento.`);
         return;
     }
-    const win = window.open();
-    if (win) {
-        win.document.write(`
-            <html>
-                <head><title>Comprovante Financeiro - ACBCSJ</title></head>
-                <body style="margin:0; background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh;">
-                    <iframe src="${fileContent}" style="width:100%; height:100vh; border:none;"></iframe>
-                </body>
-            </html>
-        `);
-    } else {
-        alert('Visualização bloqueada pelo navegador.');
+
+    // Atualiza cabeçalho e corpo do modal
+    const lblTitulo = document.getElementById('lblTituloComprovanteModal');
+    const lblSub = document.getElementById('lblSubtituloComprovanteModal');
+    const viewerBody = document.getElementById('comprovanteViewerBody');
+    const actionsLeft = document.getElementById('comprovanteActionsLeft');
+
+    if (lblTitulo) lblTitulo.textContent = `📎 ${fileName}`;
+    if (lblSub) lblSub.textContent = `Lançamento: ${descricao}`;
+
+    const isPdf = fileContent.startsWith('data:application/pdf') || fileName.toLowerCase().endsWith('.pdf');
+    const isImage = fileContent.startsWith('data:image/') || /\.(png|jpe?g|webp|gif)$/i.test(fileName);
+
+    if (viewerBody) {
+        if (isImage) {
+            viewerBody.innerHTML = `
+                <img src="${fileContent}" alt="Comprovante" style="max-width: 100%; max-height: 65vh; border-radius: 8px; object-fit: contain; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            `;
+        } else if (isPdf) {
+            viewerBody.innerHTML = `
+                <iframe src="${fileContent}" style="width: 100%; height: 65vh; border: none; border-radius: 8px; background: #fff;"></iframe>
+            `;
+        } else {
+            viewerBody.innerHTML = `
+                <div style="padding: 30px; text-align: center;">
+                    <div style="font-size: 40px; margin-bottom: 10px;">📄</div>
+                    <p style="font-weight: 600;">${fileName}</p>
+                    <p style="font-size: 13px; color: var(--text-muted);">Clique no botão abaixo para baixar ou visualizar o anexo.</p>
+                </div>
+            `;
+        }
     }
+
+    if (actionsLeft) {
+        actionsLeft.innerHTML = `
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-gold btn-sm" onclick="baixarArquivoComprovante('${id}')">
+                    📥 Baixar Arquivo
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="abrirArquivoEmNovaAba('${id}')">
+                    🔲 Abrir em Nova Guia
+                </button>
+            </div>
+        `;
+    }
+
+    openModal('modalVisualizarComprovante');
+}
+
+function base64ToBlobUrl(dataUrl) {
+    try {
+        const parts = dataUrl.split(';base64,');
+        if (parts.length === 2) {
+            const contentType = parts[0].split(':')[1];
+            const raw = window.atob(parts[1]);
+            const rawLength = raw.length;
+            const uInt8Array = new Uint8Array(rawLength);
+            for (let i = 0; i < rawLength; ++i) {
+                uInt8Array[i] = raw.charCodeAt(i);
+            }
+            const blob = new Blob([uInt8Array], { type: contentType });
+            return URL.createObjectURL(blob);
+        }
+    } catch (e) {
+        console.warn('Erro ao converter base64 para Blob:', e);
+    }
+    return dataUrl;
+}
+
+async function baixarArquivoComprovante(id) {
+    let fileContent = await idbStorage.getFile(id);
+    let fileName = 'comprovante.pdf';
+    const list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const item = list.find(f => f.id === id);
+    if (item && item.comprovante_nome) fileName = item.comprovante_nome;
+    if (!fileContent && item) fileContent = item.comprovante_url || item.arquivo_url;
+
+    if (!fileContent) {
+        alert('Arquivo não disponível para download.');
+        return;
+    }
+
+    const blobUrl = base64ToBlobUrl(fileContent);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+async function abrirArquivoEmNovaAba(id) {
+    let fileContent = await idbStorage.getFile(id);
+    const list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const item = list.find(f => f.id === id);
+    if (!fileContent && item) fileContent = item.comprovante_url || item.arquivo_url;
+
+    if (!fileContent) {
+        alert('Arquivo não disponível.');
+        return;
+    }
+
+    const blobUrl = base64ToBlobUrl(fileContent);
+    window.open(blobUrl, '_blank');
 }
 
 function extrairMesEAno(dataStr, dataIso) {
