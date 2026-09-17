@@ -1256,251 +1256,253 @@ function calcularSaldoAnteriorMes(mesIndex, anoStr, listFinanceiro, listMensalid
 
 // GERAR BALANCETE MENSAL OFICIAL DA ACBCSJ (MODELO PRESTAÇÃO DE CONTAS)
 function gerarBalanceteMensal(mesIndex, anoStr) {
-    if (!anoStr) {
-        const selAno = document.getElementById('selAnoTransparencia') || document.getElementById('diretoriaFiltroAno');
-        anoStr = selAno ? selAno.value : '2026';
-    }
-    const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-    const mIdx = parseInt(mesIndex, 10) || 1;
-    const strMes = String(mIdx).padStart(2, '0');
-    let listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
-    if (!listFinanceiro || listFinanceiro.length === 0) {
-        listFinanceiro = (typeof INITIAL_LANCAMENTOS_DATA !== 'undefined' && Array.isArray(INITIAL_LANCAMENTOS_DATA)) ? INITIAL_LANCAMENTOS_DATA : [];
-        if (listFinanceiro.length > 0) {
-            localStorage.setItem('acbcsj_financeiro', JSON.stringify(listFinanceiro));
+    try {
+        if (!anoStr) {
+            const selAno = document.getElementById('selAnoTransparencia') || document.getElementById('diretoriaFiltroAno');
+            anoStr = selAno ? selAno.value : '2026';
         }
-    }
-    const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
+        const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const mIdx = parseInt(mesIndex, 10) || 1;
+        const strMes = String(mIdx).padStart(2, '0');
+        let listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+        if (!listFinanceiro || listFinanceiro.length === 0) {
+            listFinanceiro = (typeof INITIAL_LANCAMENTOS_DATA !== 'undefined' && Array.isArray(INITIAL_LANCAMENTOS_DATA)) ? INITIAL_LANCAMENTOS_DATA : [];
+            if (listFinanceiro.length > 0) {
+                localStorage.setItem('acbcsj_financeiro', JSON.stringify(listFinanceiro));
+            }
+        }
+        const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
-    // Receitas e Despesas gerais do mês usando o parser universal de datas
-    const lancamentosMes = listFinanceiro.filter(item => {
-        const dateInfo = extrairMesEAno(item.data, item.data_iso);
-        const itemAno = dateInfo.ano || (item.data_iso ? item.data_iso.substring(0, 4) : (item.data ? item.data.split('/')[2] : anoStr));
-        return dateInfo.mes === strMes && itemAno === anoStr;
-    });
+        // Receitas e Despesas gerais do mês usando o parser universal de datas
+        const lancamentosMes = listFinanceiro.filter(item => {
+            const dateInfo = extrairMesEAno(item.data, item.data_iso);
+            const itemAno = dateInfo.ano || (item.data_iso ? item.data_iso.substring(0, 4) : (item.data ? item.data.split('/')[2] : anoStr));
+            return dateInfo.mes === strMes && itemAno === anoStr;
+        });
 
-    // Mensalidades efetivamente recebidas neste mês/ano pela data de lançamento
-    const mensalidadesMes = listMensalidades.filter(m => {
-        const infoM = extrairInfoMensalidade(m, anoStr);
-        return infoM.mes === strMes && infoM.ano === anoStr;
-    });
+        // Mensalidades efetivamente recebidas neste mês/ano pela data de lançamento
+        const mensalidadesMes = listMensalidades.filter(m => {
+            const infoM = extrairInfoMensalidade(m, anoStr);
+            return infoM.mes === strMes && infoM.ano === anoStr;
+        });
 
-    const receitasGerais = lancamentosMes.filter(i => i.tipo === 'receita');
-    const despesasGerais = lancamentosMes.filter(i => i.tipo === 'despesa');
+        const receitasGerais = lancamentosMes.filter(i => i.tipo === 'receita');
+        const despesasGerais = lancamentosMes.filter(i => i.tipo === 'despesa');
 
-    // Categorias padronizadas da ACBCSJ
-    const catDespesasPadrao = [
-        'Treinamentos',
-        'Tarifas Banco',
-        'Mercado',
-        'Presentes',
-        'Confraternizações Associados',
-        'Equipamentos de Proteção Individuais (EPIs) ou Materiais Operacionais',
-        'Eventos Sociais',
-        'Material de Escritórios',
-        'Cartório ou Documentação em geral',
-        'Restituições de Projetos (Privado, Municipal ou Estadual)',
-        'Outros'
-    ];
+        // Categorias padronizadas da ACBCSJ
+        const catDespesasPadrao = [
+            'Treinamentos',
+            'Tarifas Banco',
+            'Mercado',
+            'Presentes',
+            'Confraternizações Associados',
+            'Equipamentos de Proteção Individuais (EPIs) ou Materiais Operacionais',
+            'Eventos Sociais',
+            'Material de Escritórios',
+            'Cartório ou Documentação em geral',
+            'Restituições de Projetos (Privado, Municipal ou Estadual)',
+            'Outros'
+        ];
 
-    const totalMensalidades = mensalidadesMes.reduce((s, m) => s + (parseFloat(m.valor) || 0), 0);
-    const totalRecsGerais = receitasGerais.reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
-    const totalReceitas = totalRecsGerais + totalMensalidades;
-    const totalDespesas = despesasGerais.reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
-    const resultadoMes = totalReceitas - totalDespesas;
+        const totalMensalidades = mensalidadesMes.reduce((s, m) => s + (parseFloat(m.valor) || 0), 0);
+        const totalRecsGerais = receitasGerais.reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
+        const totalReceitas = totalRecsGerais + totalMensalidades;
+        const totalDespesas = despesasGerais.reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
+        const resultadoMes = totalReceitas - totalDespesas;
 
-    // Cálculo dinâmico do Saldo Anterior acumulado
-    const saldoAnteriorEstimado = calcularSaldoAnteriorMes(mIdx, anoStr, listFinanceiro, listMensalidades);
-    const saldoFinalConsolidado = saldoAnteriorEstimado + resultadoMes;
+        // Cálculo dinâmico do Saldo Anterior acumulado
+        const saldoAnteriorEstimado = calcularSaldoAnteriorMes(mIdx, anoStr, listFinanceiro, listMensalidades);
+        const saldoFinalConsolidado = saldoAnteriorEstimado + resultadoMes;
+        const saldoSicrediConsolidado = saldoFinalConsolidado;
 
-    const hoje = new Date();
-    const anoAtual = hoje.getFullYear();
-    const mesAtual = hoje.getMonth() + 1;
-    const anoInt = parseInt(anoStr, 10) || 2026;
-    const isEmAberto = (anoInt === anoAtual && mIdx === mesAtual);
-    const isFechado = (anoInt < anoAtual || (anoInt === anoAtual && mIdx < mesAtual));
+        const hoje = new Date();
+        const anoAtual = hoje.getFullYear();
+        const mesAtual = hoje.getMonth() + 1;
+        const anoInt = parseInt(anoStr, 10) || 2026;
+        const isEmAberto = (anoInt === anoAtual && mIdx === mesAtual);
+        const isFechado = (anoInt < anoAtual || (anoInt === anoAtual && mIdx < mesAtual));
 
-    const statusBannerHtml = isEmAberto ? `
-        <div style="background: rgba(241, 196, 15, 0.12); border: 1px solid #F1C40F; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 18px;">⏳</span>
-                <div>
-                    <strong style="color: #F1C40F; font-size: 13px;">EXERCÍCIO DE ${mesesNomes[mIdx-1].toUpperCase()}/${anoStr} EM ABERTO</strong>
-                    <div style="font-size: 11px; color: var(--text-muted);">Mês corrente em andamento. Os valores parciais refletem as movimentações registradas até a data de hoje (${hoje.toLocaleDateString('pt-BR')}) e serão consolidados ao término do mês.</div>
-                </div>
-            </div>
-            <span class="badge" style="background: rgba(241, 196, 15, 0.2); color: #F1C40F; border: 1px solid #F1C40F; font-size: 11px; padding: 4px 8px;">⏳ Em Aberto</span>
-        </div>
-    ` : `
-        <div style="background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.3); border-radius: 6px; padding: 8px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 18px;">🔒</span>
-                <div>
-                    <strong style="color: #2ECC71; font-size: 13px;">BALANCETE CONCILIADO — EXERCÍCIO FECHADO</strong>
-                    <div style="font-size: 11px; color: var(--text-muted);">Período contábil encerrado com todas as receitas, mensalidades e notas fiscais liquidadas.</div>
-                </div>
-            </div>
-            <span class="badge" style="background: rgba(46, 204, 113, 0.2); color: #2ECC71; border: 1px solid #2ECC71; font-size: 11px; padding: 4px 8px;">🔒 Fechado</span>
-        </div>
-    `;
-
-    const container = document.getElementById('conteudoBalanceteMensal');
-    if (container) {
-        container.innerHTML = `
-            <div style="text-align: center; border-bottom: 2px solid var(--accent-gold); padding-bottom: 12px; margin-bottom: 16px;">
-                <h2 style="color: var(--accent-gold); margin: 0; font-size: 18px; letter-spacing: 0.5px;">ASSOCIAÇÃO CORPO DE BOMBEIROS COMUNITÁRIOS DE SÃO JOSÉ — ACBCSJ</h2>
-                <h3 style="margin: 6px 0 0 0; font-size: 15px; color: #FFFFFF;">DEMONSTRATIVO DE PRESTAÇÃO DE CONTAS & BALANCETE FINANCEIRO</h3>
-                <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-muted);">
-                    Período: <b>01/${strMes}/${anoStr} a 31/${strMes}/${anoStr}</b> • CNPJ: <b>07.962.460/0001-40</b> • São José - SC
-                </p>
-            </div>
-
-            ${statusBannerHtml}
-
-            <!-- QUADRO SINTÉTICO DE SALDO E RESULTADO -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 18px;">
-                <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; text-align: center;">
-                    <span style="font-size: 11px; color: var(--text-muted); display: block; text-transform: uppercase;">Saldo Anterior:</span>
-                    <strong style="font-size: 14px; color: var(--text-main);">R$ ${saldoAnteriorEstimado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
-                </div>
-                <div style="background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.3); border-radius: 6px; padding: 10px; text-align: center;">
-                    <span style="font-size: 11px; color: #2ECC71; display: block; text-transform: uppercase;">(+) Total Receitas:</span>
-                    <strong style="font-size: 14px; color: #2ECC71;">R$ ${totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
-                </div>
-                <div style="background: rgba(231, 76, 60, 0.08); border: 1px solid rgba(231, 76, 60, 0.3); border-radius: 6px; padding: 10px; text-align: center;">
-                    <span style="font-size: 11px; color: #E74C3C; display: block; text-transform: uppercase;">(-) Total Despesas:</span>
-                    <strong style="font-size: 14px; color: #E74C3C;">R$ ${totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
-                </div>
-                <div style="background: rgba(212, 175, 55, 0.12); border: 1px solid var(--accent-gold); border-radius: 6px; padding: 10px; text-align: center;">
-                    <span style="font-size: 11px; color: var(--accent-gold); display: block; text-transform: uppercase; font-weight: bold;">(=) Saldo Final Caixa:</span>
-                    <strong style="font-size: 16px; color: var(--accent-gold);">R$ ${saldoFinalConsolidado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
-                </div>
-            </div>
-
-            <!-- SEÇÃO 1: RECEITAS -->
-            <div style="margin-bottom: 18px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <h4 style="color: #2ECC71; font-size: 13px; margin: 0;">➕ DEMONSTRATIVO DE RECEITAS (ENTRADAS):</h4>
-                    <span style="font-size: 12px; font-weight: bold; color: #2ECC71;">Total: R$ ${totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                </div>
-                <table class="custom-table" style="font-size: 12px; margin: 0;">
-                    <thead>
-                        <tr style="background: rgba(0,0,0,0.25);">
-                            <th>Categoria / Fonte</th>
-                            <th>Descrição / Detalhamento</th>
-                            <th style="text-align: right;">Valor (R$)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><b>Mensalidades dos Associados</b></td>
-                            <td>Arrecadação de mensalidades no mês (${mensalidadesMes.length} baixa(s) PIX registradas)</td>
-                            <td style="text-align: right; color: #3498DB; font-weight: bold;">R$ ${totalMensalidades.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                        </tr>
-                        ${receitasGerais.length > 0 ? receitasGerais.map(r => `
-                            <tr>
-                                <td><span class="badge badge-info">${r.categoria}</span></td>
-                                <td>${r.descricao} ${r.fornecedor_cliente ? `<small style="color: var(--text-muted);">(${r.fornecedor_cliente})</small>` : ''}</td>
-                                <td style="text-align: right; color: #2ECC71; font-weight: bold;">R$ ${(parseFloat(r.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                            </tr>
-                        `).join('') : `
-                            <tr>
-                                <td style="color: var(--text-muted);">Rendimentos / Outros</td>
-                                <td style="color: var(--text-muted);">Rendimentos bancários e aplicações</td>
-                                <td style="text-align: right; color: var(--text-muted);">R$ 0,00</td>
-                            </tr>
-                        `}
-                    </tbody>
-                </table>
-                ${mensalidadesMes.length > 0 ? `
-                    <div style="margin-top: 8px;">
-                        <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 8px; color: var(--text-muted);" onclick="const el = document.getElementById('detalheMensalidadesBalancete'); if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';">
-                            👥 Ver Relação Nominal de Mensalidades (${mensalidadesMes.length} baixa(s))
-                        </button>
-                        <div id="detalheMensalidadesBalancete" style="display: none; margin-top: 8px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;">
-                            <table class="custom-table" style="font-size: 11px; margin: 0;">
-                                <thead>
-                                    <tr style="background: rgba(0,0,0,0.2);">
-                                        <th>Associado / CPF</th>
-                                        <th>Referência</th>
-                                        <th>Data Pagamento</th>
-                                        <th style="text-align: right;">Valor</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${mensalidadesMes.map(m => `
-                                        <tr>
-                                            <td><b>${m.nome || m.nome_guerra || m.cpf || 'Associado'}</b> <small style="color:var(--text-muted)">(${m.cpf || '-'})</small></td>
-                                            <td><span class="badge badge-info">${m.mes_referencia || m.meses_quitados || strMes}</span></td>
-                                            <td>${m.data_pagamento || m.data || '-'}</td>
-                                            <td style="text-align: right; color: #2ECC71; font-weight: bold;">R$ ${(parseFloat(m.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
+        const statusBannerHtml = isEmAberto ? `
+            <div style="background: rgba(241, 196, 15, 0.12); border: 1px solid #F1C40F; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 18px;">⏳</span>
+                    <div>
+                        <strong style="color: #F1C40F; font-size: 13px;">EXERCÍCIO DE ${mesesNomes[mIdx-1].toUpperCase()}/${anoStr} EM ABERTO</strong>
+                        <div style="font-size: 11px; color: var(--text-muted);">Mês corrente em andamento. Os valores parciais refletem as movimentações registradas até a data de hoje (${hoje.toLocaleDateString('pt-BR')}) e serão consolidados ao término do mês.</div>
                     </div>
-                ` : ''}
-            </div>
-
-            <!-- SEÇÃO 2: DESPESAS COM ANEXOS DE NOTAS FISCAIS -->
-            <div style="margin-bottom: 18px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <h4 style="color: #E74C3C; font-size: 13px; margin: 0;">➖ RESUMO DE DESPESAS & NOTAS FISCAIS ANEXADAS:</h4>
-                    <span style="font-size: 12px; font-weight: bold; color: #E74C3C;">Total: R$ ${totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <table class="custom-table" style="font-size: 12px; margin: 0;">
-                    <thead>
-                        <tr style="background: rgba(0,0,0,0.25);">
-                            <th>Data</th>
-                            <th>Favorecido / Fornecedor</th>
-                            <th>Categoria</th>
-                            <th>Descritivo da Despesa</th>
-                            <th style="text-align: right;">Valor (R$)</th>
-                            <th style="text-align: center;">Nota Fiscal / Recibo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${despesasGerais.length === 0 ? `
-                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 12px;">Nenhuma despesa registrada neste período.</td></tr>
-                        ` : despesasGerais.map(d => {
-                            const temComprovante = Boolean(d.comprovante_url || d.comprovante_nome);
-                            const nomeArquivo = d.comprovante_nome || 'Nota Fiscal';
-                            return `
+                <span class="badge" style="background: rgba(241, 196, 15, 0.2); color: #F1C40F; border: 1px solid #F1C40F; font-size: 11px; padding: 4px 8px;">⏳ Em Aberto</span>
+            </div>
+        ` : `
+            <div style="background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.3); border-radius: 6px; padding: 8px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 18px;">🔒</span>
+                    <div>
+                        <strong style="color: #2ECC71; font-size: 13px;">BALANCETE CONCILIADO — EXERCÍCIO FECHADO</strong>
+                        <div style="font-size: 11px; color: var(--text-muted);">Período contábil encerrado com todas as receitas, mensalidades e notas fiscais liquidadas.</div>
+                    </div>
+                </div>
+                <span class="badge" style="background: rgba(46, 204, 113, 0.2); color: #2ECC71; border: 1px solid #2ECC71; font-size: 11px; padding: 4px 8px;">🔒 Fechado</span>
+            </div>
+        `;
+
+        const container = document.getElementById('conteudoBalanceteMensal');
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align: center; border-bottom: 2px solid var(--accent-gold); padding-bottom: 12px; margin-bottom: 16px;">
+                    <h2 style="color: var(--accent-gold); margin: 0; font-size: 18px; letter-spacing: 0.5px;">ASSOCIAÇÃO CORPO DE BOMBEIROS COMUNITÁRIOS DE SÃO JOSÉ — ACBCSJ</h2>
+                    <h3 style="margin: 6px 0 0 0; font-size: 15px; color: #FFFFFF;">DEMONSTRATIVO DE PRESTAÇÃO DE CONTAS & BALANCETE FINANCEIRO</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-muted);">
+                        Período: <b>01/${strMes}/${anoStr} a 31/${strMes}/${anoStr}</b> • CNPJ: <b>07.962.460/0001-40</b> • São José - SC
+                    </p>
+                </div>
+
+                ${statusBannerHtml}
+
+                <!-- QUADRO SINTÉTICO DE SALDO E RESULTADO -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 18px;">
+                    <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; text-align: center;">
+                        <span style="font-size: 11px; color: var(--text-muted); display: block; text-transform: uppercase;">Saldo Anterior:</span>
+                        <strong style="font-size: 14px; color: var(--text-main);">R$ ${saldoAnteriorEstimado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                    </div>
+                    <div style="background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.3); border-radius: 6px; padding: 10px; text-align: center;">
+                        <span style="font-size: 11px; color: #2ECC71; display: block; text-transform: uppercase;">(+) Total Receitas:</span>
+                        <strong style="font-size: 14px; color: #2ECC71;">R$ ${totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                    </div>
+                    <div style="background: rgba(231, 76, 60, 0.08); border: 1px solid rgba(231, 76, 60, 0.3); border-radius: 6px; padding: 10px; text-align: center;">
+                        <span style="font-size: 11px; color: #E74C3C; display: block; text-transform: uppercase;">(-) Total Despesas:</span>
+                        <strong style="font-size: 14px; color: #E74C3C;">R$ ${totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                    </div>
+                    <div style="background: rgba(212, 175, 55, 0.12); border: 1px solid var(--accent-gold); border-radius: 6px; padding: 10px; text-align: center;">
+                        <span style="font-size: 11px; color: var(--accent-gold); display: block; text-transform: uppercase; font-weight: bold;">(=) Saldo Final Caixa:</span>
+                        <strong style="font-size: 16px; color: var(--accent-gold);">R$ ${saldoFinalConsolidado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO 1: RECEITAS -->
+                <div style="margin-bottom: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <h4 style="color: #2ECC71; font-size: 13px; margin: 0;">➕ DEMONSTRATIVO DE RECEITAS (ENTRADAS):</h4>
+                        <span style="font-size: 12px; font-weight: bold; color: #2ECC71;">Total: R$ ${totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <table class="custom-table" style="font-size: 12px; margin: 0;">
+                        <thead>
+                            <tr style="background: rgba(0,0,0,0.25);">
+                                <th>Categoria / Fonte</th>
+                                <th>Descrição / Detalhamento</th>
+                                <th style="text-align: right;">Valor (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><b>Mensalidades dos Associados</b></td>
+                                <td>Arrecadação de mensalidades no mês (${mensalidadesMes.length} baixa(s) PIX registradas)</td>
+                                <td style="text-align: right; color: #3498DB; font-weight: bold;">R$ ${totalMensalidades.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                            </tr>
+                            ${receitasGerais.length > 0 ? receitasGerais.map(r => `
                                 <tr>
-                                    <td><b>${d.data || '-'}</b></td>
-                                    <td><strong>${d.fornecedor_cliente || 'Diversos'}</strong></td>
-                                    <td><span class="badge badge-danger">${d.categoria}</span></td>
-                                    <td>${d.descricao}</td>
-                                    <td style="text-align: right; color: #E74C3C; font-weight: bold;">R$ ${(parseFloat(d.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                                    <td style="text-align: center;">
-                                        ${temComprovante ? `
-                                            <button type="button" class="btn btn-sm btn-gold" style="padding: 3px 10px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" onclick="abrirComprovanteLancamento('${d.id}')" title="Visualizar ${nomeArquivo}">
-                                                📄 Ver NF
-                                            </button>
-                                        ` : `
-                                            <span style="font-size: 11px; color: var(--text-muted);">🏦 Débito Conta</span>
-                                        `}
-                                    </td>
+                                    <td><span class="badge badge-info">${r.categoria}</span></td>
+                                    <td>${r.descricao} ${r.fornecedor_cliente ? `<small style="color: var(--text-muted);">(${r.fornecedor_cliente})</small>` : ''}</td>
+                                    <td style="text-align: right; color: #2ECC71; font-weight: bold;">R$ ${(parseFloat(r.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                                 </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            </div>
+                            `).join('') : `
+                                <tr>
+                                    <td style="color: var(--text-muted);">Rendimentos / Outros</td>
+                                    <td style="color: var(--text-muted);">Rendimentos bancários e aplicações</td>
+                                    <td style="text-align: right; color: var(--text-muted);">R$ 0,00</td>
+                                </tr>
+                            `}
+                        </tbody>
+                    </table>
+                    ${mensalidadesMes.length > 0 ? `
+                        <div style="margin-top: 8px;">
+                            <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 8px; color: var(--text-muted);" onclick="const el = document.getElementById('detalheMensalidadesBalancete'); if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';">
+                                👥 Ver Relação Nominal de Mensalidades (${mensalidadesMes.length} baixa(s))
+                            </button>
+                            <div id="detalheMensalidadesBalancete" style="display: none; margin-top: 8px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;">
+                                <table class="custom-table" style="font-size: 11px; margin: 0;">
+                                    <thead>
+                                        <tr style="background: rgba(0,0,0,0.2);">
+                                            <th>Associado / CPF</th>
+                                            <th>Referência</th>
+                                            <th>Data Pagamento</th>
+                                            <th style="text-align: right;">Valor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${mensalidadesMes.map(m => `
+                                            <tr>
+                                                <td><b>${m.nome || m.nome_guerra || m.cpf || 'Associado'}</b> <small style="color:var(--text-muted)">(${m.cpf || '-'})</small></td>
+                                                <td><span class="badge badge-info">${m.mes_referencia || m.meses_quitados || strMes}</span></td>
+                                                <td>${m.data_pagamento || m.data || '-'}</td>
+                                                <td style="text-align: right; color: #2ECC71; font-weight: bold;">R$ ${(parseFloat(m.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
 
-            <!-- SEÇÃO 2.1: GALERIA DE NOTAS FISCAIS E COMPROVANTES DO MÊS -->
-            ${despesasGerais.some(d => d.comprovante_url || d.comprovante_nome) ? `
-                <div style="background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; padding: 14px; margin-bottom: 18px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
-                        <h4 style="color: var(--accent-gold); font-size: 13px; margin: 0; display: flex; align-items: center; gap: 6px;">
-                            📁 NOTAS FISCAIS & COMPROVANTES DO EXERCÍCIO (${despesasGerais.filter(d => d.comprovante_url || d.comprovante_nome).length} documento(s)):
-                        </h4>
-                        <small style="color: var(--text-muted);">Clique no documento para visualizá-lo em tela cheia</small>
+                <!-- SEÇÃO 2: DESPESAS COM ANEXOS DE NOTAS FISCAIS -->
+                <div style="margin-bottom: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <h4 style="color: #E74C3C; font-size: 13px; margin: 0;">➖ RESUMO DE DESPESAS & NOTAS FISCAIS ANEXADAS:</h4>
+                        <span style="font-size: 12px; font-weight: bold; color: #E74C3C;">Total: R$ ${totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
-                        ${despesasGerais.filter(d => d.comprovante_url || d.comprovante_nome).map(d => `
-                            <div style="background: rgba(0,0,0,0.35); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+                    <table class="custom-table" style="font-size: 12px; margin: 0;">
+                        <thead>
+                            <tr style="background: rgba(0,0,0,0.25);">
+                                <th>Data</th>
+                                <th>Favorecido / Fornecedor</th>
+                                <th>Categoria</th>
+                                <th>Descritivo da Despesa</th>
+                                <th style="text-align: right;">Valor (R$)</th>
+                                <th style="text-align: center;">Nota Fiscal / Recibo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${despesasGerais.length === 0 ? `
+                                <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 12px;">Nenhuma despesa registrada neste período.</td></tr>
+                            ` : despesasGerais.map(d => {
+                                const temComprovante = Boolean(d.comprovante_url || d.comprovante_nome);
+                                const nomeArquivo = d.comprovante_nome || 'Nota Fiscal';
+                                return `
+                                    <tr>
+                                        <td><b>${d.data || '-'}</b></td>
+                                        <td><strong>${d.fornecedor_cliente || 'Diversos'}</strong></td>
+                                        <td><span class="badge badge-danger">${d.categoria}</span></td>
+                                        <td>${d.descricao}</td>
+                                        <td style="text-align: right; color: #E74C3C; font-weight: bold;">R$ ${(parseFloat(d.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                        <td style="text-align: center;">
+                                            ${temComprovante ? `
+                                                <button type="button" class="btn btn-sm btn-gold" style="padding: 3px 10px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" onclick="abrirComprovanteLancamento('${d.id}')" title="Visualizar ${nomeArquivo}">
+                                                    📄 Ver NF
+                                                </button>
+                                            ` : `
+                                                <span style="font-size: 11px; color: var(--text-muted);">🏦 Débito Conta</span>
+                                            `}
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- SEÇÃO 2.1: GALERIA DE NOTAS FISCAIS E COMPROVANTES DO MÊS -->
+                ${despesasGerais.some(d => d.comprovante_url || d.comprovante_nome) ? `
+                    <div style="background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; padding: 14px; margin-bottom: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
+                            <h4 style="color: var(--accent-gold); font-size: 13px; margin: 0; display: flex; align-items: center; gap: 6px;">
+                                📁 NOTAS FISCAIS & COMPROVANTES DO EXERCÍCIO (${despesasGerais.filter(d => d.comprovante_url || d.comprovante_nome).length} documento(s)):
+                            </h4>
+                            <small style="color: var(--text-muted);">Clique no documento para visualizá-lo em tela cheia</small>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
+                            ${despesasGerais.filter(d => d.comprovante_url || d.comprovante_nome).map(d => `
+                                <div style="background: rgba(0,0,0,0.35); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
                                 <div>
                                     <div style="font-weight: 600; font-size: 12px; color: #FFFFFF; display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${d.comprovante_nome || 'Nota Fiscal'}">
                                         📄 ${d.comprovante_nome || 'Nota Fiscal / Recibo'}
@@ -1549,6 +1551,10 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
     }
 
     openModal('modalBalanceteMensal');
+} catch (err) {
+    console.error('Erro ao gerar balancete mensal:', err);
+    alert('Ocorreu um erro ao abrir o balancete mensal: ' + (err.message || err));
+}
 }
 
 // ALIAS GLOBAL PARA ABERTURA DO BALANCETE MENSAL
