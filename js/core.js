@@ -86,17 +86,31 @@ const idbStorage = {
     }
 };
 
-// INICIALIZAÃ‡ÃƒO E LIMPEZA DE DADOS
+// INICIALIZAÇÃO E LIMPEZA DE DADOS
 document.addEventListener("DOMContentLoaded", async () => {
     initMockData();
     setupCPFMasks();
     setupNavigation();
+
+    // Restaura login ativo do associado no App / PWA imediatamente
+    if (typeof restoreActiveSession === 'function') {
+        try {
+            await restoreActiveSession();
+        } catch (authErr) {
+            console.warn("Aviso ao restaurar sessão:", authErr);
+        }
+    }
+
     if (typeof dbService !== 'undefined') {
         try {
             await dbService.syncFromSupabase();
             dbService.initRealtime();
+            // Se o usuário já estiver logado, atualiza as telas com os dados mais recentes
+            if (currentUser && typeof refreshCurrentView === 'function') {
+                refreshCurrentView();
+            }
         } catch (e) {
-            console.error("Erro na sincronizaÃ§Ã£o inicial do Supabase:", e);
+            console.error("Erro na sincronização inicial do Supabase:", e);
         }
     }
 });

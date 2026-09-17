@@ -133,13 +133,22 @@ async function loginWithCPF(cpf, password) {
             return false;
         }
 
-        // 5. LOGIN BEM-SUCEDIDO
+        // 5. LOGIN BEM-SUCEDIDO COM SESSÃO PERSISTENTE (PWA / APP MOBILE / WEB)
         currentUser = found;
+        const sessionData = {
+            cpf: found.cpf,
+            cleanCpf: cleanInputCPF,
+            perfil: found.perfil || 'associado',
+            nome: found.nome_guerra || found.nome,
+            data_login: new Date().toISOString()
+        };
+
         try {
-            sessionStorage.setItem('acbcsj_logged_user', JSON.stringify({ cpf: found.cpf, perfil: found.perfil, nome: found.nome_guerra || found.nome }));
+            localStorage.setItem('acbcsj_auth_session', JSON.stringify(sessionData));
+            sessionStorage.setItem('acbcsj_logged_user', JSON.stringify(sessionData));
         } catch(e) {}
 
-        console.log(`✅ Login autenticado com sucesso: ${found.nome_guerra || found.nome} (${(found.perfil || 'associado').toUpperCase()})`);
+        console.log(`✅ Login autenticado e sessão persistida com sucesso: ${found.nome_guerra || found.nome} (${(found.perfil || 'associado').toUpperCase()})`);
 
         // Exibição do Dashboard
         const authScreen = document.getElementById('authScreen');
@@ -171,9 +180,71 @@ async function loginWithCPF(cpf, password) {
 
 window.loginWithCPF = loginWithCPF;
 
+// RESTAURAÇÃO AUTOMÁTICA DE SESSÃO PERSISTENTE
+async function restoreActiveSession() {
+    let session = null;
+    try {
+        const stored = localStorage.getItem('acbcsj_auth_session') || sessionStorage.getItem('acbcsj_logged_user');
+        if (stored) {
+            session = JSON.parse(stored);
+        }
+    } catch(e) {
+        console.warn('Erro ao ler sessão persistente:', e);
+    }
+
+    if (!session || !session.cpf) {
+        return false;
+    }
+
+    const cleanCpf = String(session.cpf).replace(/\D/g, '');
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem('acbcsj_associados')) || []; } catch(e) {}
+
+    if (!list || list.length === 0) {
+        if (typeof MOCK_DATA_INITIAL !== 'undefined' && MOCK_DATA_INITIAL.associados) {
+            list = MOCK_DATA_INITIAL.associados;
+        } else if (typeof ASSOCIADOS_PLANILHA_REAL !== 'undefined') {
+            list = ASSOCIADOS_PLANILHA_REAL;
+        }
+    }
+
+    const found = list.find(a => {
+        const itemClean = (a.cpf || '').replace(/\D/g, '');
+        return itemClean === cleanCpf || a.cpf === session.cpf;
+    });
+
+    if (!found || found.status === 'desligado' || found.status === 'pendente') {
+        console.warn('Sessão expirada ou usuário inativo/desligado.');
+        logout();
+        return false;
+    }
+
+    currentUser = found;
+    console.log(`📱 Sessão persistente restaurada no App: ${found.nome_guerra || found.nome} (${(found.perfil || 'associado').toUpperCase()})`);
+
+    const authScreen = document.getElementById('authScreen');
+    const appDashboard = document.getElementById('appDashboard');
+
+    if (authScreen) authScreen.setAttribute('style', 'display: none !important;');
+    if (appDashboard) appDashboard.setAttribute('style', 'display: flex !important; min-height: 100vh; flex-direction: column;');
+
+    try {
+        renderUserHeader();
+        renderSidebarMenu();
+        navigateTab(currentUser.perfil === 'diretoria' ? 'overview-diretoria' : 'overview-associado');
+    } catch (uiErr) {
+        console.error('Aviso ao inicializar telas na restauração da sessão:', uiErr);
+    }
+
+    return true;
+}
+
+window.restoreActiveSession = restoreActiveSession;
+
 function logout() {
     currentUser = null;
     try {
+        localStorage.removeItem('acbcsj_auth_session');
         sessionStorage.removeItem('acbcsj_logged_user');
     } catch(e) {}
 
