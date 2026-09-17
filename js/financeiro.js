@@ -614,6 +614,141 @@ function excluirLancamentoFinanceiro(id) {
     }
 }
 
+function atualizarCategoriasEditLancamento(tipo, selectedValue = null) {
+    const catSelect = document.getElementById('editFinCategoria');
+    if (!catSelect) return;
+    const categorias = getCategoriasFinanceiras(tipo || 'receita');
+    catSelect.innerHTML = '';
+    categorias.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        if (selectedValue && selectedValue === cat) {
+            opt.selected = true;
+        }
+        catSelect.appendChild(opt);
+    });
+}
+
+function abrirModalEditarLancamento(id) {
+    const list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const item = list.find(f => f.id === id);
+    if (!item) {
+        alert('Lançamento não encontrado.');
+        return;
+    }
+
+    document.getElementById('editFinId').value = item.id;
+    document.getElementById('editFinTipo').value = item.tipo || 'despesa';
+    document.getElementById('editFinValor').value = parseFloat(item.valor) || 0;
+    document.getElementById('editFinDescricao').value = item.descricao || '';
+
+    // Converte data para formato YYYY-MM-DD
+    let dateVal = item.data_iso || '';
+    if (!dateVal && item.data) {
+        const parts = item.data.split('/');
+        if (parts.length === 3) {
+            dateVal = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+        }
+    }
+    if (!dateVal) dateVal = new Date().toISOString().split('T')[0];
+    document.getElementById('editFinData').value = dateVal;
+
+    atualizarCategoriasEditLancamento(item.tipo || 'despesa', item.categoria);
+
+    const infoComprovante = document.getElementById('editFinComprovanteAtualInfo');
+    if (infoComprovante) {
+        if (item.comprovante_nome) {
+            infoComprovante.innerHTML = `📎 <b>Arquivo atual:</b> ${item.comprovante_nome} <small style="color:var(--text-muted);">(Selecione outro arquivo abaixo caso queira substituir)</small>`;
+        } else {
+            infoComprovante.innerHTML = `<span style="color:var(--text-muted);">Nenhum arquivo anexado no momento.</span>`;
+        }
+    }
+
+    const fileInput = document.getElementById('editFinComprovante');
+    if (fileInput) fileInput.value = '';
+
+    openModal('modalEditarLancamento');
+}
+
+async function salvarEdicaoLancamento(e) {
+    e.preventDefault();
+    const id = document.getElementById('editFinId').value;
+    const tipo = document.getElementById('editFinTipo').value;
+    const valor = parseFloat(document.getElementById('editFinValor').value);
+    const descricao = document.getElementById('editFinDescricao').value.trim();
+    const categoria = document.getElementById('editFinCategoria').value;
+    const dataInput = document.getElementById('editFinData').value;
+    const fileInput = document.getElementById('editFinComprovante');
+    const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+    if (!valor || valor <= 0 || !descricao || !dataInput) {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return;
+    }
+
+    const [ano, mes, dia] = dataInput.split('-');
+    const dataBR = `${dia}/${mes}/${ano}`;
+    const mesesNomes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const mesNome = mesesNomes[parseInt(mes, 10) - 1] || 'Janeiro';
+
+    const concluirEdicao = async (fileDataUrl = null, fileName = null) => {
+        let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+        const idx = list.findIndex(item => item.id === id);
+        if (idx < 0) {
+            alert('Lançamento não encontrado.');
+            return;
+        }
+
+        const itemAtual = list[idx];
+        const updatedItem = {
+            ...itemAtual,
+            tipo: tipo,
+            valor: valor,
+            descricao: descricao,
+            categoria: categoria,
+            data: dataBR,
+            data_iso: dataInput,
+            mes: mesNome
+        };
+
+        if (fileDataUrl) {
+            updatedItem.comprovante_nome = fileName;
+            updatedItem.comprovante_url = fileDataUrl;
+            try {
+                await idbStorage.setFile(id, fileDataUrl);
+            } catch (err) {
+                console.warn('Aviso IndexedDB:', err);
+            }
+        }
+
+        list[idx] = updatedItem;
+        localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+
+        try {
+            if (typeof dbService !== 'undefined') {
+                await dbService.saveFinanceiro(updatedItem);
+            }
+        } catch (dbErr) {
+            console.warn('Aviso ao sincronizar com Supabase:', dbErr);
+        }
+
+        alert('Lançamento financeiro atualizado com sucesso!');
+        closeModal('modalEditarLancamento');
+        renderGestaoFinanceira();
+    };
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            concluirEdicao(evt.target.result, file.name);
+        };
+        reader.readAsDataURL(file);
+    } else {
+        concluirEdicao();
+    }
+}
+
 async function abrirComprovanteLancamento(id) {
     let fileContent = null;
     let fileName = 'comprovante';
@@ -1059,6 +1194,7 @@ function renderGestaoFinanceira() {
                                 <span class="badge badge-success" style="font-size:10px;">💳 PIX Confirmado</span>
                             ` : `
                                 ${item.comprovante_nome ? `<button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:var(--accent-gold); border-color:var(--accent-gold);" onclick="abrirComprovanteLancamento('${item.id}')">📎 Recibo</button>` : ''}
+                                <button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:#3498DB; border-color:#3498DB;" onclick="abrirModalEditarLancamento('${item.id}')" title="Editar lançamento ou anexar recibo">✏️ Editar</button>
                                 <button class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 6px; color:#E74C3C; border-color:#E74C3C;" onclick="excluirLancamentoFinanceiro('${item.id}')">🗑️ Excluir</button>
                             `}
                         </div>
