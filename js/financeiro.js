@@ -1214,6 +1214,32 @@ function filtrarExtratoMes(strMes) {
     }
 }
 
+// CÁLCULO DINÂMICO DE SALDO ANTERIOR ACUMULADO (MESES ANTERIORES)
+function calcularSaldoAnteriorMes(mesIndex, anoStr, listFinanceiro, listMensalidades) {
+    const targetMonth = parseInt(mesIndex, 10) || 1;
+    let saldoAcumulado = 0;
+    
+    for (let m = 1; m < targetMonth; m++) {
+        const strM = String(m).padStart(2, '0');
+        const lMes = listFinanceiro.filter(item => {
+            const dateInfo = extrairMesEAno(item.data, item.data_iso);
+            const itemAno = dateInfo.ano || (item.data_iso ? item.data_iso.substring(0, 4) : (item.data ? item.data.split('/')[2] : anoStr));
+            return dateInfo.mes === strM && itemAno === anoStr;
+        });
+        const recGeral = lMes.filter(i => i.tipo === 'receita').reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
+        const despGeral = lMes.filter(i => i.tipo === 'despesa').reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
+        
+        const mMens = listMensalidades.filter(item => {
+            const infoM = extrairInfoMensalidade(item, anoStr);
+            return infoM.mes === strM && infoM.ano === anoStr;
+        }).reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
+        
+        saldoAcumulado += (recGeral + mMens - despGeral);
+    }
+    
+    return saldoAcumulado;
+}
+
 // GERAR BALANCETE MENSAL OFICIAL DA ACBCSJ (MODELO PRESTAÇÃO DE CONTAS)
 function gerarBalanceteMensal(mesIndex, anoStr) {
     if (!anoStr) {
@@ -1269,11 +1295,8 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
     const totalDespesas = despesasGerais.reduce((s, i) => s + (parseFloat(i.valor) || 0), 0);
     const resultadoMes = totalReceitas - totalDespesas;
 
-    // Cálculo do Saldo Anterior com base nos meses anteriores
-    let saldoAnteriorEstimado = 10968.92; // Valor base oficial de fechamento anterior
-    if (mIdx === 7 && anoStr === '2026') {
-        saldoAnteriorEstimado = 10968.92;
-    }
+    // Cálculo dinâmico do Saldo Anterior acumulado
+    const saldoAnteriorEstimado = calcularSaldoAnteriorMes(mIdx, anoStr, listFinanceiro, listMensalidades);
     const saldoFinalConsolidado = saldoAnteriorEstimado + resultadoMes;
 
     // Conta Oficial: SICREDI (Conta Corrente / PIX)
@@ -1885,7 +1908,7 @@ function imprimirOuBaixarBalanceteMensal(mesIndex, anoStr) {
     const totalReceitas = totalRecsGerais + totalMensalidades;
     const saldoFinal = totalReceitas - totalDespesas;
 
-    let saldoAnteriorEstimado = 10968.92;
+    const saldoAnteriorEstimado = calcularSaldoAnteriorMes(mIdx, anoStr, listFinanceiro, listMensalidades);
     const saldoFinalConsolidado = saldoAnteriorEstimado + (totalReceitas - totalDespesas);
     const saldoSicrediConsolidado = saldoFinalConsolidado;
 
