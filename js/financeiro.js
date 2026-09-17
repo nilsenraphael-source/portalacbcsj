@@ -1793,6 +1793,7 @@ function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas
         <head>
             <meta charset="UTF-8">
             <title>${tituloDoc} — ACBCSJ</title>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
             <style>
                 * { box-sizing: border-box; margin: 0; padding: 0; }
                 body {
@@ -1938,32 +1939,82 @@ function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas
                     color: #334155;
                     font-weight: 600;
                 }
-                .comprovante-print-card {
-                    page-break-inside: avoid;
-                    break-inside: avoid;
-                    border: 1px solid #cbd5e1;
-                    border-radius: 8px;
-                    padding: 16px;
-                    margin-bottom: 25px;
+                .anexo-pagina-a4 {
+                    page-break-before: always !important;
+                    break-before: page !important;
+                    min-height: 275mm;
+                    box-sizing: border-box;
+                    display: flex;
+                    flex-direction: column;
+                    margin-top: 35px;
+                    padding-top: 20px;
+                    border-top: 2px dashed #cbd5e1;
+                }
+                .anexo-doc-wrapper {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
                     background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    padding: 12px;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+                .pdf-page-canvas {
+                    max-width: 100% !important;
+                    height: auto !important;
+                    display: block !important;
+                    margin: 0 auto 15px auto !important;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+                    border-radius: 4px;
                 }
                 .comprovante-img {
-                    max-width: 100%;
-                    max-height: 220mm;
-                    width: auto;
-                    height: auto;
-                    object-fit: contain;
-                    display: block;
-                    margin: 0 auto;
+                    max-width: 100% !important;
+                    max-height: 220mm !important;
+                    width: auto !important;
+                    height: auto !important;
+                    object-fit: contain !important;
+                    display: block !important;
+                    margin: 0 auto !important;
                     border-radius: 4px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
                 }
                 @media print {
                     .no-print-bar { display: none !important; }
                     body { background: #ffffff !important; padding: 0 !important; }
-                    .doc-page { border: none !important; box-shadow: none !important; padding: 0 !important; max-width: 100% !important; }
-                    .page-break { page-break-before: always !important; break-before: page !important; }
-                    .comprovante-print-card { page-break-inside: avoid !important; break-inside: avoid !important; margin-bottom: 20mm !important; }
-                    @page { size: A4; margin: 12mm 10mm; }
+                    .doc-page { border: none !important; box-shadow: none !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; }
+                    .anexo-pagina-a4 {
+                        border-top: none !important;
+                        margin-top: 0 !important;
+                        padding-top: 0 !important;
+                        page-break-before: always !important;
+                        break-before: page !important;
+                        page-break-after: always !important;
+                        break-after: page !important;
+                        min-height: 270mm !important;
+                        height: auto !important;
+                    }
+                    .anexo-doc-wrapper {
+                        border: none !important;
+                        padding: 0 !important;
+                    }
+                    .pdf-page-canvas {
+                        box-shadow: none !important;
+                        width: 100% !important;
+                        max-width: 100% !important;
+                        height: auto !important;
+                    }
+                    .comprovante-img {
+                        box-shadow: none !important;
+                        max-height: 225mm !important;
+                    }
+                    @page {
+                        size: A4 portrait;
+                        margin: 10mm 10mm;
+                    }
                 }
             </style>
         </head>
@@ -1971,7 +2022,7 @@ function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas
             <div class="no-print-bar">
                 <div>
                     <b style="font-size: 14px;">📄 ${tituloDoc}</b><br>
-                    <span style="font-size: 12px; color: #cbd5e1;">Documento oficial contábil da ACBCSJ formatado com demonstrativos e notas fiscais anexas.</span>
+                    <span style="font-size: 12px; color: #cbd5e1;">Documento oficial contábil da ACBCSJ com balancete e notas fiscais em folha inteira A4.</span>
                 </div>
                 <div>
                     <button class="btn-action" onclick="window.print()">🖨️ Imprimir / Salvar em PDF</button>
@@ -1980,6 +2031,7 @@ function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas
             </div>
 
             <div class="doc-page">
+                <!-- BALANCETE CONTÁBIL (PÁGINA PRINCIPAL) -->
                 <div class="header-container">
                     <img src="${window.location.origin}/logo.png" alt="Logo ACBCSJ" class="header-logo" onerror="this.style.display='none'">
                     <div class="header-text">
@@ -2013,26 +2065,46 @@ function imprimirOuBaixarBalanceteDocumento(tituloDoc, subtituloDoc, htmlTabelas
                     </div>
                 </div>
 
-                ${htmlAnexosComprovantes ? `
-                    <div class="page-break" style="margin-top: 40px; padding-top: 25px; border-top: 2px dashed #cbd5e1;">
-                        <div class="header-container" style="border-bottom: 2px solid #b91c1c; margin-bottom: 20px;">
-                            <img src="${window.location.origin}/logo.png" alt="Logo ACBCSJ" class="header-logo" onerror="this.style.display='none'">
-                            <div class="header-text">
-                                <h1>Associação Corpo de Bombeiros Comunitários de São José — ACBCSJ</h1>
-                                <p>ANEXO CONTÁBIL: NOTAS FISCAIS & COMPROVANTES DE DESPESAS</p>
-                                <p>Prestação de Contas vinculada ao ${tituloDoc}</p>
-                            </div>
-                        </div>
-
-                        <div class="doc-title-box" style="background: #fffbeb; border-left: 4px solid #d97706;">
-                            <h2>📁 Caderno de Notas Fiscais & Comprovantes Anexados</h2>
-                            <p>Relação digitalizada das notas fiscais e recibos de pagamento de todas as despesas lançadas no período.</p>
-                        </div>
-
-                        ${htmlAnexosComprovantes}
-                    </div>
-                ` : ''}
+                <!-- CADERNO DE NOTAS FISCAIS EM FOLHA INTEIRA A4 -->
+                ${htmlAnexosComprovantes ? htmlAnexosComprovantes : ''}
             </div>
+
+            <script>
+                async function renderAllPdfs() {
+                    if (typeof pdfjsLib === 'undefined') return;
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    const containers = document.querySelectorAll('.pdf-render-container');
+                    for (const c of containers) {
+                        const rawData = c.getAttribute('data-pdf-content');
+                        if (rawData) {
+                            try {
+                                const loadingTask = pdfjsLib.getDocument(rawData);
+                                const pdf = await loadingTask.promise;
+                                c.innerHTML = '';
+                                for (let i = 1; i <= pdf.numPages; i++) {
+                                    const page = await pdf.getPage(i);
+                                    const scale = 2.0;
+                                    const viewport = page.getViewport({ scale: scale });
+                                    const canvas = document.createElement('canvas');
+                                    canvas.height = viewport.height;
+                                    canvas.width = viewport.width;
+                                    canvas.className = 'pdf-page-canvas';
+                                    const ctx = canvas.getContext('2d');
+                                    c.appendChild(canvas);
+                                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                                }
+                            } catch (err) {
+                                console.warn('PDF.js render error:', err);
+                            }
+                        }
+                    }
+                }
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', renderAllPdfs);
+                } else {
+                    renderAllPdfs();
+                }
+            </script>
         </body>
         </html>
     `;
@@ -2053,8 +2125,8 @@ async function imprimirOuBaixarBalanceteMensal(mesIndex, anoStr) {
     if (docWindow) {
         docWindow.document.write(`
             <div style="font-family: 'Inter', -apple-system, sans-serif; padding: 40px; text-align: center; color: #1e293b;">
-                <h3 style="color: #d97706; margin-bottom: 8px;">⏳ Gerando Balancete & Compilando Notas Fiscais...</h3>
-                <p style="color: #64748b; font-size: 13px;">Carregando demonstrativo e processando imagens/documentos anexos para impressão oficial.</p>
+                <h3 style="color: #d97706; margin-bottom: 8px;">⏳ Gerando Balancete & Compilando Notas Fiscais em A4...</h3>
+                <p style="color: #64748b; font-size: 13px;">Carregando demonstrativo e processando imagens/documentos em folha inteira.</p>
             </div>
         `);
     }
@@ -2132,27 +2204,43 @@ async function imprimirOuBaixarBalanceteMensal(mesIndex, anoStr) {
             const fileContent = itemDoc.fileContent;
             const nomeArq = itemDoc.nomeArquivo;
             const isPdf = fileContent.startsWith('data:application/pdf') || nomeArq.toLowerCase().endsWith('.pdf');
+            const containerId = `pdfContainer_m_${docIdx}`;
 
             return `
-                <div class="comprovante-print-card">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                        <div>
-                            <b style="font-size: 13px; color: #0f172a;">Documento #${docIdx + 1}: ${d.fornecedor_cliente || 'Favorecido / Fornecedor'}</b>
-                            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
-                                Data: <b>${d.data || '-'}</b> • Categoria: <span class="badge badge-danger">${d.categoria}</span> • Arquivo: <i>${nomeArq}</i>
-                            </div>
-                            <div style="font-size: 11px; color: #334155; margin-top: 4px;">
-                                <b>Descrição:</b> ${d.descricao}
-                            </div>
-                        </div>
-                        <div style="text-align: right;">
-                            <span style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold; display: block;">Valor da Despesa</span>
-                            <strong style="font-size: 15px; color: #991b1b;">R$ ${(parseFloat(d.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                <div class="anexo-pagina-a4">
+                    <div class="header-container" style="border-bottom: 2px solid #b91c1c; padding-bottom: 12px; margin-bottom: 15px;">
+                        <img src="${window.location.origin}/logo.png" alt="Logo ACBCSJ" class="header-logo" onerror="this.style.display='none'">
+                        <div class="header-text">
+                            <h1>Associação Corpo de Bombeiros Comunitários de São José — ACBCSJ</h1>
+                            <p>ANEXO CONTÁBIL: NOTA FISCAL / RECIBO (DOCUMENTO ${docIdx + 1} DE ${comprovantesCarregados.length})</p>
+                            <p>Prestação de Contas vinculada ao Balancete Mensal de ${nomeMes}/${anoStr}</p>
                         </div>
                     </div>
-                    <div style="text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px;">
+
+                    <div class="doc-title-box" style="background: #f8fafc; border-left: 4px solid #d97706; padding: 10px 14px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                            <div>
+                                <h2 style="font-size: 14px; color: #0f172a; margin: 0 0 3px 0;">📄 Nota Fiscal / Comprovante: ${d.fornecedor_cliente || d.descricao || 'Despesa ACBCSJ'}</h2>
+                                <div style="font-size: 11px; color: #64748b;">
+                                    Data do Documento: <b>${d.data || '-'}</b> • Categoria: <span class="badge badge-danger">${d.categoria}</span> • Arquivo: <i>${nomeArq}</i>
+                                </div>
+                                <div style="font-size: 11px; color: #334155; margin-top: 3px;">
+                                    <b>Descrição do Gasto:</b> ${d.descricao}
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold; display: block;">Valor da Despesa</span>
+                                <strong style="font-size: 16px; color: #991b1b;">R$ ${(parseFloat(d.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="anexo-doc-wrapper">
                         ${isPdf ? `
-                            <iframe src="${fileContent}" style="width: 100%; height: 550px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff;"></iframe>
+                            <div id="${containerId}" class="pdf-render-container" data-pdf-content="${fileContent}" style="width: 100%; text-align: center;">
+                                <p style="font-size: 12px; color: #64748b; padding: 20px;">Carregando documento em tamanho real A4...</p>
+                                <iframe src="${fileContent}" style="width: 100%; height: 215mm; border: none; border-radius: 4px;"></iframe>
+                            </div>
                         ` : `
                             <img src="${fileContent}" alt="${nomeArq}" class="comprovante-img">
                         `}
@@ -2299,8 +2387,8 @@ async function imprimirOuBaixarBalanceteAnual(anoStr) {
     if (docWindow) {
         docWindow.document.write(`
             <div style="font-family: 'Inter', -apple-system, sans-serif; padding: 40px; text-align: center; color: #1e293b;">
-                <h3 style="color: #d97706; margin-bottom: 8px;">⏳ Gerando Balancete Anual & Compilando Notas Fiscais...</h3>
-                <p style="color: #64748b; font-size: 13px;">Carregando demonstrativo consolidado e processando documentos anexos para impressão oficial.</p>
+                <h3 style="color: #d97706; margin-bottom: 8px;">⏳ Gerando Balancete Anual & Compilando Notas Fiscais em A4...</h3>
+                <p style="color: #64748b; font-size: 13px;">Carregando demonstrativo consolidado e processando documentos em folha inteira.</p>
             </div>
         `);
     }
@@ -2381,27 +2469,43 @@ async function imprimirOuBaixarBalanceteAnual(anoStr) {
             const fileContent = itemDoc.fileContent;
             const nomeArq = itemDoc.nomeArquivo;
             const isPdf = fileContent.startsWith('data:application/pdf') || nomeArq.toLowerCase().endsWith('.pdf');
+            const containerId = `pdfContainer_a_${docIdx}`;
 
             return `
-                <div class="comprovante-print-card">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                        <div>
-                            <b style="font-size: 13px; color: #0f172a;">Documento #${docIdx + 1}: ${d.fornecedor_cliente || 'Favorecido / Fornecedor'}</b>
-                            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
-                                Data: <b>${d.data || '-'}</b> • Categoria: <span class="badge badge-danger">${d.categoria}</span> • Arquivo: <i>${nomeArq}</i>
-                            </div>
-                            <div style="font-size: 11px; color: #334155; margin-top: 4px;">
-                                <b>Descrição:</b> ${d.descricao}
-                            </div>
-                        </div>
-                        <div style="text-align: right;">
-                            <span style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold; display: block;">Valor da Despesa</span>
-                            <strong style="font-size: 15px; color: #991b1b;">R$ ${(parseFloat(d.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                <div class="anexo-pagina-a4">
+                    <div class="header-container" style="border-bottom: 2px solid #b91c1c; padding-bottom: 12px; margin-bottom: 15px;">
+                        <img src="${window.location.origin}/logo.png" alt="Logo ACBCSJ" class="header-logo" onerror="this.style.display='none'">
+                        <div class="header-text">
+                            <h1>Associação Corpo de Bombeiros Comunitários de São José — ACBCSJ</h1>
+                            <p>ANEXO CONTÁBIL: NOTA FISCAL / RECIBO (DOCUMENTO ${docIdx + 1} DE ${comprovantesCarregados.length})</p>
+                            <p>Prestação de Contas vinculada ao Balancete Anual do Exercício ${anoStr}</p>
                         </div>
                     </div>
-                    <div style="text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px;">
+
+                    <div class="doc-title-box" style="background: #f8fafc; border-left: 4px solid #d97706; padding: 10px 14px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                            <div>
+                                <h2 style="font-size: 14px; color: #0f172a; margin: 0 0 3px 0;">📄 Nota Fiscal / Comprovante: ${d.fornecedor_cliente || d.descricao || 'Despesa ACBCSJ'}</h2>
+                                <div style="font-size: 11px; color: #64748b;">
+                                    Data do Documento: <b>${d.data || '-'}</b> • Categoria: <span class="badge badge-danger">${d.categoria}</span> • Arquivo: <i>${nomeArq}</i>
+                                </div>
+                                <div style="font-size: 11px; color: #334155; margin-top: 3px;">
+                                    <b>Descrição do Gasto:</b> ${d.descricao}
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold; display: block;">Valor da Despesa</span>
+                                <strong style="font-size: 16px; color: #991b1b;">R$ ${(parseFloat(d.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="anexo-doc-wrapper">
                         ${isPdf ? `
-                            <iframe src="${fileContent}" style="width: 100%; height: 550px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff;"></iframe>
+                            <div id="${containerId}" class="pdf-render-container" data-pdf-content="${fileContent}" style="width: 100%; text-align: center;">
+                                <p style="font-size: 12px; color: #64748b; padding: 20px;">Carregando documento em tamanho real A4...</p>
+                                <iframe src="${fileContent}" style="width: 100%; height: 215mm; border: none; border-radius: 4px;"></iframe>
+                            </div>
                         ` : `
                             <img src="${fileContent}" alt="${nomeArq}" class="comprovante-img">
                         `}
