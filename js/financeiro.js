@@ -1412,6 +1412,35 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
                         `}
                     </tbody>
                 </table>
+                ${mensalidadesMes.length > 0 ? `
+                    <div style="margin-top: 8px;">
+                        <button type="button" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 2px 8px; color: var(--text-muted);" onclick="const el = document.getElementById('detalheMensalidadesBalancete'); if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';">
+                            👥 Ver Relação Nominal de Mensalidades (${mensalidadesMes.length} baixa(s))
+                        </button>
+                        <div id="detalheMensalidadesBalancete" style="display: none; margin-top: 8px; max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;">
+                            <table class="custom-table" style="font-size: 11px; margin: 0;">
+                                <thead>
+                                    <tr style="background: rgba(0,0,0,0.2);">
+                                        <th>Associado / CPF</th>
+                                        <th>Referência</th>
+                                        <th>Data Pagamento</th>
+                                        <th style="text-align: right;">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${mensalidadesMes.map(m => `
+                                        <tr>
+                                            <td><b>${m.nome || m.nome_guerra || m.cpf || 'Associado'}</b> <small style="color:var(--text-muted)">(${m.cpf || '-'})</small></td>
+                                            <td><span class="badge badge-info">${m.mes_referencia || m.meses_quitados || strMes}</span></td>
+                                            <td>${m.data_pagamento || m.data || '-'}</td>
+                                            <td style="text-align: right; color: #2ECC71; font-weight: bold;">R$ ${(parseFloat(m.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                ` : ''}
             </div>
 
             <!-- SEÇÃO 2: DESPESAS COM ANEXOS DE NOTAS FISCAIS -->
@@ -1428,7 +1457,7 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
                             <th>Categoria</th>
                             <th>Descritivo da Despesa</th>
                             <th style="text-align: right;">Valor (R$)</th>
-                            <th style="text-align: center;">Comprovante / NF</th>
+                            <th style="text-align: center;">Nota Fiscal / Recibo</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1436,6 +1465,7 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
                             <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 12px;">Nenhuma despesa registrada neste período.</td></tr>
                         ` : despesasGerais.map(d => {
                             const temComprovante = Boolean(d.comprovante_url || d.comprovante_nome);
+                            const nomeArquivo = d.comprovante_nome || 'Nota Fiscal';
                             return `
                                 <tr>
                                     <td><b>${d.data || '-'}</b></td>
@@ -1445,7 +1475,7 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
                                     <td style="text-align: right; color: #E74C3C; font-weight: bold;">R$ ${(parseFloat(d.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                                     <td style="text-align: center;">
                                         ${temComprovante ? `
-                                            <button type="button" class="btn btn-sm btn-outline" style="padding: 2px 8px; font-size: 11px; color: var(--accent-gold); border-color: var(--accent-gold);" onclick="abrirComprovanteLancamento('${d.id}')" title="Visualizar Nota Fiscal / Comprovante">
+                                            <button type="button" class="btn btn-sm btn-gold" style="padding: 3px 10px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" onclick="abrirComprovanteLancamento('${d.id}')" title="Visualizar ${nomeArquivo}">
                                                 📄 Ver NF
                                             </button>
                                         ` : `
@@ -1458,6 +1488,38 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
                     </tbody>
                 </table>
             </div>
+
+            <!-- SEÇÃO 2.1: GALERIA DE NOTAS FISCAIS E COMPROVANTES DO MÊS -->
+            ${despesasGerais.some(d => d.comprovante_url || d.comprovante_nome) ? `
+                <div style="background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; padding: 14px; margin-bottom: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
+                        <h4 style="color: var(--accent-gold); font-size: 13px; margin: 0; display: flex; align-items: center; gap: 6px;">
+                            📁 NOTAS FISCAIS & COMPROVANTES DO EXERCÍCIO (${despesasGerais.filter(d => d.comprovante_url || d.comprovante_nome).length} documento(s)):
+                        </h4>
+                        <small style="color: var(--text-muted);">Clique no documento para visualizá-lo em tela cheia</small>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
+                        ${despesasGerais.filter(d => d.comprovante_url || d.comprovante_nome).map(d => `
+                            <div style="background: rgba(0,0,0,0.35); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+                                <div>
+                                    <div style="font-weight: 600; font-size: 12px; color: #FFFFFF; display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${d.comprovante_nome || 'Nota Fiscal'}">
+                                        📄 ${d.comprovante_nome || 'Nota Fiscal / Recibo'}
+                                    </div>
+                                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.3;">
+                                        ${d.fornecedor_cliente ? `<b>${d.fornecedor_cliente}</b><br>` : ''}${d.descricao}
+                                    </div>
+                                    <div style="font-size: 13px; font-weight: bold; color: #E74C3C; margin-top: 6px;">
+                                        R$ ${(parseFloat(d.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-gold" style="width: 100%; padding: 4px 8px; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="abrirComprovanteLancamento('${d.id}')">
+                                    👁️ Visualizar Documento
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
 
             <!-- SEÇÃO 3: CONCILIAÇÃO BANCÁRIA -->
             <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 6px; padding: 14px; margin-bottom: 15px;">
