@@ -1929,6 +1929,522 @@
                     </div>
                 </div>
 
+                <!-- ABA 13: TELEFONES DE EMERGÊNCIA (PARA TODOS OS INTEGRANTES) -->
+                <div id="tab-telefones-emergencia" class="tab-content" style="display: none;">
+                    <div class="page-header"
+                        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+                        <div>
+                            <h2 class="page-title" style="display: flex; align-items: center; gap: 8px;">
+                                <span>🚨</span> <span>Telefones de Emergência & Úteis</span>
+                            </h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">
+                                Guia oficial de contatos públicos e emergência para São José e Florianópolis • SC (Atendimento 24 Horas).
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <div style="position: relative; min-width: 220px;">
+                                <input type="text" id="inputBuscaTelefonesEmergencia" class="form-control"
+                                    style="margin: 0; padding: 6px 12px 6px 32px; font-size: 13px;"
+                                    placeholder="🔍 Buscar serviço ou número..."
+                                    oninput="filtrarTelefonesEmergencia(this.value)">
+                                <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity: 0.6; pointer-events: none;">🔍</span>
+                            </div>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="window.print()" title="Imprimir este folheto de emergência">
+                                🖨️ Imprimir
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BOTÕES DE DISCAGEM RÁPIDA NO TOPO -->
+                    <div class="emergency-quick-dial-grid">
+                        <a href="tel:193" class="emergency-quick-dial-card bombeiros" title="Ligue 193 - Bombeiros">
+                            <div>
+                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; font-weight: 800;">Corpo de Bombeiros</div>
+                                <div style="font-size: 36px; font-weight: 900; line-height: 1;">193</div>
+                                <div style="font-size: 11px; opacity: 0.85; margin-top: 4px;">🚒 Resgate & Incêndio</div>
+                            </div>
+                            <div style="font-size: 40px; opacity: 0.9;">🚒</div>
+                        </a>
+
+                        <a href="tel:190" class="emergency-quick-dial-card policia" title="Ligue 190 - Polícia Militar">
+                            <div>
+                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; font-weight: 800;">Polícia Militar</div>
+                                <div style="font-size: 36px; font-weight: 900; line-height: 1;">190</div>
+                                <div style="font-size: 11px; opacity: 0.85; margin-top: 4px;">👮 Ocorrências & Segurança</div>
+                            </div>
+                            <div style="font-size: 40px; opacity: 0.9;">🚓</div>
+                        </a>
+
+                        <a href="tel:192" class="emergency-quick-dial-card samu" title="Ligue 192 - SAMU">
+                            <div>
+                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; font-weight: 800;">SAMU</div>
+                                <div style="font-size: 36px; font-weight: 900; line-height: 1;">192</div>
+                                <div style="font-size: 11px; opacity: 0.85; margin-top: 4px;">🚑 Atendimento Médico</div>
+                            </div>
+                            <div style="font-size: 40px; opacity: 0.9;">🚑</div>
+                        </a>
+
+                        <a href="tel:199" class="emergency-quick-dial-card defesa-civil" title="Ligue 199 - Defesa Civil">
+                            <div>
+                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; font-weight: 800;">Defesa Civil</div>
+                                <div style="font-size: 36px; font-weight: 900; line-height: 1;">199</div>
+                                <div style="font-size: 11px; opacity: 0.85; margin-top: 4px;">⚠️ Alagamentos & Deslizamentos</div>
+                            </div>
+                            <div style="font-size: 40px; opacity: 0.9;">⚠️</div>
+                        </a>
+                    </div>
+
+                    <!-- SEÇÃO 1: EMERGÊNCIA GERAL -->
+                    <div class="emergency-category-section emergency-sec-group" data-categoria="emergencia-geral">
+                        <div class="emergency-category-header geral">
+                            <span>➕</span> <span>EMERGÊNCIA GERAL</span>
+                        </div>
+                        <div class="emergency-items-grid">
+                            <!-- 1. Polícia Militar -->
+                            <div class="emergency-contact-card" data-busca="policia militar 190 seguranca viatura">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">👮</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Polícia Militar</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Segurança Pública & Emergências</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="margin-top: 10px;">190</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:190" class="emergency-btn-call">📞 Ligar 190</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('190', 'Polícia Militar')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 2. SAMU -->
+                            <div class="emergency-contact-card" data-busca="samu 192 medico saude ambulancia atendimento">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🚑</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">SAMU</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Atendimento Médico de Urgência</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="margin-top: 10px;">192</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:192" class="emergency-btn-call">📞 Ligar 192</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('192', 'SAMU')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 3. Bombeiros -->
+                            <div class="emergency-contact-card" data-busca="bombeiros 193 fogo incendio resgate acidente">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🚒</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Bombeiros (CBMSC)</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Combate a Incêndio & Busca/Salvamento</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="margin-top: 10px;">193</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:193" class="emergency-btn-call">📞 Ligar 193</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('193', 'Bombeiros')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 4. Defesa Civil -->
+                            <div class="emergency-contact-card" data-busca="defesa civil 199 enchente alagamento deslizamento tempestade">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">⚠️</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Defesa Civil</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Monitoramento & Desastres Naturais</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="margin-top: 10px;">199</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:199" class="emergency-btn-call">📞 Ligar 199</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('199', 'Defesa Civil')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 5. Guarda Municipal -->
+                            <div class="emergency-contact-card" data-busca="guarda municipal 153 transito sao jose florianopolis">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🛡️</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Guarda Municipal</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Segurança Urbana & Fiscalização</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="margin-top: 10px;">153</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:153" class="emergency-btn-call">📞 Ligar 153</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('153', 'Guarda Municipal')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 6. PRF -->
+                            <div class="emergency-contact-card" data-busca="prf policia rodoviaria federal 191 br 101 rodovia">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🛣️</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">PRF | Polícia Rodoviária Federal</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Rodovias Federais (BR-101 / BR-282)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="margin-top: 10px;">191</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:191" class="emergency-btn-call">📞 Ligar 191</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('191', 'PRF')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 7. Arteris Litoral Sul -->
+                            <div class="emergency-contact-card" data-busca="arteris litoral sul 0800 725 1771 socorro guincho br 101 pedagio">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🚗</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Arteris | Atendimento Rodoviário</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Socorro & Resgate na BR-101 (Concessionária)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="font-size: 18px; margin-top: 10px;">0800 725 1771</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:08007251771" class="emergency-btn-call">📞 Ligar 0800</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('0800 725 1771', 'Arteris')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 8. Polícia Civil -->
+                            <div class="emergency-contact-card" data-busca="policia civil 197 delegacia investigacao denuncia bo">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🚔</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Polícia Civil</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Disque Denúncia & Investigação</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="margin-top: 10px;">197</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:197" class="emergency-btn-call">📞 Ligar 197</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('197', 'Polícia Civil')">📋 Copiar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 2: SAÚDE MENTAL & ATENDIMENTO SOCIAL -->
+                    <div class="emergency-category-section emergency-sec-group" data-categoria="saude-mental-social">
+                        <div class="emergency-category-header mental">
+                            <span>🧠</span> <span>SAÚDE MENTAL & ATENDIMENTO SOCIAL</span>
+                        </div>
+                        <div class="emergency-items-grid">
+                            <!-- 1. CAPS II -->
+                            <div class="emergency-contact-card" data-busca="caps ii centro atencao psicossocial saude mental psicologo 3346-8525 33468525">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🧠</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">CAPS II</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Centro de Atenção Psicossocial</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="font-size: 18px; margin-top: 10px;">(48) 3346-8525</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:04833468525" class="emergency-btn-call">📞 Ligar</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('(48) 3346-8525', 'CAPS II')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 2. CAPS AD -->
+                            <div class="emergency-contact-card" data-busca="caps ad alcool drogas dependencia quimica 3346-4997 33464997">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">👥</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">CAPS AD</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Álcool e Drogas • Reabilitação</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="font-size: 18px; margin-top: 10px;">(48) 3346-4997</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:04833464997" class="emergency-btn-call">📞 Ligar</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('(48) 3346-4997', 'CAPS AD')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 3. Central da Mulher -->
+                            <div class="emergency-contact-card" data-busca="central mulher 180 violencia doméstica agressao apoio">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">👩</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Central Mulher | Ligue 180</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Atendimento à Mulher em Situação de Violência</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="margin-top: 10px;">180</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:180" class="emergency-btn-call">📞 Ligar 180</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('180', 'Central Mulher')">📋 Copiar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 3: VIGILÂNCIA, ZOONOSES & BEM-ESTAR ANIMAL -->
+                    <div class="emergency-category-section emergency-sec-group" data-categoria="zoonoses-ambiental-animal">
+                        <div class="emergency-category-header vigilancia">
+                            <span>☣️</span> <span>VIGILÂNCIA, ZOONOSES & BEM-ESTAR ANIMAL</span>
+                        </div>
+                        <div class="emergency-items-grid">
+                            <!-- 1. CIATox -->
+                            <div class="emergency-contact-card" data-busca="ciatox intoxicacao veneno picada cobra escorpiao medicamento veneno 0800 643 5252">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🧪</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">CIATox | Intoxicação</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Orientação Toxicológica & Venenos (24h)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="font-size: 18px; margin-top: 10px;">0800 643 5252</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:08006435252" class="emergency-btn-call">📞 Ligar 0800</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('0800 643 5252', 'CIATox')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 2. PMA -->
+                            <div class="emergency-contact-card" data-busca="pma policia militar ambiental animais silvestres desmatamento caca pesca 3229-6081 32296081">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🌲</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">PMA | Polícia Militar Ambiental</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Proteção da Fauna, Flora & Crimes Ambientais</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="font-size: 18px; margin-top: 10px;">(48) 3229-6081</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:04832296081" class="emergency-btn-call">📞 Ligar</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('(48) 3229-6081', 'PMA Ambiental')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 3. Zoonoses Florianópolis -->
+                            <div class="emergency-contact-card" data-busca="zoonoses florianopolis dengue morcego raiva animais peconhentos 3338-9004 33389004">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🐾</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Zoonoses Florianópolis</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Controle de Pragas & Endemias Urbanas</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="font-size: 18px; margin-top: 10px;">(48) 3338-9004</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:04833389004" class="emergency-btn-call">📞 Ligar</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('(48) 3338-9004', 'Zoonoses')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 4. DIBEA São José -->
+                            <div class="emergency-contact-card" data-busca="dibea sao jose bem estar animal castracao cachorro gato maus tratos 99821-7971 99609-2896 98811-6586">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🐶</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">DIBEA São José | Bem-Estar Animal</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Resgate, Denúncias & Atendimento Animal</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 8px;">
+                                        <div style="font-size: 13px; font-weight: bold; color: var(--text-main);">
+                                            📞 (48) 99821-7971 / (48) 99609-2896
+                                        </div>
+                                        <div style="font-size: 13px; font-weight: bold; color: #25D366; margin-top: 4px;">
+                                            💬 WhatsApp: (48) 98811-6586
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:048998217971" class="emergency-btn-call">📞 Ligar</a>
+                                    <a href="https://api.whatsapp.com/send?phone=5548988116586&text=Ol%C3%A1%2C%20gostaria%20de%20informa%C3%A7%C3%B5es%20da%20DIBEA%20S%C3%A3o%20Jos%C3%A9" target="_blank" class="emergency-btn-whats">💬 WhatsApp</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('(48) 98811-6586', 'DIBEA SJ')">📋 Copiar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 4: HOSPITAIS • ATENDIMENTO HOSPITALAR -->
+                    <div class="emergency-category-section emergency-sec-group" data-categoria="hospitais-atendimento-hospitalar">
+                        <div class="emergency-category-header hospitais">
+                            <span>🏥</span> <span>HOSPITAIS • ATENDIMENTO HOSPITALAR</span>
+                        </div>
+                        <div class="emergency-items-grid">
+                            <!-- 1. Hospital Regional de São José -->
+                            <div class="emergency-contact-card" data-busca="hospital regional de sao jose dr homero emergencia pronto socorro 3654-9700 3664-9743 36549700 36649743">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🏥</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Hospital Regional de São José</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Dr. Homero de Miranda Gomes • Geral & Emergência</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 8px;">
+                                        <div style="font-size: 15px; font-weight: 900; color: var(--accent-gold);">
+                                            Geral: (48) 3654-9700
+                                        </div>
+                                        <div style="font-size: 14px; font-weight: 800; color: #FF6B6B; margin-top: 2px;">
+                                            🚨 Emergência: (48) 3664-9743
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:04836649743" class="emergency-btn-call" style="background:#E74C3C; color:#fff;">📞 Emergência</a>
+                                    <a href="tel:04836549700" class="emergency-btn-call">📞 Geral</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('(48) 3664-9743', 'Emergência HRSJ')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 2. Hospital Nereu Ramos -->
+                            <div class="emergency-contact-card" data-busca="hospital nereu ramos florianopolis doencas infectologia 3216-9411 32169411">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🏥</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Hospital Nereu Ramos</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Referência em Doenças Infectocontagiosas</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="font-size: 18px; margin-top: 10px;">(48) 3216-9411</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:04832169411" class="emergency-btn-call">📞 Ligar</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('(48) 3216-9411', 'Hospital Nereu Ramos')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 3. Hospital Florianópolis -->
+                            <div class="emergency-contact-card" data-busca="hospital florianopolis estreito pronto atendimento 3281-7810 32817810">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🏥</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Hospital Florianópolis</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">Atendimento Hospitalar Continente (Estreito)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="emergency-phone-badge" style="font-size: 18px; margin-top: 10px;">(48) 3281-7810</div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:04832817810" class="emergency-btn-call">📞 Ligar</a>
+                                    <button type="button" class="emergency-btn-copy" onclick="copiarTelefoneEmergencia('(48) 3281-7810', 'Hospital Florianópolis')">📋 Copiar</button>
+                                </div>
+                            </div>
+
+                            <!-- 4. Hospital Governador Celso Ramos & Vigilância Sanitária -->
+                            <div class="emergency-contact-card" data-busca="hospital governador celso ramos vigilancia sanitaria sao jose fiscalizacao saude">
+                                <div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 22px;">🏛️</span>
+                                            <div>
+                                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Outras Unidades de Referência</h4>
+                                                <span style="font-size: 11px; color: var(--text-muted);">São José & Florianópolis</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 10px; font-size: 12px; color: var(--text-main); line-height: 1.5;">
+                                        <div>🏥 <b>Hospital Celso Ramos:</b> Referência em Trauma (Centro/Floripa)</div>
+                                        <div style="margin-top: 4px;">🏛️ <b>Vigilância Sanitária São José:</b> Atendimento ao Cidadão & Denúncias</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                    <a href="tel:192" class="emergency-btn-call" style="font-size: 11px;">🚑 SAMU 192</a>
+                                    <a href="tel:193" class="emergency-btn-call" style="background:#c0392b; color:#fff; font-size: 11px;">🚒 Bombeiros 193</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CARD INFORMATIVO DE RODAPÉ (CONFORME IMAGEM) -->
+                    <div class="card" style="margin-top: 25px; border-left: 4px solid var(--accent-gold); background: rgba(0, 0, 0, 0.4);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div>
+                                <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--accent-gold); display: flex; align-items: center; gap: 6px;">
+                                    <span>ℹ️</span> <span>INFORMAÇÕES IMPORTANTES</span>
+                                </h4>
+                                <ul style="margin: 8px 0 0 16px; padding: 0; font-size: 12px; color: var(--text-main); line-height: 1.6;">
+                                    <li><b>Todos os números atendem 24 horas.</b> Em emergência crítica, ligue imediatamente para <b>190</b>, <b>192</b> ou <b>193</b>.</li>
+                                    <li>Este é um guia de contatos públicos para <b>São José</b> e <b>Florianópolis - SC</b>.</li>
+                                    <li>Atualizado: <b>Setembro/2024</b> • Mantenha este guia sempre à mão no aplicativo ACBCSJ.</li>
+                                </ul>
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-muted); text-align: right;">
+                                Para mais orientações, acesse os canais oficiais<br>das Prefeituras de São José e Florianópolis.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </main>
         </div>
 
@@ -1988,6 +2504,11 @@
                     onclick="navigateTab('senhas-acessos'); closeModal('modalMenuMaisDiretoria');">
                     <span class="mobile-more-icon">🔐</span>
                     <span class="mobile-more-title">Cofre de Senhas</span>
+                </div>
+                <div class="mobile-more-item"
+                    onclick="navigateTab('telefones-emergencia'); closeModal('modalMenuMaisDiretoria');">
+                    <span class="mobile-more-icon">🚨</span>
+                    <span class="mobile-more-title">Emergência</span>
                 </div>
             </div>
         </div>

@@ -1603,3 +1603,211 @@ body {
     display: none !important;
   }
 }
+
+/* ===================================================
+   ESTILOS DA PÁGINA DE TELEFONES DE EMERGÊNCIA
+   =================================================== */
+
+.emergency-quick-dial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.emergency-quick-dial-card {
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-decoration: none;
+  color: #fff;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.emergency-quick-dial-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.emergency-quick-dial-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  filter: brightness(1.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.emergency-quick-dial-card:hover::before {
+  opacity: 1;
+}
+
+.emergency-quick-dial-card.bombeiros {
+  background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+  border: 1px solid rgba(231, 76, 60, 0.6);
+}
+
+.emergency-quick-dial-card.policia {
+  background: linear-gradient(135deg, #1f4068 0%, #162447 100%);
+  border: 1px solid rgba(52, 152, 219, 0.6);
+}
+
+.emergency-quick-dial-card.samu {
+  background: linear-gradient(135deg, #b83b5e 0%, #f08a5d 100%);
+  border: 1px solid rgba(240, 138, 93, 0.6);
+}
+
+.emergency-quick-dial-card.defesa-civil {
+  background: linear-gradient(135deg, #d35400 0%, #f39c12 100%);
+  border: 1px solid rgba(243, 156, 18, 0.6);
+}
+
+.emergency-category-section {
+  margin-bottom: 25px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(28, 32, 38, 0.7);
+  border: 1px solid var(--border-color);
+}
+
+.emergency-category-header {
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+}
+
+.emergency-category-header.geral {
+  background: linear-gradient(90deg, #A82020 0%, #E74C3C 100%);
+}
+
+.emergency-category-header.mental {
+  background: linear-gradient(90deg, #4A235A 0%, #8E44AD 100%);
+}
+
+.emergency-category-header.vigilancia {
+  background: linear-gradient(90deg, #145A32 0%, #27AE60 100%);
+}
+
+.emergency-category-header.hospitais {
+  background: linear-gradient(90deg, #1B4F72 0%, #2980B9 100%);
+}
+
+.emergency-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+
+.emergency-contact-card {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.emergency-contact-card:hover {
+  border-color: var(--accent-gold);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.emergency-phone-badge {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--accent-gold);
+  letter-spacing: 0.5px;
+  font-family: monospace, sans-serif;
+}
+
+.emergency-btn-call {
+  background: #2ECC71;
+  color: #121417;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  transition: all 0.2s;
+}
+
+.emergency-btn-call:hover {
+  background: #27ae60;
+  color: #fff;
+  transform: scale(1.04);
+}
+
+.emergency-btn-copy {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.emergency-btn-copy:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: var(--accent-gold);
+}
+
+.emergency-btn-whats {
+  background: #25D366;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.emergency-btn-whats:hover {
+  background: #1ebc59;
+  transform: scale(1.04);
+}
+
+@media print {
+  #tab-telefones-emergencia, #tab-telefones-emergencia * {
+    visibility: visible;
+  }
+  #tab-telefones-emergencia {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    display: block !important;
+  }
+}
+

@@ -259,6 +259,7 @@ function renderSidebarMenu() {
                 <div class="nav-item" onclick="navigateTab('documentos-associado')"><span>📑 Documentos</span></div>
                 <div class="nav-item" onclick="navigateTab('mensagens-diretoria')"><span>📬 Mensagens</span>${badgeMsg}</div>
                 <div class="nav-item" onclick="navigateTab('senhas-acessos')"><span>🔐 Senhas & Acessos</span></div>
+                <div class="nav-item" onclick="navigateTab('telefones-emergencia')"><span>🚨 Telefones de Emergência</span></div>
             `;
         }
 
@@ -305,6 +306,7 @@ function renderSidebarMenu() {
                 <div class="nav-item" onclick="navigateTab('balancetes-associado')"><span>📈 Balancetes & Contas</span></div>
                 <div class="nav-item" onclick="navigateTab('documentos-associado')"><span>📁 Documentos & Convites</span></div>
                 <div class="nav-item" onclick="navigateTab('enviar-mensagem')"><span>💬 Fale com a Diretoria</span></div>
+                <div class="nav-item" onclick="navigateTab('telefones-emergencia')"><span>🚨 Telefones de Emergência</span></div>
             `;
         }
 
@@ -401,7 +403,71 @@ function navigateTab(tabId) {
     if (tabId === 'aniversariantes') {
         if (typeof renderAniversariantes === 'function') renderAniversariantes();
     }
+    if (tabId === 'telefones-emergencia') {
+        const input = document.getElementById('inputBuscaTelefonesEmergencia');
+        if (input) input.value = '';
+        filtrarTelefonesEmergencia('');
+    }
 }
+
+// FILTRAR E BUSCAR TELEFONES DE EMERGÊNCIA
+function filtrarTelefonesEmergencia(termo) {
+    const q = (termo || '').trim().toLowerCase();
+    const qNorm = q.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const cards = document.querySelectorAll('#tab-telefones-emergencia .emergency-contact-card');
+    
+    cards.forEach(card => {
+        const buscaData = (card.getAttribute('data-busca') || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const textoCard = (card.textContent || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (!q || buscaData.includes(qNorm) || textoCard.includes(qNorm)) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Ocultar seções cujos cards foram todos filtrados
+    document.querySelectorAll('#tab-telefones-emergencia .emergency-sec-group').forEach(sec => {
+        const visiveis = Array.from(sec.querySelectorAll('.emergency-contact-card')).filter(c => c.style.display !== 'none');
+        sec.style.display = (visiveis.length > 0) ? 'block' : 'none';
+    });
+}
+window.filtrarTelefonesEmergencia = filtrarTelefonesEmergencia;
+
+// COPIAR NÚMERO DE TELEFONE DE EMERGÊNCIA
+function copiarTelefoneEmergencia(numero, nome) {
+    if (!numero) return;
+    const clean = String(numero).trim();
+    const toastMsg = `📋 Número do(a) ${nome || 'serviço'} copiado: ${clean}`;
+
+    const dispararToast = (msg) => {
+        if (typeof mostrarToastSucesso === 'function') {
+            mostrarToastSucesso(msg);
+        } else {
+            let toast = document.getElementById('acbcsjToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'acbcsjToast';
+                toast.className = 'acbcsj-toast';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2800);
+        }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(clean).then(() => {
+            dispararToast(toastMsg);
+        }).catch(() => {
+            prompt('Copie o telefone abaixo:', clean);
+        });
+    } else {
+        prompt('Copie o telefone abaixo:', clean);
+    }
+}
+window.copiarTelefoneEmergencia = copiarTelefoneEmergencia;
 
 // PARSER UNIVERSAL ROBUSTO DE DATA (EXTRAI MÊS '01'-'12' E ANO 'YYYY')
 function extrairMesEAno(dataStr, dataIso) {
