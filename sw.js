@@ -1,5 +1,5 @@
 // Service Worker - Portal ACBCSJ PWA
-const CACHE_NAME = 'acbcsj-cache-v11';
+const CACHE_NAME = 'acbcsj-cache-v12';
 const PRECACHE_ASSETS = [
     './',
     './index.html',
@@ -20,7 +20,8 @@ const PRECACHE_ASSETS = [
     './js/mensalidades.js',
     './js/relatorios.js',
     './js/escala.js',
-    './js/senhas.js'
+    './js/senhas.js',
+    './js/aniversariantes.js'
 ];
 
 // Instalação do Service Worker

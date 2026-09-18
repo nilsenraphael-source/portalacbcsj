@@ -249,6 +249,7 @@ function renderSidebarMenu() {
             menuNav.innerHTML = `
                 <div class="nav-item active" onclick="navigateTab('overview-diretoria')"><span>📊 Painel Geral</span></div>
                 <div class="nav-item" onclick="navigateTab('gestao-associados')"><span>👥 Associados</span></div>
+                <div class="nav-item" onclick="navigateTab('aniversariantes')"><span>🎂 Aniversariantes</span></div>
                 <div class="nav-item" onclick="navigateTab('associados-desligados')"><span>📋 Desligados</span></div>
                 <div class="nav-item" onclick="navigateTab('gestao-mensalidades')"><span>💳 Mensalidades</span></div>
                 <div class="nav-item" onclick="navigateTab('minhas-mensalidades-diretor')"><span>👤 Minhas Mensalidades</span></div>
@@ -396,6 +397,9 @@ function navigateTab(tabId) {
     if (tabId === 'mensagens-diretoria') renderMensagensDiretoria();
     if (tabId === 'senhas-acessos') {
         if (typeof renderSenhasAcessos === 'function') renderSenhasAcessos();
+    }
+    if (tabId === 'aniversariantes') {
+        if (typeof renderAniversariantes === 'function') renderAniversariantes();
     }
 }
 

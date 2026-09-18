@@ -1482,5 +1482,124 @@ body {
   transform: translateY(0);
 }
 
+/* ===================================================
+   ESTILOS DO MÓDULO DE ANIVERSARIANTES (DIRETORIA)
+   =================================================== */
 
+@keyframes pulseBadge {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
 
+.bday-banner-today {
+  border-left: 5px solid var(--accent-gold) !important;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(46, 204, 113, 0.08) 50%, rgba(28, 32, 38, 0.98) 100%) !important;
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.12);
+}
+
+.bday-day-cell {
+  transition: var(--transition);
+  user-select: none;
+}
+
+.bday-day-cell:not(.outside-month):hover {
+  filter: brightness(1.15);
+  transform: translateY(-2px);
+  border-color: var(--accent-gold) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.bday-day-cell.is-today {
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.25);
+}
+
+.bday-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255, 215, 0, 0.14);
+  color: var(--accent-gold);
+  border: 1px solid rgba(255, 215, 0, 0.38);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bday-chip:hover {
+  background: rgba(255, 215, 0, 0.3);
+  transform: scale(1.02);
+  border-color: var(--accent-gold);
+}
+
+.bday-chip.is-diretoria {
+  background: rgba(231, 76, 60, 0.18);
+  color: #FF8585;
+  border-color: rgba(231, 76, 60, 0.45);
+}
+
+.bday-chip.is-diretoria:hover {
+  background: rgba(231, 76, 60, 0.32);
+}
+
+.bday-chip-icon {
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.bday-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.bday-chip-age {
+  font-size: 9px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.bday-month-card {
+  border-radius: 8px;
+  transition: var(--transition);
+}
+
+.bday-month-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+.bday-month-card.is-current-month {
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.18);
+}
+
+/* Regra de impressão para o calendário de aniversariantes */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #tab-aniversariantes, #tab-aniversariantes * {
+    visibility: visible;
+  }
+  #tab-aniversariantes {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    display: block !important;
+  }
+  .app-header, .sidebar-nav, .mobile-bottom-nav, #btnModoCalendarioAniversariantes, #btnModoMuralAniversariantes, .page-header button {
+    display: none !important;
+  }
+}

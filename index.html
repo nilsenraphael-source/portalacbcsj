@@ -1779,6 +1779,156 @@
                     <div id="containerSenhasAcessos"></div>
                 </div>
 
+                <!-- ABA 12: ANIVERSARIANTES DA ASSOCIAÇÃO (DIRETORIA) -->
+                <div id="tab-aniversariantes" class="tab-content" style="display: none;">
+                    <div class="page-header"
+                        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+                        <div>
+                            <h2 class="page-title">🎂 Calendário de Aniversariantes</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Acompanhamento das datas comemorativas, idades e felicitações a todos os integrantes da ACBCSJ.</p>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <div style="display: flex; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; padding: 2px;">
+                                <button id="btnModoCalendarioAniversariantes" class="btn btn-sm btn-gold"
+                                    style="font-size: 11px; padding: 4px 10px;"
+                                    onclick="alternarVisualizacaoAniversariantes('calendario')">📅 Calendário</button>
+                                <button id="btnModoMuralAniversariantes" class="btn btn-sm btn-outline"
+                                    style="font-size: 11px; padding: 4px 10px; border: none;"
+                                    onclick="alternarVisualizacaoAniversariantes('mural')">📋 Mural Anual (12 Meses)</button>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="imprimirCalendarioAniversariantes()" title="Imprimir lista ou calendário">
+                                🖨️ Imprimir
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BANNER FESTIVO DE HOJE -->
+                    <div id="cardAniversarianteHojeDestaque" class="card" style="margin-bottom: 20px;">
+                        <div id="conteudoAniversarianteHoje"></div>
+                    </div>
+
+                    <!-- CARDS DE MÉTRICAS / RESUMO -->
+                    <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin-bottom: 20px;">
+                        <div class="metric-card" style="border-left: 4px solid var(--accent-gold);">
+                            <div class="title">ANIVERSARIANTES DE HOJE</div>
+                            <div id="metricAniversariantesHojeCount" class="value" style="color: var(--accent-gold);">0 integrante(s)</div>
+                            <div class="subtext" style="color: var(--status-success);">Comemoração ativa hoje</div>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #2ECC71;">
+                            <div class="title">NO MÊS SELECIONADO</div>
+                            <div id="metricAniversariantesMesCount" class="value" style="color: #2ECC71;">0 no mês</div>
+                            <div class="subtext" style="color: var(--text-muted);">Completam ano neste mês</div>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #3498DB;">
+                            <div class="title">PRÓXIMOS ANIVERSÁRIOS</div>
+                            <div id="metricProximosAniversariantesCount" class="value" style="color: #3498DB;">0 a caminho</div>
+                            <div class="subtext" style="color: var(--text-muted);">Janela dos próximos 30 dias</div>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #E67E22;">
+                            <div class="title">INTEGRANTES MAPEADOS</div>
+                            <div id="metricTotalCadastradosComNascimento" class="value" style="color: #E67E22;">0 associados</div>
+                            <div class="subtext" style="color: var(--text-muted);">Com data registrada</div>
+                        </div>
+                    </div>
+
+                    <!-- CARD LATERAL / SUPERIOR DE PRÓXIMOS ANIVERSARIANTES -->
+                    <div id="cardProximosAniversarios" class="card" style="margin-bottom: 20px; border-left: 4px solid #3498DB;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                            <div>
+                                <h3 class="card-title" style="display: flex; align-items: center; gap: 6px; font-size: 15px;">
+                                    <span>⏭️ Próximos Aniversariantes da Associação</span>
+                                </h3>
+                                <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Fique atento para planejar felicitações e homenagens com antecedência.</p>
+                            </div>
+                        </div>
+                        <div id="containerListaProximosAniversarios" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px;"></div>
+                    </div>
+
+                    <!-- BARRA DE CONTROLE, FILTROS E PESQUISA -->
+                    <div class="card" style="margin-bottom: 20px; padding: 14px 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <!-- NAVEGAÇÃO DE MÊS E ANO -->
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <button class="btn btn-outline btn-sm" onclick="aniversariantesMesAnterior()" title="Mês Anterior">◀ Anterior</button>
+                                <h3 id="lblMesAnoTituloAniversariantes" style="font-size: 17px; color: var(--accent-gold); font-weight: 800; min-width: 170px; text-align: center; margin: 0;">
+                                    Setembro de 2026
+                                </h3>
+                                <button class="btn btn-outline btn-sm" onclick="aniversariantesMesSeguinte()" title="Mês Seguinte">Seguinte ▶</button>
+                                <button class="btn btn-gold btn-sm" onclick="aniversariantesIrHoje()">Hoje</button>
+                            </div>
+
+                            <!-- SELETORES E BUSCA -->
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <label style="font-size: 12px; font-weight: bold; color: var(--text-muted);">Mês:</label>
+                                    <select id="selMesAniversariantes" class="form-control" style="width: 130px; margin: 0; padding: 4px 8px; font-size: 12px;" onchange="mudarMesAniversariantes(this.value)">
+                                        <option value="0">01 - Janeiro</option>
+                                        <option value="1">02 - Fevereiro</option>
+                                        <option value="2">03 - Março</option>
+                                        <option value="3">04 - Abril</option>
+                                        <option value="4">05 - Maio</option>
+                                        <option value="5">06 - Junho</option>
+                                        <option value="6">07 - Julho</option>
+                                        <option value="7">08 - Agosto</option>
+                                        <option value="8" selected>09 - Setembro</option>
+                                        <option value="9">10 - Outubro</option>
+                                        <option value="10">11 - Novembro</option>
+                                        <option value="11">12 - Dezembro</option>
+                                    </select>
+                                </div>
+
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <label style="font-size: 12px; font-weight: bold; color: var(--text-muted);">Ano:</label>
+                                    <select id="selAnoAniversariantes" class="form-control" style="width: 90px; margin: 0; padding: 4px 8px; font-size: 12px; font-weight: bold; color: var(--accent-gold);" onchange="mudarAnoAniversariantes(this.value)">
+                                        <option value="2024">2024</option>
+                                        <option value="2025">2025</option>
+                                        <option value="2026" selected>2026</option>
+                                        <option value="2027">2027</option>
+                                        <option value="2028">2028</option>
+                                        <option value="2029">2029</option>
+                                        <option value="2030">2030</option>
+                                    </select>
+                                </div>
+
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <select id="selFiltroStatusAniversariantes" class="form-control" style="width: 140px; margin: 0; padding: 4px 8px; font-size: 12px;" onchange="mudarFiltroStatusAniversariantes(this.value)">
+                                        <option value="ativo" selected>🟢 Apenas Ativos</option>
+                                        <option value="todos">👥 Todos Integrantes</option>
+                                        <option value="desligado">📋 Desligados</option>
+                                    </select>
+                                </div>
+
+                                <div style="position: relative; min-width: 180px;">
+                                    <input type="text" id="inputBuscaAniversariantes" class="form-control" style="margin: 0; padding: 4px 8px 4px 28px; font-size: 12px;" placeholder="🔍 Buscar nome..." oninput="onSearchAniversariantesInput(this.value)">
+                                    <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; opacity: 0.6; pointer-events: none;">🔍</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODO 1: GRADE DO CALENDÁRIO MENSAL -->
+                    <div id="containerVisualizacaoCalendarioAniversariantes" class="card" style="margin-bottom: 25px; padding: 15px;">
+                        <!-- CABEÇALHO DOS DIAS DA SEMANA -->
+                        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px; text-align: center; font-weight: 800; font-size: 12px;">
+                            <div style="padding: 6px; background: rgba(231, 76, 60, 0.15); color: #FF6B6B; border-radius: 4px; border: 1px solid rgba(231, 76, 60, 0.3);">DOMINGO</div>
+                            <div style="padding: 6px; background: rgba(255, 255, 255, 0.04); color: var(--text-main); border-radius: 4px; border: 1px solid var(--border-color);">SEGUNDA</div>
+                            <div style="padding: 6px; background: rgba(255, 255, 255, 0.04); color: var(--text-main); border-radius: 4px; border: 1px solid var(--border-color);">TERÇA</div>
+                            <div style="padding: 6px; background: rgba(255, 255, 255, 0.04); color: var(--text-main); border-radius: 4px; border: 1px solid var(--border-color);">QUARTA</div>
+                            <div style="padding: 6px; background: rgba(255, 255, 255, 0.04); color: var(--text-main); border-radius: 4px; border: 1px solid var(--border-color);">QUINTA</div>
+                            <div style="padding: 6px; background: rgba(255, 255, 255, 0.04); color: var(--text-main); border-radius: 4px; border: 1px solid var(--border-color);">SEXTA</div>
+                            <div style="padding: 6px; background: rgba(52, 152, 219, 0.15); color: #5DADE2; border-radius: 4px; border: 1px solid rgba(52, 152, 219, 0.3);">SÁBADO</div>
+                        </div>
+
+                        <!-- GRADE DOS DIAS DO MÊS -->
+                        <div id="gridDiasCalendarioAniversariantes" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;"></div>
+                    </div>
+
+                    <!-- MODO 2: MURAL ANUAL (12 MESES) -->
+                    <div id="containerVisualizacaoMuralAniversariantes" style="display: none; margin-bottom: 25px;">
+                        <div id="gridMuralAnualAniversariantes" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;"></div>
+                    </div>
+                </div>
+
             </main>
         </div>
 
@@ -1799,6 +1949,11 @@
                     onclick="closeModal('modalMenuMaisDiretoria')">&times;</button>
             </div>
             <div class="mobile-more-grid">
+                <div class="mobile-more-item"
+                    onclick="navigateTab('aniversariantes'); closeModal('modalMenuMaisDiretoria');">
+                    <span class="mobile-more-icon">🎂</span>
+                    <span class="mobile-more-title">Aniversariantes</span>
+                </div>
                 <div class="mobile-more-item"
                     onclick="navigateTab('escala-militar'); closeModal('modalMenuMaisDiretoria');">
                     <span class="mobile-more-icon">🚒</span>
@@ -3473,6 +3628,82 @@
         </div>
     </div>
 
+    <!-- MODAL DE DETALHES DO ANIVERSARIANTE (DIRETORIA) -->
+    <div id="modalDetalhesAniversariante" class="modal-backdrop"
+        onclick="if(event.target === this) closeModal('modalDetalhesAniversariante')">
+        <div class="modal-content" style="max-width: 520px;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 24px;">🎂</span>
+                    <div>
+                        <h3 class="card-title" style="margin: 0; font-size: 17px;">Ficha do Aniversariante</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin: 2px 0 0 0;">Informações cadastrais e felicitações da Diretoria ACBCSJ.</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeModal('modalDetalhesAniversariante')">&times;</button>
+            </div>
+
+            <!-- CABEÇALHO DO INTEGRANTE COM AVATAR -->
+            <div style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(28, 32, 38, 0.95) 100%); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px;">
+                <div id="modalBdayAvatar" style="width: 52px; height: 52px; border-radius: 50%; background: var(--accent-gold); color: #121417; font-size: 20px; font-weight: 900; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.4);">
+                    A
+                </div>
+                <div style="overflow: hidden;">
+                    <h4 id="modalBdayNomeGuerra" style="margin: 0; font-size: 18px; font-weight: 800; color: var(--accent-gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        Nome de Guerra
+                    </h4>
+                    <p id="modalBdayNomeCompleto" style="margin: 2px 0 6px 0; font-size: 13px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        Nome Completo
+                    </p>
+                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                        <span id="modalBdayPerfil"></span>
+                        <span id="modalBdayStatus"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRID DE INFORMAÇÕES DETALHADAS -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; font-size: 13px;">
+                <div style="background: rgba(0,0,0,0.25); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📅 Data de Nascimento</div>
+                    <div id="modalBdayDataNasc" style="font-size: 14px; font-weight: bold; color: var(--text-main); margin-top: 2px;">-</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.25); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🎈 Idade no Ano</div>
+                    <div id="modalBdayIdade" style="font-size: 14px; font-weight: bold; color: var(--text-main); margin-top: 2px;">-</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.25); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📱 Telefone / Celular</div>
+                    <div id="modalBdayTelefone" style="font-size: 13px; font-weight: bold; color: var(--text-main); margin-top: 2px;">-</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.25); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🆔 CPF</div>
+                    <div id="modalBdayCpf" style="font-size: 13px; font-weight: bold; color: var(--text-main); margin-top: 2px;">-</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.25); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color); grid-column: span 2;">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">✉️ E-mail</div>
+                    <div id="modalBdayEmail" style="font-size: 13px; color: var(--text-main); margin-top: 2px; word-break: break-all;">-</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.25); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🚒 OBM</div>
+                    <div id="modalBdayObm" style="font-size: 13px; color: var(--text-main); margin-top: 2px;">-</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.25); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">💼 Profissão / Função</div>
+                    <div id="modalBdayProfissao" style="font-size: 13px; color: var(--text-main); margin-top: 2px;">-</div>
+                </div>
+            </div>
+
+            <!-- AÇÕES DO RODAPÉ -->
+            <div style="display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalDetalhesAniversariante')">Fechar</button>
+                <button type="button" id="btnModalBdayWhatsApp" class="btn btn-gold" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span>💬</span> Enviar Parabéns no WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- SCRIPTS JS MODULARES -->
     <script src="supabaseClient.js?v=20260917_11"></script>
@@ -3487,6 +3718,7 @@
     <script src="js/relatorios.js?v=20260917_11"></script>
     <script src="js/escala.js?v=20260917_11"></script>
     <script src="js/senhas.js?v=20260917_11"></script>
+    <script src="js/aniversariantes.js?v=20260918_01"></script>
 
     <!-- REGISTRO DO SERVICE WORKER (PWA) -->
     <script>
