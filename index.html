@@ -2514,6 +2514,53 @@
         </div>
     </div>
 
+    <!-- MODAL MENU MAIS DO ASSOCIADO (BOTTOM SHEET MOBILE) -->
+    <div id="modalMenuMaisAssociado" class="modal-backdrop"
+        onclick="if(event.target === this) closeModal('modalMenuMaisAssociado')">
+        <div class="modal-content mobile-bottom-sheet" style="max-width: 500px;">
+            <div class="bottom-sheet-drag-handle"></div>
+            <div class="modal-header" style="margin-bottom: 12px;">
+                <h3 style="font-size: 16px; color: var(--accent-gold); display: flex; align-items: center; gap: 8px;">
+                    <span>📂 Mais Opções & Serviços</span>
+                </h3>
+                <button type="button" class="modal-close"
+                    onclick="closeModal('modalMenuMaisAssociado')">&times;</button>
+            </div>
+            <div class="mobile-more-grid">
+                <div class="mobile-more-item"
+                    onclick="navigateTab('documentos-associado'); closeModal('modalMenuMaisAssociado');">
+                    <span class="mobile-more-icon">📁</span>
+                    <span class="mobile-more-title">Documentos & Convites</span>
+                </div>
+                <div class="mobile-more-item"
+                    onclick="navigateTab('enviar-mensagem'); closeModal('modalMenuMaisAssociado');">
+                    <span class="mobile-more-icon">💬</span>
+                    <span class="mobile-more-title">Fale com a Diretoria</span>
+                </div>
+                <div class="mobile-more-item"
+                    onclick="navigateTab('telefones-emergencia'); closeModal('modalMenuMaisAssociado');">
+                    <span class="mobile-more-icon">🚨</span>
+                    <span class="mobile-more-title">Telefones Úteis</span>
+                </div>
+                <div class="mobile-more-item"
+                    onclick="abrirModalEditarMeusDados(); closeModal('modalMenuMaisAssociado');">
+                    <span class="mobile-more-icon">✏️</span>
+                    <span class="mobile-more-title">Meus Dados</span>
+                </div>
+                <div class="mobile-more-item"
+                    onclick="gerarCartaDesligamentoPreenchida(); closeModal('modalMenuMaisAssociado');">
+                    <span class="mobile-more-icon">📄</span>
+                    <span class="mobile-more-title">Gerar Carta</span>
+                </div>
+                <div class="mobile-more-item"
+                    onclick="abrirModalSolicitarDesligamento(); closeModal('modalMenuMaisAssociado');">
+                    <span class="mobile-more-icon">⚠️</span>
+                    <span class="mobile-more-title">Desligamento</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE PRÉ-CADASTRO -->
     <div id="modalPreCadastro" class="modal-backdrop">
         <div class="modal-content modal-content-lg">

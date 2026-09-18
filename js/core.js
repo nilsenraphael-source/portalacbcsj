@@ -281,7 +281,7 @@ function renderSidebarMenu() {
                     <span class="mobile-tab-icon">💰</span>
                     <span class="mobile-tab-label">Caixa</span>
                 </div>
-                <div class="mobile-tab-btn" onclick="openModal('modalMenuMaisDiretoria')">
+                <div class="mobile-tab-btn" data-tab-more="aniversariantes,escala-militar,associados-desligados,minhas-mensalidades-diretor,relatorios-diretoria,documentos-associado,mensagens-diretoria,senhas-acessos,telefones-emergencia" onclick="openModal('modalMenuMaisDiretoria')">
                     <span class="mobile-tab-icon">⋯</span>
                     <span class="mobile-tab-label">Mais</span>
                     ${badgeMsg}
@@ -314,7 +314,7 @@ function renderSidebarMenu() {
             mobileBottomNav.innerHTML = `
                 <div class="mobile-tab-btn active" data-tab="overview-associado" onclick="navigateTab('overview-associado')">
                     <span class="mobile-tab-icon">🏠</span>
-                    <span class="mobile-tab-label">Início</span>
+                    <span class="mobile-tab-label">Painel</span>
                 </div>
                 <div class="mobile-tab-btn" data-tab="escala-militar" onclick="navigateTab('escala-militar')">
                     <span class="mobile-tab-icon">🚒</span>
@@ -329,9 +329,9 @@ function renderSidebarMenu() {
                     <span class="mobile-tab-icon">📈</span>
                     <span class="mobile-tab-label">Contas</span>
                 </div>
-                <div class="mobile-tab-btn" data-tab="enviar-mensagem" onclick="navigateTab('enviar-mensagem')">
-                    <span class="mobile-tab-icon">💬</span>
-                    <span class="mobile-tab-label">Contato</span>
+                <div class="mobile-tab-btn" data-tab-more="documentos-associado,enviar-mensagem,telefones-emergencia" onclick="openModal('modalMenuMaisAssociado')">
+                    <span class="mobile-tab-icon">⋯</span>
+                    <span class="mobile-tab-label">Mais</span>
                 </div>
             `;
         }
@@ -354,7 +354,9 @@ function navigateTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
     document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
-        if (btn.getAttribute('data-tab') === tabId) {
+        const tab = btn.getAttribute('data-tab');
+        const moreTabs = (btn.getAttribute('data-tab-more') || '').split(',').map(s => s.trim()).filter(Boolean);
+        if (tab === tabId || moreTabs.includes(tabId)) {
             btn.classList.add('active');
         } else {
             btn.classList.remove('active');
