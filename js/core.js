@@ -1212,9 +1212,14 @@ function renderDiretoriaOverview() {
                     <td>${p.telefone || '-'}</td>
                     <td><small style="color:var(--accent-gold);">${p.data_cadastro || '-'}</small></td>
                     <td>
-                        <button class="btn btn-sm btn-primary" onclick="aprovarAssociado('${p.cpf}')">Aprovar</button>
-                        <button class="btn btn-sm btn-outline" onclick="verFichaAssociado('${p.cpf}')">Ver Ficha</button>
-                        <button class="btn btn-sm btn-outline" style="color:#E74C3C" onclick="abrirModalDesligar('${p.cpf}')">Rejeitar</button>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                            <button class="btn btn-sm" style="background:#25D366; color:#ffffff; font-weight:600; border:none; display:inline-flex; align-items:center; gap:4px; padding: 4px 8px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);" onclick="enviarBoasVindasPreCadastroWhatsApp('${p.cpf}')" title="Enviar orientações e boas-vindas pelo WhatsApp">
+                                💬 WhatsApp
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="aprovarAssociado('${p.cpf}')">Aprovar</button>
+                            <button class="btn btn-sm btn-outline" onclick="verFichaAssociado('${p.cpf}')">Ver Ficha</button>
+                            <button class="btn btn-sm btn-outline" style="color:#E74C3C" onclick="abrirModalDesligar('${p.cpf}')">Rejeitar</button>
+                        </div>
                     </td>
                 </tr>
             `).join('');

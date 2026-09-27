@@ -564,7 +564,7 @@ function verFichaAssociado(cpf) {
         <div><b>CPF:</b> ${a.cpf}</div>
         <div><b>Data de Nascimento:</b> ${a.data_nascimento || '-'}</div>
         <div><b>Sexo:</b> ${a.sexo || '-'}</div>
-        <div><b>Telefone / WhatsApp:</b> ${a.telefone || '-'}</div>
+        <div><b>Telefone / WhatsApp:</b> ${a.telefone || '-'} ${a.telefone ? `<button class="btn btn-sm" style="background:#25D366; color:#fff; font-weight:600; padding:2px 8px; font-size:11px; margin-left:6px; border:none; border-radius:4px; cursor:pointer;" onclick="enviarBoasVindasPreCadastroWhatsApp('${a.cpf}')" title="Enviar orientações no WhatsApp">💬 WhatsApp</button>` : ''}</div>
         <div><b>OBM de Lotação:</b> <b style="color: var(--accent-gold);">${a.obm || '-'}</b></div>
         <div><b>Profissão:</b> ${a.profissao || '-'}</div>
         <div><b>Perfil no Portal:</b> <b style="color: var(--accent-gold);">${(a.perfil || 'associado').toUpperCase()}</b></div>
@@ -579,6 +579,18 @@ function verFichaAssociado(cpf) {
         <div><b>CEP:</b> ${a.cep || '-'}</div>
         <div><b>Bairro:</b> ${a.bairro || '-'}</div>
         <div style="grid-column: 1 / -1;"><b>Cidade:</b> ${a.cidade || '-'}</div>
+
+        ${a.status === 'pendente' ? `
+            <div style="grid-column: 1 / -1; margin-top: 10px; background: rgba(37, 211, 102, 0.12); border: 1px solid rgba(37, 211, 102, 0.35); padding: 12px 14px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <b style="color: #2ECC71; display: block; font-size: 13px;">📲 Orientações de Pré-Cadastro (WhatsApp):</b>
+                    <small style="color: var(--text-muted);">Envie ao novo integrante as orientações de acesso, PIX, mensalidade e o link da Cartilha do Associado antes de autorizar.</small>
+                </div>
+                <button class="btn btn-sm" style="background: #25D366; color: #fff; font-weight: bold; border: none; padding: 6px 14px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;" onclick="enviarBoasVindasPreCadastroWhatsApp('${a.cpf}')">
+                    💬 Enviar Mensagem no WhatsApp
+                </button>
+            </div>
+        ` : ''}
 
         ${a.status === 'desligado' ? `
             <div style="grid-column: 1 / -1; margin-top:10px; background-color:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.4); padding:12px; border-radius:6px; color:#FF6B6B;">
@@ -713,11 +725,67 @@ function aprovarAssociado(cpf) {
         item.status = 'ativo';
         localStorage.setItem('acbcsj_associados', JSON.stringify(list));
         dbService.saveAssociado(item);
-        alert(`Associado ${item.nome} aprovado com sucesso!`);
+        
+        const querWhatsApp = confirm(`Associado ${item.nome} aprovado com sucesso! ✅\n\nDeseja abrir o WhatsApp para enviar a mensagem de boas-vindas com dados de acesso, PIX e a Cartilha do Associado agora?`);
+        if (querWhatsApp) {
+            enviarBoasVindasPreCadastroWhatsApp(cpf);
+        }
+        
         renderDiretoriaOverview();
         renderGestaoAssociados();
     }
 }
+
+function enviarBoasVindasPreCadastroWhatsApp(cpf) {
+    let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
+    const p = list.find(a => a.cpf === cpf);
+    if (!p) {
+        alert('Solicitação de pré-cadastro não localizada.');
+        return;
+    }
+
+    let cleanPhone = (p.telefone || '').replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
+        alert(`O associado ${p.nome_guerra || p.nome} não possui um telefone/WhatsApp válido cadastrado (${p.telefone || 'em branco'}).`);
+        return;
+    }
+
+    if (cleanPhone.length === 10 || cleanPhone.length === 11) {
+        cleanPhone = '55' + cleanPhone;
+    }
+
+    const nomeDestino = p.nome_guerra || p.nome || 'Associado';
+
+    const textoMensagem = 
+`👨‍🚒 Seja muito bem-vindo(a), *${nomeDestino}*, à Associação Corpo de Bombeiros Comunitários de São José!
+
+É uma satisfação ter você conosco! 🚒❤️🔥
+Confira abaixo algumas informações importantes:
+
+💰 Mensalidade: R$ 20,00
+📅 Vencimento: todo dia 15 de cada mês
+💳 Pagamento: via PIX
+🔑 Chave PIX (CNPJ): 07.962.460/0001-40
+
+🌐 Portal do Associado:
+https://portalacbcsj.vercel.app
+
+🔐 Acesso ao portal:
+* Usuário: seu CPF
+* Senha: os 4 primeiros dígitos do seu CPF
+
+📲 Pelo próprio portal, você poderá encaminhar dúvidas, sugestões, solicitações ou relatar problemas diretamente à Associação.
+
+📖 Em seguida, já lhe encaminharei a Cartilha do Associado, com maiores informações sobre a Associação, seus benefícios, direitos, deveres e demais orientações importantes.
+
+Seja muito bem-vindo(a) à ACBCSJ!
+Juntos, fortalecemos cada vez mais a nossa Associação e o Corpo de Bombeiros Comunitário. 🚒❤️🔥`;
+
+    const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(textoMensagem)}`;
+    window.open(url, '_blank');
+}
+window.enviarBoasVindasPreCadastroWhatsApp = enviarBoasVindasPreCadastroWhatsApp;
+
 
 function excluirAssociado(cpf) {
     if (confirm('Tem certeza que deseja excluir este associado do sistema? Esta ação é permanente.')) {
