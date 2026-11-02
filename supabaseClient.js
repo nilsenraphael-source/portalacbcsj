@@ -20,38 +20,89 @@ function getSupabaseClient() {
 
 getSupabaseClient();
 
+// Helper para remover base64 pesados ao salvar no LocalStorage
+function compactarArrayParaLocalStorage(data) {
+    if (!Array.isArray(data)) return data;
+    return data.map(item => {
+        if (typeof item === 'object' && item !== null) {
+            const copy = { ...item };
+            if (copy.carta_desligamento_url && copy.carta_desligamento_url.length > 500) {
+                copy.carta_desligamento_url = '[ARMAZENADO_NO_SUPABASE]';
+            }
+            if (copy.arquivo_url && copy.arquivo_url.length > 500) {
+                copy.arquivo_url = '[ARMAZENADO_NO_SUPABASE]';
+            }
+            if (copy.comprovante_url && copy.comprovante_url.length > 500 && copy.id !== 'config_categorias_financeiras') {
+                copy.comprovante_url = '[ARMAZENADO_NO_SUPABASE]';
+            }
+            return copy;
+        }
+        return item;
+    });
+}
+
 // Helper seguro para salvar no LocalStorage sem estourar cota de 5MB
 function safeSetLocalStorage(key, data) {
-    if (!data) return;
+    if (data === undefined || data === null) return;
     try {
         localStorage.setItem(key, JSON.stringify(data));
     } catch (e) {
         console.warn(`LocalStorage quota excedida ao salvar ${key}. Otimizando campos...`, e);
         try {
-            if (Array.isArray(data)) {
-                const cleanedData = data.map(item => {
-                    if (typeof item === 'object' && item !== null) {
-                        const copy = { ...item };
-                        if (copy.carta_desligamento_url && copy.carta_desligamento_url.length > 500) {
-                            copy.carta_desligamento_url = '[ARMAZENADO_NO_SUPABASE]';
+            ['acbcsj_documentos', 'acbcsj_associados', 'acbcsj_financeiro'].forEach(heavyKey => {
+                if (heavyKey !== key) {
+                    try {
+                        const raw = localStorage.getItem(heavyKey);
+                        if (raw && raw.length > 50000) {
+                            const parsed = JSON.parse(raw);
+                            if (Array.isArray(parsed)) {
+                                localStorage.setItem(heavyKey, JSON.stringify(compactarArrayParaLocalStorage(parsed)));
+                            }
                         }
-                        if (copy.arquivo_url && copy.arquivo_url.length > 500) {
-                            copy.arquivo_url = '[ARMAZENADO_NO_SUPABASE]';
-                        }
-                        if (copy.comprovante_url && copy.comprovante_url.length > 500) {
-                            copy.comprovante_url = '[ARMAZENADO_NO_SUPABASE]';
-                        }
-                        return copy;
-                    }
-                    return item;
-                });
-                localStorage.setItem(key, JSON.stringify(cleanedData));
-            }
+                    } catch (ignoreErr) { }
+                }
+            });
+
+            const payloadToSave = Array.isArray(data) ? compactarArrayParaLocalStorage(data) : data;
+            localStorage.setItem(key, JSON.stringify(payloadToSave));
         } catch (innerErr) {
             console.error(`Erro ao salvar no LocalStorage (${key}):`, innerErr);
         }
     }
 }
+window.safeSetLocalStorage = safeSetLocalStorage;
+
+// Separa o registro de configuração de categorias dos lançamentos financeiros reais
+function processarDadosFinanceiros(rawData) {
+    if (!Array.isArray(rawData)) return [];
+
+    const configRow = rawData.find(item => item && (item.id === 'config_categorias_financeiras' || item.tipo === 'config_cat'));
+    const lancamentosReais = rawData.filter(item => item && item.id !== 'config_categorias_financeiras' && item.tipo !== 'config_cat');
+
+    if (configRow && configRow.comprovante_url) {
+        try {
+            const parsedCat = JSON.parse(configRow.comprovante_url);
+            if (parsedCat && typeof parsedCat === 'object') {
+                window.CATEGORIAS_FINANCEIRAS_DB = {
+                    receitas: Array.isArray(parsedCat.receitas) ? parsedCat.receitas : [],
+                    despesas: Array.isArray(parsedCat.despesas) ? parsedCat.despesas : []
+                };
+                if (window.CATEGORIAS_FINANCEIRAS_DB.receitas.length > 0) {
+                    safeSetLocalStorage('acbcsj_categorias_receitas', window.CATEGORIAS_FINANCEIRAS_DB.receitas);
+                }
+                if (window.CATEGORIAS_FINANCEIRAS_DB.despesas.length > 0) {
+                    safeSetLocalStorage('acbcsj_categorias_despesas', window.CATEGORIAS_FINANCEIRAS_DB.despesas);
+                }
+            }
+        } catch (catErr) {
+            console.warn("Aviso ao ler categorias financeiras do banco:", catErr);
+        }
+    }
+
+    safeSetLocalStorage('acbcsj_financeiro', lancamentosReais);
+    return lancamentosReais;
+}
+window.processarDadosFinanceiros = processarDadosFinanceiros;
 
 // Helper REST direto com fallback infalível e controle de timeout
 async function supabaseRest(endpoint, options = {}) {
@@ -69,7 +120,7 @@ async function supabaseRest(endpoint, options = {}) {
         controller = new AbortController();
         timeoutId = setTimeout(() => {
             try { controller.abort(); } catch (e) { }
-        }, options.timeout || 10000);
+        }, options.timeout || 25000);
     }
 
     try {
@@ -302,7 +353,7 @@ const dbService = {
             try {
                 const { data, error } = await client.from('associados').select('*');
                 if (!error && data && data.length > 0) {
-                    localStorage.setItem('acbcsj_associados', JSON.stringify(data));
+                    safeSetLocalStorage('acbcsj_associados', data);
                     return data;
                 }
             } catch (e) {
@@ -312,7 +363,7 @@ const dbService = {
         try {
             const data = await supabaseRest('associados?select=*');
             if (Array.isArray(data) && data.length > 0) {
-                localStorage.setItem('acbcsj_associados', JSON.stringify(data));
+                safeSetLocalStorage('acbcsj_associados', data);
                 return data;
             }
         } catch (e) { }
@@ -327,7 +378,7 @@ const dbService = {
         const idx = list.findIndex(a => a.cpf === clean.cpf || a.id === clean.id);
         if (idx >= 0) list[idx] = clean;
         else list.push(clean);
-        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+        safeSetLocalStorage('acbcsj_associados', list);
 
         const client = getSupabaseClient();
         if (client) {
@@ -355,7 +406,7 @@ const dbService = {
     async deleteAssociado(cpf) {
         let list = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
         list = list.filter(a => a.cpf !== cpf);
-        localStorage.setItem('acbcsj_associados', JSON.stringify(list));
+        safeSetLocalStorage('acbcsj_associados', list);
 
         const client = getSupabaseClient();
         if (client) {
@@ -372,15 +423,14 @@ const dbService = {
         return true;
     },
 
-    // FINANCEIRO
+    // FINANCEIRO & CATEGORIAS NO BANCO DE DADOS
     async getFinanceiro() {
         const client = getSupabaseClient();
         if (client) {
             try {
                 const { data, error } = await client.from('financeiro_lancamentos').select('*');
                 if (!error && data && data.length > 0) {
-                    localStorage.setItem('acbcsj_financeiro', JSON.stringify(data));
-                    return data;
+                    return processarDadosFinanceiros(data);
                 }
             } catch (e) {
                 console.error("Erro no Supabase getFinanceiro:", e);
@@ -389,8 +439,7 @@ const dbService = {
         try {
             const data = await supabaseRest('financeiro_lancamentos?select=*');
             if (Array.isArray(data) && data.length > 0) {
-                localStorage.setItem('acbcsj_financeiro', JSON.stringify(data));
-                return data;
+                return processarDadosFinanceiros(data);
             }
         } catch (e) { }
         return JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
@@ -401,23 +450,33 @@ const dbService = {
         if (!clean) return false;
 
         let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+        list = list.filter(f => f && f.id !== 'config_categorias_financeiras' && f.tipo !== 'config_cat');
         const idx = list.findIndex(f => f.id === clean.id);
         if (idx >= 0) list[idx] = clean;
         else list.unshift(clean);
-        localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+        safeSetLocalStorage('acbcsj_financeiro', list);
+
+        // Se comprovante_url foi compactado no LocalStorage, não sobrescrever o PDF real no Supabase
+        const payload = { ...clean };
+        if (payload.comprovante_url === '[ARMAZENADO_NO_SUPABASE]') {
+            delete payload.comprovante_url;
+        }
 
         const client = getSupabaseClient();
         if (client) {
             try {
-                const { error } = await client.from('financeiro_lancamentos').upsert([clean]);
-                if (error) console.error("Erro ao salvar lançamento no Supabase:", error.message);
-                else console.log("✅ Lançamento financeiro salvo no Supabase:", clean.descricao, clean.valor);
-                return true;
+                const { error } = await client.from('financeiro_lancamentos').upsert([payload]);
+                if (error) {
+                    console.error("Erro ao salvar lançamento no Supabase:", error.message);
+                } else {
+                    console.log("✅ Lançamento financeiro salvo no Supabase:", clean.descricao, clean.categoria, clean.valor);
+                    return true;
+                }
             } catch (e) {
                 console.error("Erro ao salvar lançamento financeiro no Supabase:", e);
             }
         }
-        await supabaseRestUpsert('financeiro_lancamentos', clean);
+        await supabaseRestUpsert('financeiro_lancamentos', payload);
         return true;
     },
 
@@ -429,7 +488,7 @@ const dbService = {
     async deleteFinanceiro(id) {
         let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
         list = list.filter(f => f.id !== id);
-        localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+        safeSetLocalStorage('acbcsj_financeiro', list);
 
         const client = getSupabaseClient();
         if (client) {
@@ -443,6 +502,80 @@ const dbService = {
         } else {
             await supabaseRestDelete('financeiro_lancamentos', `id=eq.${id}`);
         }
+        return true;
+    },
+
+    // CATEGORIAS FINANCEIRAS SALVAS NO BANCO DE DADOS (SUPABASE)
+    async getCategoriasFinanceirasDB() {
+        try {
+            const data = await supabaseRest('financeiro_lancamentos?id=eq.config_categorias_financeiras&select=*');
+            if (Array.isArray(data) && data.length > 0 && data[0].comprovante_url) {
+                const parsed = JSON.parse(data[0].comprovante_url);
+                if (parsed && typeof parsed === 'object') {
+                    window.CATEGORIAS_FINANCEIRAS_DB = {
+                        receitas: Array.isArray(parsed.receitas) ? parsed.receitas : [],
+                        despesas: Array.isArray(parsed.despesas) ? parsed.despesas : []
+                    };
+                    if (window.CATEGORIAS_FINANCEIRAS_DB.receitas.length > 0) {
+                        safeSetLocalStorage('acbcsj_categorias_receitas', window.CATEGORIAS_FINANCEIRAS_DB.receitas);
+                    }
+                    if (window.CATEGORIAS_FINANCEIRAS_DB.despesas.length > 0) {
+                        safeSetLocalStorage('acbcsj_categorias_despesas', window.CATEGORIAS_FINANCEIRAS_DB.despesas);
+                    }
+                    return window.CATEGORIAS_FINANCEIRAS_DB;
+                }
+            }
+        } catch (e) {
+            console.warn("Aviso ao buscar categorias financeiras no banco:", e);
+        }
+        return window.CATEGORIAS_FINANCEIRAS_DB || null;
+    },
+
+    async saveCategoriasFinanceirasDB(receitas, despesas) {
+        const cleanReceitas = Array.isArray(receitas) ? receitas : (JSON.parse(localStorage.getItem('acbcsj_categorias_receitas')) || []);
+        const cleanDespesas = Array.isArray(despesas) ? despesas : (JSON.parse(localStorage.getItem('acbcsj_categorias_despesas')) || []);
+
+        window.CATEGORIAS_FINANCEIRAS_DB = {
+            receitas: cleanReceitas,
+            despesas: cleanDespesas
+        };
+
+        safeSetLocalStorage('acbcsj_categorias_receitas', cleanReceitas);
+        safeSetLocalStorage('acbcsj_categorias_despesas', cleanDespesas);
+
+        const configRow = {
+            id: 'config_categorias_financeiras',
+            tipo: 'config_cat',
+            descricao: 'CONFIG_CATEGORIAS_FINANCEIRAS',
+            valor: 0,
+            categoria: 'SISTEMA',
+            fornecedor_cliente: 'ACBCSJ',
+            data: '01/01/2026',
+            data_iso: '2026-01-01',
+            mes: 'Config',
+            comprovante_nome: 'categorias_json',
+            comprovante_url: JSON.stringify({
+                receitas: cleanReceitas,
+                despesas: cleanDespesas
+            })
+        };
+
+        const client = getSupabaseClient();
+        if (client) {
+            try {
+                const { error } = await client.from('financeiro_lancamentos').upsert([configRow]);
+                if (!error) {
+                    console.log("✅ Categorias financeiras salvas no banco de dados (Supabase)!");
+                    return true;
+                } else {
+                    console.warn("Aviso ao salvar categorias via SDK, tentando REST:", error.message);
+                }
+            } catch (e) {
+                console.warn("Erro ao salvar categorias via SDK:", e);
+            }
+        }
+        await supabaseRestUpsert('financeiro_lancamentos', configRow);
+        console.log("✅ Categorias financeiras salvas no banco de dados via REST!");
         return true;
     },
 
@@ -640,7 +773,7 @@ const dbService = {
             try {
                 const { data, error } = await client.from('documentos').select('*');
                 if (!error && data) {
-                    localStorage.setItem('acbcsj_documentos', JSON.stringify(data));
+                    safeSetLocalStorage('acbcsj_documentos', data);
                     return data;
                 }
             } catch (e) {
@@ -650,7 +783,7 @@ const dbService = {
         try {
             const data = await supabaseRest('documentos?select=*');
             if (Array.isArray(data)) {
-                localStorage.setItem('acbcsj_documentos', JSON.stringify(data));
+                safeSetLocalStorage('acbcsj_documentos', data);
                 return data;
             }
         } catch (e) { }
@@ -665,7 +798,7 @@ const dbService = {
         const idx = list.findIndex(d => d.id === clean.id);
         if (idx >= 0) list[idx] = clean;
         else list.unshift(clean);
-        localStorage.setItem('acbcsj_documentos', JSON.stringify(list));
+        safeSetLocalStorage('acbcsj_documentos', list);
 
         const client = getSupabaseClient();
         if (client) {
@@ -685,7 +818,7 @@ const dbService = {
     async deleteDocumento(id) {
         let list = JSON.parse(localStorage.getItem('acbcsj_documentos')) || [];
         list = list.filter(d => d.id !== id);
-        localStorage.setItem('acbcsj_documentos', JSON.stringify(list));
+        safeSetLocalStorage('acbcsj_documentos', list);
 
         const client = getSupabaseClient();
         if (client) {
@@ -709,7 +842,7 @@ const dbService = {
             try {
                 const { data, error } = await client.from('senhas_acessos').select('*');
                 if (!error && data && data.length > 0) {
-                    localStorage.setItem('acbcsj_senhas_acessos', JSON.stringify(data));
+                    safeSetLocalStorage('acbcsj_senhas_acessos', data);
                     return data;
                 }
             } catch (e) {
@@ -719,7 +852,7 @@ const dbService = {
         try {
             const data = await supabaseRest('senhas_acessos?select=*');
             if (Array.isArray(data) && data.length > 0) {
-                localStorage.setItem('acbcsj_senhas_acessos', JSON.stringify(data));
+                safeSetLocalStorage('acbcsj_senhas_acessos', data);
                 return data;
             }
         } catch (e) { }
@@ -734,7 +867,7 @@ const dbService = {
         const idx = list.findIndex(s => s.id === clean.id);
         if (idx >= 0) list[idx] = clean;
         else list.unshift(clean);
-        localStorage.setItem('acbcsj_senhas_acessos', JSON.stringify(list));
+        safeSetLocalStorage('acbcsj_senhas_acessos', list);
 
         const client = getSupabaseClient();
         if (client) {
@@ -756,7 +889,7 @@ const dbService = {
     async deleteSenhaAcesso(id) {
         let list = JSON.parse(localStorage.getItem('acbcsj_senhas_acessos')) || [];
         list = list.filter(s => s.id !== id);
-        localStorage.setItem('acbcsj_senhas_acessos', JSON.stringify(list));
+        safeSetLocalStorage('acbcsj_senhas_acessos', list);
 
         const client = getSupabaseClient();
         if (client) {
@@ -793,8 +926,8 @@ const dbService = {
                 }),
                 supabaseRest('financeiro_lancamentos?select=*').then(data => {
                     if (data && Array.isArray(data) && data.length > 0) {
-                        safeSetLocalStorage('acbcsj_financeiro', data);
-                        countTotal += data.length;
+                        const lancamentosReais = processarDadosFinanceiros(data);
+                        countTotal += lancamentosReais.length;
                         sucessos++;
                     }
                 }),

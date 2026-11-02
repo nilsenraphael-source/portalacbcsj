@@ -3140,7 +3140,7 @@
     </div>
 
     <!-- MODAL DE GERENCIAMENTO DE CATEGORIAS FINANCEIRAS -->
-    <div id="modalGerenciarCategoriasFinanceiras" class="modal-backdrop">
+    <div id="modalGerenciarCategoriasFinanceiras" class="modal-backdrop" style="z-index: 1200;">
         <div class="modal-content" style="max-width: 550px;">
             <div class="modal-header">
                 <div>
@@ -3247,7 +3247,13 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div class="form-group">
-                        <label>Categoria <span class="req-star">*</span></label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label style="margin: 0;">Categoria <span class="req-star">*</span></label>
+                            <button type="button" class="btn btn-outline btn-sm" style="padding: 1px 6px; font-size: 11px;"
+                                onclick="abrirModalGerenciarCategoriasFin(document.getElementById('editFinTipo').value)" title="Adicionar, editar ou excluir categorias">
+                                ⚙️ Gerenciar
+                            </button>
+                        </div>
                         <select id="editFinCategoria" class="form-control" required></select>
                     </div>
 
@@ -4274,19 +4280,19 @@
 
 
     <!-- SCRIPTS JS MODULARES -->
-    <script src="supabaseClient.js?v=20260917_11"></script>
-    <script src="js/core.js?v=20260917_11"></script>
-    <script src="js/auth.js?v=20260917_11"></script>
-    <script src="js/associados.js?v=20260917_11"></script>
-    <script src="js/documentos.js?v=20260917_11"></script>
-    <script src="js/mensagens.js?v=20260917_11"></script>
-    <script src="js/financeiro.js?v=20260917_11"></script>
-    <script src="js/portal-socio.js?v=20260917_11"></script>
-    <script src="js/mensalidades.js?v=20260917_11"></script>
-    <script src="js/relatorios.js?v=20260917_11"></script>
-    <script src="js/escala.js?v=20260917_11"></script>
-    <script src="js/senhas.js?v=20260917_11"></script>
-    <script src="js/aniversariantes.js?v=20260918_01"></script>
+    <script src="supabaseClient.js?v=20261102_01"></script>
+    <script src="js/core.js?v=20261102_01"></script>
+    <script src="js/auth.js?v=20261102_01"></script>
+    <script src="js/associados.js?v=20261102_01"></script>
+    <script src="js/documentos.js?v=20261102_01"></script>
+    <script src="js/mensagens.js?v=20261102_01"></script>
+    <script src="js/financeiro.js?v=20261102_01"></script>
+    <script src="js/portal-socio.js?v=20261102_01"></script>
+    <script src="js/mensalidades.js?v=20261102_01"></script>
+    <script src="js/relatorios.js?v=20261102_01"></script>
+    <script src="js/escala.js?v=20261102_01"></script>
+    <script src="js/senhas.js?v=20261102_01"></script>
+    <script src="js/aniversariantes.js?v=20261102_01"></script>
 
     <!-- REGISTRO DO SERVICE WORKER (PWA) -->
     <script>

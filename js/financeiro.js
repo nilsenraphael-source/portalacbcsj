@@ -31,7 +31,7 @@ function renderBalancetesAssociado() {
     const ativos = listAssociados.filter(a => a.status === 'ativo' || !a.status);
     const qtdAssociadosAtivos = ativos.length || 1;
 
-    let financeiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    let financeiro = (JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []).filter(i => i && i.id !== 'config_categorias_financeiras' && i.tipo !== 'config_cat');
     if (!financeiro || financeiro.length === 0) {
         financeiro = (typeof INITIAL_LANCAMENTOS_DATA !== 'undefined' && Array.isArray(INITIAL_LANCAMENTOS_DATA)) ? INITIAL_LANCAMENTOS_DATA : [];
         if (financeiro.length > 0) {
@@ -322,9 +322,22 @@ function abrirModalNovoLancamento(tipo) {
     }
 
     openModal('modalNovoLancamento');
+
+    if (typeof dbService !== 'undefined' && typeof dbService.getCategoriasFinanceirasDB === 'function') {
+        dbService.getCategoriasFinanceirasDB().then(res => {
+            if (res && selTipo) {
+                const currentVal = document.getElementById('finCategoria')?.value;
+                atualizarCategoriasLancamento(selTipo.value, currentVal);
+            }
+        }).catch(() => {});
+    }
 }
 
 const DEFAULT_CATEGORIAS_RECEITAS = [
+    "Mensalidades dos Associados",
+    "Rendimentos",
+    "Receitas em Eventos",
+    "Projetos (Privado, Municipal ou Estadual)",
     "Mensalidade / Contribuição",
     "Doação / Convênio",
     "Evento / Rifa",
@@ -332,6 +345,17 @@ const DEFAULT_CATEGORIAS_RECEITAS = [
 ];
 
 const DEFAULT_CATEGORIAS_DESPESAS = [
+    "Tarifas Banco",
+    "Presentes",
+    "Treinamentos",
+    "Mercado",
+    "Cartório ou Documentação em geral",
+    "Confraternizações Associados",
+    "Equipamentos de Proteção Individuais (EPIs) ou Materiais Operacionais",
+    "Eventos Sociais",
+    "Material de Escritórios",
+    "Restituições de Projetos (Privado, Municipal ou Estadual)",
+    "Outros",
     "Despesa Operacional",
     "Manutenção de Viatura",
     "Administrativo / Consumo",
@@ -347,11 +371,20 @@ function getCategoriasFinanceiras(tipo) {
     const isRec = (tipo === 'receita');
     const storageKey = isRec ? 'acbcsj_categorias_receitas' : 'acbcsj_categorias_despesas';
     const defaultList = isRec ? DEFAULT_CATEGORIAS_RECEITAS : DEFAULT_CATEGORIAS_DESPESAS;
+
+    // 1. Prioriza categorias carregadas do banco de dados (Supabase) em memória
+    if (window.CATEGORIAS_FINANCEIRAS_DB) {
+        const dbList = isRec ? window.CATEGORIAS_FINANCEIRAS_DB.receitas : window.CATEGORIAS_FINANCEIRAS_DB.despesas;
+        if (Array.isArray(dbList) && dbList.length > 0) {
+            return [...dbList];
+        }
+    }
     
+    // 2. Fallback: localStorage sincronizado com o banco
     try {
         const stored = JSON.parse(localStorage.getItem(storageKey));
         if (Array.isArray(stored) && stored.length > 0) {
-            return stored;
+            return [...stored];
         }
     } catch(e) {
         console.warn('Erro ao ler categorias financeiras do storage:', e);
@@ -364,13 +397,42 @@ function getCategoriasFinanceiras(tipo) {
     return [...defaultList];
 }
 
-function salvarCategoriasFinanceiras(tipo, lista) {
+async function salvarCategoriasFinanceiras(tipo, lista) {
     const isRec = (tipo === 'receita');
     const storageKey = isRec ? 'acbcsj_categorias_receitas' : 'acbcsj_categorias_despesas';
+    const cleanList = Array.isArray(lista) ? lista.map(c => String(c || '').trim()).filter(Boolean) : [];
+
+    if (!window.CATEGORIAS_FINANCEIRAS_DB) {
+        window.CATEGORIAS_FINANCEIRAS_DB = {
+            receitas: getCategoriasFinanceiras('receita'),
+            despesas: getCategoriasFinanceiras('despesa')
+        };
+    }
+    if (isRec) {
+        window.CATEGORIAS_FINANCEIRAS_DB.receitas = [...cleanList];
+    } else {
+        window.CATEGORIAS_FINANCEIRAS_DB.despesas = [...cleanList];
+    }
+
     try {
-        localStorage.setItem(storageKey, JSON.stringify(lista));
+        if (typeof safeSetLocalStorage === 'function') {
+            safeSetLocalStorage(storageKey, cleanList);
+        } else {
+            localStorage.setItem(storageKey, JSON.stringify(cleanList));
+        }
     } catch(e) {
-        console.error('Erro ao salvar categorias financeiras:', e);
+        console.error('Erro ao salvar categorias financeiras localmente:', e);
+    }
+
+    // Persiste imediatamente no banco de dados Supabase
+    if (typeof dbService !== 'undefined' && typeof dbService.saveCategoriasFinanceirasDB === 'function') {
+        try {
+            const recList = window.CATEGORIAS_FINANCEIRAS_DB.receitas || getCategoriasFinanceiras('receita');
+            const despList = window.CATEGORIAS_FINANCEIRAS_DB.despesas || getCategoriasFinanceiras('despesa');
+            await dbService.saveCategoriasFinanceirasDB(recList, despList);
+        } catch (dbErr) {
+            console.error('Erro ao salvar categorias financeiras no Supabase:', dbErr);
+        }
     }
 }
 
@@ -379,6 +441,9 @@ function atualizarCategoriasLancamento(tipo, selectedValue = null) {
     if (!catSelect) return;
     
     const categorias = getCategoriasFinanceiras(tipo || 'receita');
+    if (selectedValue && !categorias.includes(selectedValue)) {
+        categorias.push(selectedValue);
+    }
     catSelect.innerHTML = '';
     
     categorias.forEach(cat => {
@@ -390,6 +455,19 @@ function atualizarCategoriasLancamento(tipo, selectedValue = null) {
         }
         catSelect.appendChild(opt);
     });
+}
+
+function atualizarSelectsCategoriasAbertos(tipo, selectedValue = null) {
+    const selTipoLanc = document.getElementById('finTipo');
+    if (selTipoLanc && selTipoLanc.value === tipo) {
+        const val = selectedValue || document.getElementById('finCategoria')?.value;
+        atualizarCategoriasLancamento(tipo, val);
+    }
+    const selEditTipo = document.getElementById('editFinTipo');
+    if (selEditTipo && selEditTipo.value === tipo) {
+        const val = selectedValue || document.getElementById('editFinCategoria')?.value;
+        atualizarCategoriasEditLancamento(tipo, val);
+    }
 }
 
 // Modal de Gerenciamento de Categorias
@@ -407,6 +485,15 @@ function abrirModalGerenciarCategoriasFin(tipo = null) {
     
     setTipoCategoriaManager(categoriaManagerTipoAtual);
     openModal('modalGerenciarCategoriasFinanceiras');
+
+    if (typeof dbService !== 'undefined' && typeof dbService.getCategoriasFinanceirasDB === 'function') {
+        dbService.getCategoriasFinanceirasDB().then(res => {
+            if (res) {
+                renderListaCategoriasGerenciador();
+                atualizarSelectsCategoriasAbertos(categoriaManagerTipoAtual);
+            }
+        }).catch(() => {});
+    }
 }
 
 function setTipoCategoriaManager(tipo) {
@@ -454,22 +541,27 @@ function renderListaCategoriasGerenciador() {
     }
     
     container.innerHTML = categorias.map((cat) => {
-        const safeCat = cat.replace(/'/g, "\\'");
+        const safeCat = cat.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
         return `
-            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px;">
-                <div style="display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 13px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 13px; flex: 1;">
                     <span style="color: ${categoriaManagerTipoAtual === 'receita' ? '#2ECC71' : '#E74C3C'};">🏷️</span>
                     <span>${cat}</span>
                 </div>
-                <button type="button" class="btn btn-outline btn-sm" style="color: #E74C3C; border-color: rgba(231,76,60,0.3); font-size: 11px; padding: 2px 8px;" onclick="removerCategoriaFin('${safeCat}')" title="Excluir categoria">
-                    🗑️ Excluir
-                </button>
+                <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                    <button type="button" class="btn btn-outline btn-sm" style="color: #3498DB; border-color: rgba(52,152,219,0.3); font-size: 11px; padding: 2px 8px;" onclick="editarCategoriaFin('${safeCat}')" title="Renomear categoria">
+                        ✏️ Editar
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm" style="color: #E74C3C; border-color: rgba(231,76,60,0.3); font-size: 11px; padding: 2px 8px;" onclick="removerCategoriaFin('${safeCat}')" title="Excluir categoria">
+                        🗑️ Excluir
+                    </button>
+                </div>
             </div>
         `;
     }).join('');
 }
 
-function adicionarNovaCategoriaFin(e) {
+async function adicionarNovaCategoriaFin(e) {
     if (e) e.preventDefault();
     const input = document.getElementById('novaCategoriaFinInput');
     if (!input) return;
@@ -491,19 +583,60 @@ function adicionarNovaCategoriaFin(e) {
     }
     
     categorias.push(nome);
-    salvarCategoriasFinanceiras(categoriaManagerTipoAtual, categorias);
+    await salvarCategoriasFinanceiras(categoriaManagerTipoAtual, categorias);
     input.value = '';
     
     renderListaCategoriasGerenciador();
-    
-    // Atualiza o select de lançamento se estiver aberto
-    const selTipoLanc = document.getElementById('finTipo');
-    if (selTipoLanc && selTipoLanc.value === categoriaManagerTipoAtual) {
-        atualizarCategoriasLancamento(categoriaManagerTipoAtual, nome);
-    }
+    atualizarSelectsCategoriasAbertos(categoriaManagerTipoAtual, nome);
 }
 
-function removerCategoriaFin(nomeCat) {
+async function editarCategoriaFin(nomeAntigo) {
+    const novoNomeInput = prompt(`Renomear a categoria "${nomeAntigo}" para:`, nomeAntigo);
+    if (novoNomeInput === null) return;
+    const novoNome = novoNomeInput.trim();
+    if (!novoNome || novoNome === nomeAntigo) return;
+
+    let categorias = getCategoriasFinanceiras(categoriaManagerTipoAtual);
+    const duplicada = categorias.some(c => c !== nomeAntigo && c.toLowerCase() === novoNome.toLowerCase());
+    if (duplicada) {
+        alert(`Já existe uma categoria chamada "${novoNome}".`);
+        return;
+    }
+
+    categorias = categorias.map(c => c === nomeAntigo ? novoNome : c);
+    await salvarCategoriasFinanceiras(categoriaManagerTipoAtual, categorias);
+
+    // Atualiza também lançamentos existentes que usavam o nome antigo desta categoria
+    let list = (JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []).filter(i => i && i.id !== 'config_categorias_financeiras' && i.tipo !== 'config_cat');
+    const alterados = [];
+    list = list.map(item => {
+        if (item.tipo === categoriaManagerTipoAtual && item.categoria === nomeAntigo) {
+            const atualizado = { ...item, categoria: novoNome };
+            alterados.push(atualizado);
+            return atualizado;
+        }
+        return item;
+    });
+
+    if (alterados.length > 0) {
+        if (typeof safeSetLocalStorage === 'function') {
+            safeSetLocalStorage('acbcsj_financeiro', list);
+        } else {
+            try { localStorage.setItem('acbcsj_financeiro', JSON.stringify(list)); } catch(e) {}
+        }
+        if (typeof dbService !== 'undefined' && typeof dbService.saveFinanceiro === 'function') {
+            for (const item of alterados) {
+                try { await dbService.saveFinanceiro(item); } catch(e) {}
+            }
+        }
+        renderGestaoFinanceira();
+    }
+
+    renderListaCategoriasGerenciador();
+    atualizarSelectsCategoriasAbertos(categoriaManagerTipoAtual, novoNome);
+}
+
+async function removerCategoriaFin(nomeCat) {
     if (!confirm(`Deseja realmente remover a categoria "${nomeCat}" da lista de ${categoriaManagerTipoAtual === 'receita' ? 'Receitas' : 'Despesas'}?`)) {
         return;
     }
@@ -515,29 +648,20 @@ function removerCategoriaFin(nomeCat) {
         categorias.push(categoriaManagerTipoAtual === 'receita' ? 'Outras Receitas' : 'Outras Despesas');
     }
     
-    salvarCategoriasFinanceiras(categoriaManagerTipoAtual, categorias);
+    await salvarCategoriasFinanceiras(categoriaManagerTipoAtual, categorias);
     renderListaCategoriasGerenciador();
-    
-    // Atualiza o select de lançamento
-    const selTipoLanc = document.getElementById('finTipo');
-    if (selTipoLanc && selTipoLanc.value === categoriaManagerTipoAtual) {
-        atualizarCategoriasLancamento(categoriaManagerTipoAtual);
-    }
+    atualizarSelectsCategoriasAbertos(categoriaManagerTipoAtual);
 }
 
-function restaurarCategoriasPadraoFin() {
+async function restaurarCategoriasPadraoFin() {
     if (!confirm(`Deseja restaurar as categorias padrão para ${categoriaManagerTipoAtual === 'receita' ? 'Receitas' : 'Despesas'}?`)) {
         return;
     }
     
     const defaultList = (categoriaManagerTipoAtual === 'receita') ? DEFAULT_CATEGORIAS_RECEITAS : DEFAULT_CATEGORIAS_DESPESAS;
-    salvarCategoriasFinanceiras(categoriaManagerTipoAtual, [...defaultList]);
+    await salvarCategoriasFinanceiras(categoriaManagerTipoAtual, [...defaultList]);
     renderListaCategoriasGerenciador();
-    
-    const selTipoLanc = document.getElementById('finTipo');
-    if (selTipoLanc && selTipoLanc.value === categoriaManagerTipoAtual) {
-        atualizarCategoriasLancamento(categoriaManagerTipoAtual);
-    }
+    atualizarSelectsCategoriasAbertos(categoriaManagerTipoAtual);
 }
 
 function salvarNovoLancamento(e) {
@@ -563,7 +687,7 @@ function salvarNovoLancamento(e) {
     const lancId = 'lanc_' + Date.now();
 
     const concluirSalvarLancamento = async (fileDataUrl = null, fileName = null) => {
-        let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+        let list = (JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []).filter(i => i && i.id !== 'config_categorias_financeiras' && i.tipo !== 'config_cat');
         const novoLancamento = {
             id: lancId,
             descricao: descricao,
@@ -585,16 +709,29 @@ function salvarNovoLancamento(e) {
             }
         }
 
+        // Garante que a categoria utilizada também esteja salva na lista de categorias do banco
+        if (categoria) {
+            const catsAtuais = getCategoriasFinanceiras(tipo);
+            if (!catsAtuais.includes(categoria)) {
+                catsAtuais.push(categoria);
+                await salvarCategoriasFinanceiras(tipo, catsAtuais);
+            }
+        }
+
         list.unshift(novoLancamento);
 
         try {
-            localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+            if (typeof safeSetLocalStorage === 'function') {
+                safeSetLocalStorage('acbcsj_financeiro', list);
+            } else {
+                localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+            }
         } catch (err) {
             console.warn('Salvo no sistema.');
         }
 
         try {
-            if (typeof dbService !== "undefined") dbService.saveFinanceiro(novoLancamento);
+            if (typeof dbService !== "undefined") await dbService.saveFinanceiro(novoLancamento);
         } catch (err) {}
 
         alert(`Lançamento de ${tipo.toUpperCase()} (R$ ${valor.toFixed(2).replace('.', ',')}) cadastrado com sucesso!`);
@@ -616,9 +753,13 @@ function salvarNovoLancamento(e) {
 
 function excluirLancamentoFinanceiro(id) {
     if (confirm('Deseja realmente remover este lançamento financeiro?')) {
-        let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+        let list = (JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []).filter(i => i && i.id !== 'config_categorias_financeiras' && i.tipo !== 'config_cat');
         list = list.filter(item => item.id !== id);
-        localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+        if (typeof safeSetLocalStorage === 'function') {
+            safeSetLocalStorage('acbcsj_financeiro', list);
+        } else {
+            try { localStorage.setItem('acbcsj_financeiro', JSON.stringify(list)); } catch(e) {}
+        }
         if (typeof dbService !== 'undefined') {
             try { dbService.deleteFinanceiro(id); } catch(e) {}
         }
@@ -632,6 +773,9 @@ function atualizarCategoriasEditLancamento(tipo, selectedValue = null) {
     const catSelect = document.getElementById('editFinCategoria');
     if (!catSelect) return;
     const categorias = getCategoriasFinanceiras(tipo || 'receita');
+    if (selectedValue && !categorias.includes(selectedValue)) {
+        categorias.push(selectedValue);
+    }
     catSelect.innerHTML = '';
     categorias.forEach(cat => {
         const opt = document.createElement('option');
@@ -645,7 +789,7 @@ function atualizarCategoriasEditLancamento(tipo, selectedValue = null) {
 }
 
 function abrirModalEditarLancamento(id) {
-    const list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const list = (JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []).filter(i => i && i.id !== 'config_categorias_financeiras' && i.tipo !== 'config_cat');
     const item = list.find(f => f.id === id);
     if (!item) {
         alert('Lançamento não encontrado.');
@@ -683,6 +827,16 @@ function abrirModalEditarLancamento(id) {
     if (fileInput) fileInput.value = '';
 
     openModal('modalEditarLancamento');
+
+    if (typeof dbService !== 'undefined' && typeof dbService.getCategoriasFinanceirasDB === 'function') {
+        dbService.getCategoriasFinanceirasDB().then(res => {
+            if (res) {
+                const currentTipo = document.getElementById('editFinTipo')?.value || item.tipo || 'despesa';
+                const currentCat = document.getElementById('editFinCategoria')?.value || item.categoria;
+                atualizarCategoriasEditLancamento(currentTipo, currentCat);
+            }
+        }).catch(() => {});
+    }
 }
 
 async function salvarEdicaoLancamento(e) {
@@ -707,7 +861,7 @@ async function salvarEdicaoLancamento(e) {
     const mesNome = mesesNomes[parseInt(mes, 10) - 1] || 'Janeiro';
 
     const concluirEdicao = async (fileDataUrl = null, fileName = null) => {
-        let list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+        let list = (JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []).filter(i => i && i.id !== 'config_categorias_financeiras' && i.tipo !== 'config_cat');
         const idx = list.findIndex(item => item.id === id);
         if (idx < 0) {
             alert('Lançamento não encontrado.');
@@ -736,8 +890,25 @@ async function salvarEdicaoLancamento(e) {
             }
         }
 
+        // Garante que a categoria selecionada também fique salva na lista de categorias no banco
+        if (categoria) {
+            const catsAtuais = getCategoriasFinanceiras(tipo);
+            if (!catsAtuais.includes(categoria)) {
+                catsAtuais.push(categoria);
+                await salvarCategoriasFinanceiras(tipo, catsAtuais);
+            }
+        }
+
         list[idx] = updatedItem;
-        localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+        try {
+            if (typeof safeSetLocalStorage === 'function') {
+                safeSetLocalStorage('acbcsj_financeiro', list);
+            } else {
+                localStorage.setItem('acbcsj_financeiro', JSON.stringify(list));
+            }
+        } catch (storageErr) {
+            console.warn('Aviso ao gravar no localStorage (compactado):', storageErr);
+        }
 
         try {
             if (typeof dbService !== 'undefined') {
@@ -782,11 +953,26 @@ async function abrirComprovanteLancamento(id) {
     if (item) {
         if (item.descricao) descricao = item.descricao;
         if (item.comprovante_nome) fileName = item.comprovante_nome;
-        if (!fileContent && (item.comprovante_url || item.arquivo_url)) {
-            fileContent = item.comprovante_url || item.arquivo_url;
+        const candidateUrl = item.comprovante_url || item.arquivo_url;
+        if (!fileContent && candidateUrl && candidateUrl !== '[ARMAZENADO_NO_SUPABASE]') {
+            fileContent = candidateUrl;
             try {
                 await idbStorage.setFile(id, fileContent);
             } catch (e) {}
+        }
+    }
+
+    // 3. Fallback: Busca sob demanda diretamente no Supabase caso o localStorage esteja compactado
+    if ((!fileContent || fileContent === '[ARMAZENADO_NO_SUPABASE]') && typeof supabaseRest === 'function') {
+        try {
+            const rows = await supabaseRest(`financeiro_lancamentos?id=eq.${encodeURIComponent(id)}&select=comprovante_url,comprovante_nome`);
+            if (Array.isArray(rows) && rows[0] && rows[0].comprovante_url && rows[0].comprovante_url !== '[ARMAZENADO_NO_SUPABASE]') {
+                fileContent = rows[0].comprovante_url;
+                if (rows[0].comprovante_nome) fileName = rows[0].comprovante_nome;
+                try { await idbStorage.setFile(id, fileContent); } catch (e) {}
+            }
+        } catch (e) {
+            console.warn('Aviso ao buscar comprovante no Supabase:', e);
         }
     }
 
@@ -869,7 +1055,19 @@ async function baixarArquivoComprovante(id) {
     const list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
     const item = list.find(f => f.id === id);
     if (item && item.comprovante_nome) fileName = item.comprovante_nome;
-    if (!fileContent && item) fileContent = item.comprovante_url || item.arquivo_url;
+    if (!fileContent && item) {
+        const candidate = item.comprovante_url || item.arquivo_url;
+        if (candidate && candidate !== '[ARMAZENADO_NO_SUPABASE]') fileContent = candidate;
+    }
+    if ((!fileContent || fileContent === '[ARMAZENADO_NO_SUPABASE]') && typeof supabaseRest === 'function') {
+        try {
+            const rows = await supabaseRest(`financeiro_lancamentos?id=eq.${encodeURIComponent(id)}&select=comprovante_url,comprovante_nome`);
+            if (Array.isArray(rows) && rows[0] && rows[0].comprovante_url && rows[0].comprovante_url !== '[ARMAZENADO_NO_SUPABASE]') {
+                fileContent = rows[0].comprovante_url;
+                if (rows[0].comprovante_nome) fileName = rows[0].comprovante_nome;
+            }
+        } catch (e) {}
+    }
 
     if (!fileContent) {
         alert('Arquivo não disponível para download.');
@@ -889,7 +1087,18 @@ async function abrirArquivoEmNovaAba(id) {
     let fileContent = await idbStorage.getFile(id);
     const list = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
     const item = list.find(f => f.id === id);
-    if (!fileContent && item) fileContent = item.comprovante_url || item.arquivo_url;
+    if (!fileContent && item) {
+        const candidate = item.comprovante_url || item.arquivo_url;
+        if (candidate && candidate !== '[ARMAZENADO_NO_SUPABASE]') fileContent = candidate;
+    }
+    if ((!fileContent || fileContent === '[ARMAZENADO_NO_SUPABASE]') && typeof supabaseRest === 'function') {
+        try {
+            const rows = await supabaseRest(`financeiro_lancamentos?id=eq.${encodeURIComponent(id)}&select=comprovante_url`);
+            if (Array.isArray(rows) && rows[0] && rows[0].comprovante_url && rows[0].comprovante_url !== '[ARMAZENADO_NO_SUPABASE]') {
+                fileContent = rows[0].comprovante_url;
+            }
+        } catch (e) {}
+    }
 
     if (!fileContent) {
         alert('Arquivo não disponível.');
@@ -988,7 +1197,7 @@ function extrairInfoMensalidade(m, anoPadrao = '2026') {
 }
 
 function renderGestaoFinanceira() {
-    let listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    let listFinanceiro = (JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []).filter(i => i && i.id !== 'config_categorias_financeiras' && i.tipo !== 'config_cat');
     if (!listFinanceiro || listFinanceiro.length === 0) {
         listFinanceiro = (typeof INITIAL_LANCAMENTOS_DATA !== 'undefined' && Array.isArray(INITIAL_LANCAMENTOS_DATA)) ? INITIAL_LANCAMENTOS_DATA : [];
         if (listFinanceiro.length > 0) {
@@ -1281,7 +1490,7 @@ function gerarBalanceteMensal(mesIndex, anoStr) {
         const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         const mIdx = parseInt(mesIndex, 10) || 1;
         const strMes = String(mIdx).padStart(2, '0');
-        let listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+        let listFinanceiro = (JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []).filter(i => i && i.id !== 'config_categorias_financeiras' && i.tipo !== 'config_cat');
         if (!listFinanceiro || listFinanceiro.length === 0) {
             listFinanceiro = (typeof INITIAL_LANCAMENTOS_DATA !== 'undefined' && Array.isArray(INITIAL_LANCAMENTOS_DATA)) ? INITIAL_LANCAMENTOS_DATA : [];
             if (listFinanceiro.length > 0) {
@@ -1587,7 +1796,7 @@ function gerarBalanceteAnualCompleto(anoStr) {
     }
 
     const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-    const listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const listFinanceiro = (JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []).filter(i => i && i.id !== 'config_categorias_financeiras' && i.tipo !== 'config_cat');
     const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
     const listAssociados = JSON.parse(localStorage.getItem('acbcsj_associados')) || [];
     const ativos = listAssociados.filter(a => a.status === 'ativo' || !a.status);
@@ -2136,7 +2345,7 @@ async function imprimirOuBaixarBalanceteMensal(mesIndex, anoStr) {
     const strMes = String(mIdx).padStart(2, '0');
     const nomeMes = mesesNomes[mIdx - 1];
 
-    let listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    let listFinanceiro = (JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []).filter(i => i && i.id !== 'config_categorias_financeiras' && i.tipo !== 'config_cat');
     if (!listFinanceiro || listFinanceiro.length === 0) {
         listFinanceiro = (typeof INITIAL_LANCAMENTOS_DATA !== 'undefined' && Array.isArray(INITIAL_LANCAMENTOS_DATA)) ? INITIAL_LANCAMENTOS_DATA : [];
         if (listFinanceiro.length > 0) {
@@ -2185,11 +2394,20 @@ async function imprimirOuBaixarBalanceteMensal(mesIndex, anoStr) {
             console.warn('Aviso ao carregar comprovante do idb para impressão:', e);
         }
 
-        if (!fileContent && (d.comprovante_url || d.arquivo_url)) {
-            fileContent = d.comprovante_url || d.arquivo_url;
+        const candUrl = d.comprovante_url || d.arquivo_url;
+        if (!fileContent && candUrl && candUrl !== '[ARMAZENADO_NO_SUPABASE]') {
+            fileContent = candUrl;
+        }
+        if ((!fileContent || fileContent === '[ARMAZENADO_NO_SUPABASE]') && d.comprovante_nome && typeof supabaseRest === 'function') {
+            try {
+                const rows = await supabaseRest(`financeiro_lancamentos?id=eq.${encodeURIComponent(d.id)}&select=comprovante_url`);
+                if (Array.isArray(rows) && rows[0] && rows[0].comprovante_url && rows[0].comprovante_url !== '[ARMAZENADO_NO_SUPABASE]') {
+                    fileContent = rows[0].comprovante_url;
+                }
+            } catch (e) {}
         }
 
-        if (fileContent) {
+        if (fileContent && fileContent !== '[ARMAZENADO_NO_SUPABASE]') {
             comprovantesCarregados.push({
                 despesa: d,
                 fileContent: fileContent,
@@ -2394,7 +2612,7 @@ async function imprimirOuBaixarBalanceteAnual(anoStr) {
     }
 
     const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-    const listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const listFinanceiro = (JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []).filter(i => i && i.id !== 'config_categorias_financeiras' && i.tipo !== 'config_cat');
     const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
     const tabelaMeses = mesesNomes.map((mNome, idx) => {
@@ -2450,11 +2668,20 @@ async function imprimirOuBaixarBalanceteAnual(anoStr) {
             console.warn('Aviso ao carregar comprovante anual do idb:', e);
         }
 
-        if (!fileContent && (d.comprovante_url || d.arquivo_url)) {
-            fileContent = d.comprovante_url || d.arquivo_url;
+        const candUrl = d.comprovante_url || d.arquivo_url;
+        if (!fileContent && candUrl && candUrl !== '[ARMAZENADO_NO_SUPABASE]') {
+            fileContent = candUrl;
+        }
+        if ((!fileContent || fileContent === '[ARMAZENADO_NO_SUPABASE]') && d.comprovante_nome && typeof supabaseRest === 'function') {
+            try {
+                const rows = await supabaseRest(`financeiro_lancamentos?id=eq.${encodeURIComponent(d.id)}&select=comprovante_url`);
+                if (Array.isArray(rows) && rows[0] && rows[0].comprovante_url && rows[0].comprovante_url !== '[ARMAZENADO_NO_SUPABASE]') {
+                    fileContent = rows[0].comprovante_url;
+                }
+            } catch (e) {}
         }
 
-        if (fileContent) {
+        if (fileContent && fileContent !== '[ARMAZENADO_NO_SUPABASE]') {
             comprovantesCarregados.push({
                 despesa: d,
                 fileContent: fileContent,
@@ -2600,7 +2827,7 @@ function exportarBalanceteMensalCSV(mesIndex, anoStr) {
     const strMes = String(mIdx).padStart(2, '0');
     const nomeMes = mesesNomes[mIdx - 1];
 
-    const listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const listFinanceiro = (JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []).filter(i => i && i.id !== 'config_categorias_financeiras' && i.tipo !== 'config_cat');
     const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
     let csv = `BALANCETE MENSAL ACBCSJ - ${nomeMes.toUpperCase()}/${anoStr}\n`;
@@ -2632,7 +2859,7 @@ function exportarBalanceteAnualCSV(anoStr) {
         anoStr = selAno ? selAno.value : '2026';
     }
     const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-    const listFinanceiro = JSON.parse(localStorage.getItem('acbcsj_financeiro')) || [];
+    const listFinanceiro = (JSON.parse(localStorage.getItem('acbcsj_financeiro')) || []).filter(i => i && i.id !== 'config_categorias_financeiras' && i.tipo !== 'config_cat');
     const listMensalidades = JSON.parse(localStorage.getItem('acbcsj_mensalidades_historico')) || [];
 
     let csv = `BALANCETE ANUAL CONSOLIDADO ACBCSJ - EXERCICIO ${anoStr}\n`;
@@ -2700,6 +2927,7 @@ window.abrirComprovanteLancamento = abrirComprovanteLancamento;
 window.abrirModalGerenciarCategoriasFin = abrirModalGerenciarCategoriasFin;
 window.setTipoCategoriaManager = setTipoCategoriaManager;
 window.adicionarNovaCategoriaFin = adicionarNovaCategoriaFin;
+window.editarCategoriaFin = editarCategoriaFin;
 window.removerCategoriaFin = removerCategoriaFin;
 window.restaurarCategoriasPadraoFin = restaurarCategoriasPadraoFin;
 window.atualizarCategoriasLancamento = atualizarCategoriasLancamento;
