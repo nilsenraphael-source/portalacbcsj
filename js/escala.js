@@ -60,9 +60,10 @@ const ANCORA_ANO = 2026;
 const ANCORA_MES = 8; // 0-indexed (8 = Setembro)
 const ANCORA_DIA = 1;
 
+const _dataInicialAtual = new Date();
 let estadoEscala = {
-    ano: 2026,
-    mes: 8, // 0-indexed (8 = Setembro)
+    ano: _dataInicialAtual.getFullYear(),
+    mes: _dataInicialAtual.getMonth(), // 0-indexed (abre sempre no mês atual)
     filtroGu: 'todas', // 'todas', 'verde', 'vermelha', 'azul', 'amarela'
     modoVisualizacao: 'calendario' // 'calendario' ou 'lista'
 };

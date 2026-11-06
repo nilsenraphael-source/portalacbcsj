@@ -388,7 +388,11 @@ function navigateTab(tabId) {
         if (typeof renderMinhasMensalidadesDiretor === 'function') renderMinhasMensalidadesDiretor();
     }
     if (tabId === 'escala-militar') {
-        if (typeof renderEscalaMilitar === 'function') renderEscalaMilitar();
+        if (typeof escalaIrParaHoje === 'function') {
+            escalaIrParaHoje();
+        } else if (typeof renderEscalaMilitar === 'function') {
+            renderEscalaMilitar();
+        }
     }
     if (tabId === 'relatorios-diretoria') {
         if (typeof renderRelatoriosDiretoria === 'function') renderRelatoriosDiretoria();
